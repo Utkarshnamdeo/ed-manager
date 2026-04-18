@@ -13,7 +13,7 @@
 | i18n | i18next, 2 languages (en/de), lazy loaded |
 | Auth | Firebase Authentication (email + password) |
 | Database | Cloud Firestore |
-| Functions | Firebase Cloud Functions v2, Node 20, TypeScript |
+| Functions | Firebase Cloud Functions v2, Node 22, TypeScript |
 | Dev | Firebase Local Emulator Suite — Auth :9099, Firestore :8080, Functions :5001, UI :4000 |
 
 ---

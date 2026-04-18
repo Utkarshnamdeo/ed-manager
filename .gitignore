@@ -27,3 +27,9 @@ emulator-data
 *.njsproj
 *.sln
 *.sw?
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Override: allow .env.example
+!.env.example
