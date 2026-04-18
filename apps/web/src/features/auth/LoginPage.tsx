@@ -30,110 +30,195 @@ export function LoginPage() {
     <div
       style={{
         display: 'flex',
-        height: '100vh',
+        minHeight: '100vh',
+        backgroundColor: 'var(--color-background)',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'var(--color-background)',
+        padding: '1.5rem',
       }}
     >
+      {/* Card */}
       <div
         style={{
           width: '100%',
-          maxWidth: '24rem',
-          borderRadius: '0.5rem',
-          border: '1px solid var(--color-border)',
+          maxWidth: '22rem',
           backgroundColor: 'var(--color-card)',
-          padding: '2rem',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          borderRadius: '1.25rem',
+          border: '1px solid var(--color-border)',
+          padding: '2.5rem 2rem',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 600, margin: 0 }}>
-            {t('login.title')}
-          </h1>
-          <p
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '2rem' }}>
+          <div
             style={{
-              fontSize: '0.875rem',
-              color: 'var(--color-muted-foreground)',
-              marginTop: '0.25rem',
-              marginBottom: 0,
+              width: '36px',
+              height: '36px',
+              borderRadius: '9px',
+              background: 'var(--color-primary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '0.8125rem',
+              fontWeight: 800,
+              color: 'var(--color-primary-foreground)',
+              flexShrink: 0,
             }}
           >
-            {t('login.subtitle')}
+            EM
+          </div>
+          <span
+            style={{
+              fontSize: '1.0625rem',
+              fontWeight: 800,
+              color: 'var(--color-foreground)',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Elite Manager
+          </span>
+        </div>
+
+        {/* Heading */}
+        <div style={{ marginBottom: '1.75rem' }}>
+          <h1
+            style={{
+              fontSize: '1.5rem',
+              fontWeight: 800,
+              margin: '0 0 0.375rem',
+              letterSpacing: '-0.03em',
+              color: 'var(--color-foreground)',
+            }}
+          >
+            Welcome back
+          </h1>
+          <p style={{ fontSize: '0.875rem', color: 'var(--color-muted-foreground)', margin: 0 }}>
+            Sign in to your workspace
           </p>
         </div>
+
+        {/* Form */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-            <label htmlFor="email" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
-              {t('login.email')}
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              style={{
-                borderRadius: '0.375rem',
-                border: '1px solid var(--color-border)',
-                backgroundColor: 'var(--color-background)',
-                padding: '0.5rem 0.75rem',
-                fontSize: '0.875rem',
-                outline: 'none',
-                width: '100%',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-            <label htmlFor="password" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
-              {t('login.password')}
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              style={{
-                borderRadius: '0.375rem',
-                border: '1px solid var(--color-border)',
-                backgroundColor: 'var(--color-background)',
-                padding: '0.5rem 0.75rem',
-                fontSize: '0.875rem',
-                outline: 'none',
-                width: '100%',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
+          <Field
+            id="email"
+            label={t('login.email')}
+            type="email"
+            value={email}
+            onChange={setEmail}
+            autoComplete="email"
+            placeholder="you@example.com"
+          />
+          <Field
+            id="password"
+            label={t('login.password')}
+            type="password"
+            value={password}
+            onChange={setPassword}
+            autoComplete="current-password"
+            placeholder="••••••••"
+          />
+
           {error && (
-            <p style={{ fontSize: '0.875rem', color: 'var(--color-destructive)', margin: 0 }}>
+            <div
+              role="alert"
+              style={{
+                fontSize: '0.8125rem',
+                color: 'var(--color-destructive)',
+                backgroundColor: 'var(--color-destructive-subtle)',
+                padding: '0.625rem 0.875rem',
+                borderRadius: '0.5rem',
+                fontWeight: 500,
+              }}
+            >
               {error}
-            </p>
+            </div>
           )}
+
           <button
             type="submit"
             disabled={loading}
             style={{
-              borderRadius: '0.375rem',
-              backgroundColor: 'var(--color-primary)',
-              color: 'var(--color-primary-foreground)',
-              padding: '0.5rem',
-              fontSize: '0.875rem',
-              fontWeight: 500,
+              marginTop: '0.25rem',
+              height: '42px',
+              borderRadius: '0.625rem',
               border: 'none',
+              backgroundColor: loading ? 'var(--color-primary-hover)' : 'var(--color-primary)',
+              color: 'var(--color-primary-foreground)',
+              fontSize: '0.9375rem',
+              fontWeight: 700,
               cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.6 : 1,
+              transition: 'background-color 0.15s',
               width: '100%',
+              letterSpacing: '-0.01em',
             }}
           >
-            {loading ? t('login.signingIn') : t('login.submit')}
+            {loading ? 'Signing in…' : t('login.submit')}
           </button>
         </form>
       </div>
+    </div>
+  )
+}
+
+/* ─── Field ────────────────────────────────────────────────────────────────── */
+
+function Field({
+  id,
+  label,
+  type,
+  value,
+  onChange,
+  autoComplete,
+  placeholder,
+}: {
+  id: string
+  label: string
+  type: string
+  value: string
+  onChange: (v: string) => void
+  autoComplete?: string
+  placeholder?: string
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+      <label
+        htmlFor={id}
+        style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-foreground-secondary)' }}
+      >
+        {label}
+      </label>
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required
+        autoComplete={autoComplete}
+        placeholder={placeholder}
+        style={{
+          height: '42px',
+          borderRadius: '0.625rem',
+          border: '1.5px solid var(--color-border)',
+          backgroundColor: 'var(--color-background)',
+          padding: '0 0.875rem',
+          fontSize: '0.9375rem',
+          color: 'var(--color-foreground)',
+          outline: 'none',
+          width: '100%',
+          transition: 'border-color 0.15s, box-shadow 0.15s',
+        }}
+        onFocus={(e) => {
+          e.target.style.borderColor = 'var(--color-primary)'
+          e.target.style.boxShadow = '0 0 0 3px var(--color-primary-subtle)'
+          e.target.style.backgroundColor = 'var(--color-card)'
+        }}
+        onBlur={(e) => {
+          e.target.style.borderColor = 'var(--color-border)'
+          e.target.style.boxShadow = 'none'
+          e.target.style.backgroundColor = 'var(--color-background)'
+        }}
+      />
     </div>
   )
 }
