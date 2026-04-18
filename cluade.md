@@ -143,8 +143,8 @@ apps/
 
 ## Current build status
 
-**Completed:** nothing yet — starting from scratch.
-**In progress:** step 1 — monorepo scaffold.
+**Completed:** steps 1–2 — monorepo scaffold, auth.
+**In progress:** step 3 — Firestore security rules baseline.
 
 > Update this section after every completed build step.
 > Format: `Completed: steps 1–N. In progress: step N+1 — [name].`

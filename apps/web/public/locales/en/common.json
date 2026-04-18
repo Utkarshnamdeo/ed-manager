@@ -1,0 +1,26 @@
+{
+  "app": {
+    "name": "Elite Manager"
+  },
+  "nav": {
+    "attendance": "Attendance",
+    "dashboard": "Dashboard",
+    "calendar": "Calendar",
+    "checkin": "Check-in",
+    "students": "Students",
+    "templates": "Templates",
+    "teachers": "Teachers",
+    "rooms": "Rooms",
+    "reports": "Reports",
+    "settings": "Settings",
+    "signOut": "Sign out"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back, {{name}}",
+    "emulatorStatus": "Firebase Emulator Suite"
+  },
+  "attendance": {
+    "placeholder": "Today's sessions will appear here — coming in step 9."
+  }
+}
