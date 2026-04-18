@@ -9,7 +9,7 @@
 
 Dance school attendance management app. Firebase backend, React 19 frontend, TypeScript throughout. Staff use it daily at the front desk to run class check-ins and track student memberships.
 
-Before writing any code, read **SPEC.md** for types, collections, business rules, and conventions.
+Before writing any code, read **spec.md** for types, collections, business rules, and conventions.
 
 ---
 

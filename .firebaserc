@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "demo-elite-manager"
-  }
+    "default": "demo-elite-manager",
+    "dev": "elite-manager-app-dev"
+  },
+  "targets": {},
+  "etags": {}
 }
