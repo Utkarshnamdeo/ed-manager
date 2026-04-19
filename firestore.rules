@@ -2,13 +2,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
-
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // Fetch the calling user's Firestore doc (cached per request by the runtime)
     function me() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
@@ -37,21 +34,14 @@ service cloud.firestore {
       return isAdmin() || isStaff();
     }
 
-    // Check a specific permission flag (falls back to false if field missing)
     function can(flag) {
       return isActive() && me().permissions.get(flag, false) == true;
     }
 
-    // True when the requesting teacher owns the given session
     function teacherOwnsSession(sessionId) {
       let session = get(/databases/$(database)/documents/classSessions/$(sessionId)).data;
       return session.teacherId == me().teacherId;
     }
-
-    // ── users ─────────────────────────────────────────────────────────────────
-    // Users read their own doc (needed to load role + permissions on login).
-    // Admin can read/write all user docs.
-    // Writes from non-admin are blocked — user management is admin-only.
 
     match /users/{userId} {
       allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
@@ -59,19 +49,11 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ── students ──────────────────────────────────────────────────────────────
-    // Staff + admin: full read/write (manageStudents flag required for writes).
-    // Teachers: read-only (need roster names for their sessions).
-    // Hard deletes are never allowed — use active: false.
-
     match /students/{studentId} {
       allow read: if isAdminOrStaff() || isTeacher();
       allow create, update: if isAdmin() || (isStaff() && can('manageStudents'));
       allow delete: if false;
     }
-
-    // ── memberships ───────────────────────────────────────────────────────────
-    // Staff + admin only. Teachers have no reason to see membership financials.
 
     match /memberships/{membershipId} {
       allow read: if isAdminOrStaff();
@@ -79,18 +61,11 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ── teachers ──────────────────────────────────────────────────────────────
-    // All active users can read (needed to display names on class cards).
-    // Only admin (or staff with manageTeachers) can write.
-
     match /teachers/{teacherId} {
       allow read: if isActive();
       allow create, update: if isAdmin() || (isStaff() && can('manageTeachers'));
       allow delete: if false;
     }
-
-    // ── rooms ─────────────────────────────────────────────────────────────────
-    // All active users can read. Only admin (or staff with manageRooms) can write.
 
     match /rooms/{roomId} {
       allow read: if isActive();
@@ -98,18 +73,11 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ── classTemplates ────────────────────────────────────────────────────────
-    // All active users can read. Admin/staff with manageClasses can write.
-
     match /classTemplates/{templateId} {
       allow read: if isActive();
       allow create, update: if isAdmin() || (isStaff() && can('manageClasses'));
       allow delete: if false;
     }
-
-    // ── classSessions ─────────────────────────────────────────────────────────
-    // All active users can read. Admin/staff with manageClasses can write.
-    // Teachers cannot create/edit sessions (calendar is managed by staff).
 
     match /classSessions/{sessionId} {
       allow read: if isActive();
@@ -117,31 +85,16 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ── attendanceRecords ─────────────────────────────────────────────────────
-    // ALL client writes are denied — records are created only by the
-    // onAttendanceCreated Cloud Function via the Admin SDK (bypasses these rules).
-    //
-    // Read access:
-    //   admin/staff: all records
-    //   teacher: only records for sessions they teach
-
     match /attendanceRecords/{recordId} {
       allow read: if isAdminOrStaff() ||
         (isTeacher() && teacherOwnsSession(resource.data.sessionId));
       allow create, update, delete: if false;
     }
 
-    // ── backupLogs ────────────────────────────────────────────────────────────
-    // Admin read-only. Writes come exclusively from Cloud Functions (Admin SDK).
-
     match /backupLogs/{logId} {
       allow read: if isAdmin();
       allow write: if false;
     }
-
-    // ── config ────────────────────────────────────────────────────────────────
-    // Staff + admin can read config (needed to display pricing, etc.).
-    // Only admin with configureSystem permission can write.
 
     match /config/{configId} {
       allow read: if isAdminOrStaff();
