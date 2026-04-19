@@ -30,6 +30,12 @@
 - i18n from day one. All user-facing strings go through `t()`. No hardcoded copy.
 - Soft deletes everywhere — `active: false`. Never hard delete.
 - Credit deduction logic lives only in Cloud Functions. Never implement it client-side.
+- Named exports over default exports
+- No barrel files (index.ts re-exports) — import from the specific module
+  Exception: features/*/index.ts is fine for internal re-exports
+- One component per file, PascalCase filenames
+- React 19: no forwardRef (refs as props)
+- No any, no unused variables
 
 ---
 
@@ -444,6 +450,24 @@ providers   Array<{ id: string, name: string, active: boolean }>
 
 ### `cleanupOldBackups` (Cloud Scheduler)
 - Weekly. Deletes `backupLogs` documents older than 90 days.
+
+---
+
+## Testing — what NOT to test (the "what to test" is obvious; the exclusions prevent wasted effort):
+  - Don't test: Tailwind classes, Radix UI internals, static markup
+  - Do test: hook logic, Firestore query behavior, combination/credit calculation logic
+
+---
+
+## CLAUDE.md update triggers — currently missing, leads to bloat:
+  - Update only when: new dependency affects architecture, a convention changes,
+  - a non-obvious constraint exists that code alone doesn't communicate.
+  - Do NOT update for: bug fixes, refactors, individual feature implementation details.
+
+--- 
+
+## Task workflow — the "write plan → get approval → code" discipline is valuable:
+  Before starting any feature: read spec.md + relevant code, write a plan, get approval.
 
 ---
 
