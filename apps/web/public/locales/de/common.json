@@ -30,5 +30,8 @@
     "en": "EN",
     "de": "DE",
     "toggle": "Sprache wechseln"
+  },
+  "errors": {
+    "failedToLoad": "Daten konnten nicht geladen werden."
   }
 }
