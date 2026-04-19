@@ -1,42 +1,42 @@
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useAuth } from '../../contexts/AuthContext'
-import { useTeachers, useCreateTeacher, useUpdateTeacher } from '../../hooks/useTeachers'
-import type { Teacher } from '../../types'
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../contexts/AuthContext';
+import { useTeachers, useCreateTeacher, useUpdateTeacher } from '../../hooks/useTeachers';
+import type { Teacher } from '../../types';
 
 /* ─── Avatar ───────────────────────────────────────────────────────────────── */
 
-const AVATAR_HUES = [15, 45, 145, 200, 240, 285, 320, 355]
+const AVATAR_HUES = [15, 45, 145, 200, 240, 285, 320, 355];
 
 function nameHash(name: string): number {
-  let h = 0
-  for (const c of name) h = c.charCodeAt(0) + ((h << 5) - h)
-  return Math.abs(h)
+  let h = 0;
+  for (const c of name) h = c.charCodeAt(0) + ((h << 5) - h);
+  return Math.abs(h);
 }
 
-function Avatar({ name }: { name: string }) {
-  const hue = AVATAR_HUES[nameHash(name) % 8]
-  const initials = name.split(' ').slice(0, 2).map((p) => p[0]).join('').toUpperCase()
+function Avatar({ name }: { name: string; }) {
+  const hue = AVATAR_HUES[nameHash(name) % 8];
+  const initials = name.split(' ').slice(0, 2).map((p) => p[0]).join('').toUpperCase();
   return (
     <div
       aria-hidden="true"
       style={{
         width: 36, height: 36, borderRadius: '9999px', flexShrink: 0,
-        backgroundColor: `oklch(0.88 0.10 ${hue})`,
-        color: `oklch(0.38 0.14 ${hue})`,
+        backgroundColor: `oklch(0.88 0.10 ${ hue })`,
+        color: `oklch(0.38 0.14 ${ hue })`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: '0.75rem', fontWeight: 700, userSelect: 'none',
       }}
     >
       {initials}
     </div>
-  )
+  );
 }
 
 /* ─── Status Badge ─────────────────────────────────────────────────────────── */
 
-function StatusBadge({ active }: { active: boolean }) {
-  const { t } = useTranslation('teachers')
+function StatusBadge({ active }: { active: boolean; }) {
+  const { t } = useTranslation('teachers');
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center',
@@ -46,14 +46,14 @@ function StatusBadge({ active }: { active: boolean }) {
     }}>
       {active ? t('status.active') : t('status.inactive')}
     </span>
-  )
+  );
 }
 
 /* ─── Add Teacher Form ─────────────────────────────────────────────────────── */
 
-function AddTeacherForm({ onClose }: { onClose: () => void }) {
-  const { t } = useTranslation('teachers')
-  const createTeacher = useCreateTeacher()
+function AddTeacherForm({ onClose }: { onClose: () => void; }) {
+  const { t } = useTranslation('teachers');
+  const createTeacher = useCreateTeacher();
   const [form, setForm] = useState({
     firstName: '', lastName: '', email: '',
     ratePerStudent: 0, monthlyFloor: '' as string | number,
@@ -63,19 +63,19 @@ function AddTeacherForm({ onClose }: { onClose: () => void }) {
       showTotalEarnings: false,
     },
     active: true,
-  })
+  });
 
   function set<K extends keyof typeof form>(key: K, value: typeof form[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }))
+    setForm((prev) => ({ ...prev, [key]: value }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+    e.preventDefault();
     await createTeacher.mutateAsync({
       ...form,
       monthlyFloor: form.monthlyFloor === '' ? null : Number(form.monthlyFloor),
-    })
-    onClose()
+    });
+    onClose();
   }
 
   return (
@@ -93,11 +93,11 @@ function AddTeacherForm({ onClose }: { onClose: () => void }) {
       </FormField>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem' }}>
         <FormField label={t('form.ratePerStudent')}>
-          <input className="form-input" type="number" min="0" step="0.01" value={form.ratePerStudent}
+          <input className="form-input" type="text" inputMode='numeric' value={form.ratePerStudent}
             onChange={(e) => set('ratePerStudent', parseFloat(e.target.value) || 0)} required />
         </FormField>
         <FormField label={t('form.monthlyFloor')} hint={t('form.monthlyFloorHint')}>
-          <input className="form-input" type="number" min="0" step="0.01" value={form.monthlyFloor}
+          <input className="form-input" type="text" inputMode='numeric' value={form.monthlyFloor}
             onChange={(e) => set('monthlyFloor', e.target.value)} placeholder="—" />
         </FormField>
       </div>
@@ -108,21 +108,21 @@ function AddTeacherForm({ onClose }: { onClose: () => void }) {
         </button>
       </div>
     </form>
-  )
+  );
 }
 
 /* ─── Teacher Drawer ───────────────────────────────────────────────────────── */
 
-function TeacherDrawer({ teacher, isAdmin, onClose }: {
-  teacher: Teacher
-  isAdmin: boolean
-  onClose: () => void
+function TeacherDrawer({ teacher, canManage, onClose }: {
+  teacher: Teacher;
+  canManage: boolean;
+  onClose: () => void;
 }) {
-  const { t } = useTranslation('teachers')
-  const updateTeacher = useUpdateTeacher()
-  const [tab, setTab] = useState<'details' | 'compensation'>('details')
-  const [editing, setEditing] = useState(false)
-  const [confirmDeactivate, setConfirmDeactivate] = useState(false)
+  const { t } = useTranslation('teachers');
+  const updateTeacher = useUpdateTeacher();
+  const [tab, setTab] = useState<'details' | 'compensation'>('details');
+  const [editing, setEditing] = useState(false);
+  const [confirmDeactivate, setConfirmDeactivate] = useState(false);
 
   const [form, setForm] = useState({
     firstName: teacher.firstName,
@@ -131,10 +131,10 @@ function TeacherDrawer({ teacher, isAdmin, onClose }: {
     ratePerStudent: teacher.ratePerStudent,
     monthlyFloor: teacher.monthlyFloor ?? ('' as string | number),
     reportVisibility: { ...teacher.reportVisibility },
-  })
+  });
 
   function setField<K extends keyof typeof form>(key: K, value: typeof form[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }))
+    setForm((prev) => ({ ...prev, [key]: value }));
   }
 
   async function handleSave() {
@@ -142,8 +142,8 @@ function TeacherDrawer({ teacher, isAdmin, onClose }: {
       id: teacher.id,
       ...form,
       monthlyFloor: form.monthlyFloor === '' ? null : Number(form.monthlyFloor),
-    })
-    setEditing(false)
+    });
+    setEditing(false);
   }
 
   function handleCancel() {
@@ -154,16 +154,16 @@ function TeacherDrawer({ teacher, isAdmin, onClose }: {
       ratePerStudent: teacher.ratePerStudent,
       monthlyFloor: teacher.monthlyFloor ?? '',
       reportVisibility: { ...teacher.reportVisibility },
-    })
-    setEditing(false)
+    });
+    setEditing(false);
   }
 
   async function handleToggleActive() {
-    await updateTeacher.mutateAsync({ id: teacher.id, active: !teacher.active })
-    setConfirmDeactivate(false)
+    await updateTeacher.mutateAsync({ id: teacher.id, active: !teacher.active });
+    setConfirmDeactivate(false);
   }
 
-  const fullName = `${teacher.firstName} ${teacher.lastName}`
+  const fullName = `${ teacher.firstName } ${ teacher.lastName }`;
 
   return (
     <>
@@ -205,7 +205,7 @@ function TeacherDrawer({ teacher, isAdmin, onClose }: {
           {(['details', 'compensation'] as const).map((tabKey) => (
             <button
               key={tabKey}
-              onClick={() => { setTab(tabKey); setEditing(false) }}
+              onClick={() => { setTab(tabKey); setEditing(false); }}
               style={{
                 padding: '0.75rem 0', marginRight: '1.5rem', background: 'none', border: 'none',
                 cursor: 'pointer', fontSize: '0.875rem', fontWeight: tab === tabKey ? 600 : 400,
@@ -214,7 +214,7 @@ function TeacherDrawer({ teacher, isAdmin, onClose }: {
                 transition: 'color 0.15s',
               }}
             >
-              {t(`tabs.${tabKey}`)}
+              {t(`tabs.${ tabKey }`)}
             </button>
           ))}
         </div>
@@ -249,14 +249,14 @@ function TeacherDrawer({ teacher, isAdmin, onClose }: {
                 <FormField label={t('form.ratePerStudent')}>
                   {editing
                     ? <input className="form-input" type="number" min="0" step="0.01" value={form.ratePerStudent}
-                        onChange={(e) => setField('ratePerStudent', parseFloat(e.target.value) || 0)} />
+                      onChange={(e) => setField('ratePerStudent', parseFloat(e.target.value) || 0)} />
                     : <ReadValue>€{teacher.ratePerStudent.toFixed(2)}</ReadValue>}
                 </FormField>
                 <FormField label={t('form.monthlyFloor')} hint={editing ? t('form.monthlyFloorHint') : undefined}>
                   {editing
                     ? <input className="form-input" type="number" min="0" step="0.01" value={form.monthlyFloor}
-                        onChange={(e) => setField('monthlyFloor', e.target.value)} placeholder="—" />
-                    : <ReadValue>{teacher.monthlyFloor != null ? `€${teacher.monthlyFloor.toFixed(2)}` : '—'}</ReadValue>}
+                      onChange={(e) => setField('monthlyFloor', e.target.value)} placeholder="—" />
+                    : <ReadValue>{teacher.monthlyFloor != null ? `€${ teacher.monthlyFloor.toFixed(2) }` : '—'}</ReadValue>}
                 </FormField>
               </div>
 
@@ -272,7 +272,7 @@ function TeacherDrawer({ teacher, isAdmin, onClose }: {
                       disabled={!editing}
                       onChange={(e) => setField('reportVisibility', { ...form.reportVisibility, [key]: e.target.checked })}
                     />
-                    <span style={{ fontSize: '0.875rem', color: 'var(--color-foreground)' }}>{t(`form.${key}`)}</span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--color-foreground)' }}>{t(`form.${ key }`)}</span>
                   </label>
                 ))}
               </div>
@@ -285,7 +285,7 @@ function TeacherDrawer({ teacher, isAdmin, onClose }: {
           padding: '1rem 1.5rem', borderTop: '1px solid var(--color-border)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem',
         }}>
-          {isAdmin && (
+          {canManage && (
             confirmDeactivate ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
                 <p style={{ fontSize: '0.8125rem', color: 'var(--color-foreground)', margin: 0 }}>
@@ -311,7 +311,7 @@ function TeacherDrawer({ teacher, isAdmin, onClose }: {
             )
           )}
           <div style={{ display: 'flex', gap: '0.5rem', marginLeft: 'auto' }}>
-            {isAdmin && (
+            {canManage && (
               editing ? (
                 <>
                   <button onClick={handleCancel} className="btn-secondary">{t('actions.cancel')}</button>
@@ -327,16 +327,16 @@ function TeacherDrawer({ teacher, isAdmin, onClose }: {
         </div>
       </div>
     </>
-  )
+  );
 }
 
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
 
 function FormField({ label, hint, style, children }: {
-  label: string
-  hint?: string
-  style?: React.CSSProperties
-  children: React.ReactNode
+  label: string;
+  hint?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
 }) {
   return (
     <div style={style}>
@@ -346,15 +346,15 @@ function FormField({ label, hint, style, children }: {
       {children}
       {hint && <p style={{ fontSize: '0.75rem', color: 'var(--color-muted-foreground)', margin: '0.25rem 0 0' }}>{hint}</p>}
     </div>
-  )
+  );
 }
 
-function ReadValue({ children }: { children: React.ReactNode }) {
+function ReadValue({ children }: { children: React.ReactNode; }) {
   return (
     <div style={{ fontSize: '0.9375rem', color: 'var(--color-foreground)', padding: '0.5rem 0' }}>
       {children}
     </div>
-  )
+  );
 }
 
 function IconClose() {
@@ -362,7 +362,7 @@ function IconClose() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
     </svg>
-  )
+  );
 }
 
 function IconPlus() {
@@ -370,19 +370,19 @@ function IconPlus() {
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
     </svg>
-  )
+  );
 }
 
 /* ─── Teachers Page ────────────────────────────────────────────────────────── */
 
 export function TeachersPage() {
-  const { t } = useTranslation('teachers')
-  const { appUser } = useAuth()
-  const isAdmin = appUser?.role === 'admin'
+  const { t } = useTranslation('teachers');
+  const { appUser } = useAuth();
+  const canManage = appUser?.role === 'admin' || !!appUser?.permissions?.manageTeachers;
 
-  const { data: teachers, isLoading, isError } = useTeachers()
-  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null)
-  const [showAddForm, setShowAddForm] = useState(false)
+  const { data: teachers, isLoading, isError } = useTeachers();
+  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   return (
     <div className="page-enter" style={{ padding: '1.75rem', maxWidth: '900px' }}>
@@ -392,7 +392,7 @@ export function TeachersPage() {
         <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, letterSpacing: '-0.025em', color: 'var(--color-foreground)' }}>
           {t('title')}
         </h1>
-        {isAdmin && !showAddForm && (
+        {canManage && !showAddForm && (
           <button
             onClick={() => setShowAddForm(true)}
             className="btn-primary"
@@ -425,7 +425,7 @@ export function TeachersPage() {
 
         {isError && (
           <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-destructive)', fontSize: '0.875rem' }}>
-            Failed to load teachers.
+            {t('errors.failedToLoad', { ns: 'common' })}
           </div>
         )}
 
@@ -450,7 +450,7 @@ export function TeachersPage() {
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-muted)')}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
           >
-            <Avatar name={`${teacher.firstName} ${teacher.lastName}`} />
+            <Avatar name={`${ teacher.firstName } ${ teacher.lastName }`} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--color-foreground)' }}>
                 {teacher.firstName} {teacher.lastName}
@@ -468,10 +468,10 @@ export function TeachersPage() {
       {selectedTeacher && (
         <TeacherDrawer
           teacher={selectedTeacher}
-          isAdmin={isAdmin}
+          canManage={canManage}
           onClose={() => setSelectedTeacher(null)}
         />
       )}
     </div>
-  )
+  );
 }

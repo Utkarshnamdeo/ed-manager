@@ -25,7 +25,7 @@ function IconPlus() {
 
 /* ─── Room Row ─────────────────────────────────────────────────────────────── */
 
-function RoomRow({ room, isAdmin }: { room: Room; isAdmin: boolean }) {
+function RoomRow({ room, canManage }: { room: Room; canManage: boolean }) {
   const { t } = useTranslation('rooms')
   const updateRoom = useUpdateRoom()
   const [editing, setEditing] = useState(false)
@@ -111,7 +111,7 @@ function RoomRow({ room, isAdmin }: { room: Room; isAdmin: boolean }) {
           <div style={{ width: '110px', fontSize: '0.875rem', color: 'var(--color-muted-foreground)' }}>
             {room.capacity != null ? room.capacity : '—'}
           </div>
-          {isAdmin && (
+          {canManage && (
             <div style={{ display: 'flex', gap: '0.25rem' }}>
               <button
                 onClick={() => setEditing(true)}
@@ -205,7 +205,7 @@ function AddRoomRow({ onClose }: { onClose: () => void }) {
 export function RoomsPage() {
   const { t } = useTranslation('rooms')
   const { appUser } = useAuth()
-  const isAdmin = appUser?.role === 'admin'
+  const canManage = appUser?.role === 'admin' || !!appUser?.permissions?.manageRooms
 
   const { data: rooms, isLoading, isError } = useRooms()
   const [showAddRow, setShowAddRow] = useState(false)
@@ -218,7 +218,7 @@ export function RoomsPage() {
         <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, letterSpacing: '-0.025em', color: 'var(--color-foreground)' }}>
           {t('title')}
         </h1>
-        {isAdmin && !showAddRow && (
+        {canManage && !showAddRow && (
           <button
             onClick={() => setShowAddRow(true)}
             className="btn-primary"
@@ -245,7 +245,7 @@ export function RoomsPage() {
           <div style={{ width: '110px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             {t('form.capacity')}
           </div>
-          {isAdmin && <div style={{ width: '120px' }} />}
+          {canManage && <div style={{ width: '120px' }} />}
         </div>
 
         {isLoading && (
@@ -254,7 +254,7 @@ export function RoomsPage() {
 
         {isError && (
           <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-destructive)', fontSize: '0.875rem' }}>
-            Failed to load rooms.
+            {t('errors.failedToLoad', { ns: 'common' })}
           </div>
         )}
 
@@ -265,7 +265,7 @@ export function RoomsPage() {
         )}
 
         {rooms && rooms.map((room) => (
-          <RoomRow key={room.id} room={room} isAdmin={isAdmin} />
+          <RoomRow key={room.id} room={room} canManage={canManage} />
         ))}
 
         {showAddRow && <AddRoomRow onClose={() => setShowAddRow(false)} />}
