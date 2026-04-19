@@ -209,7 +209,7 @@
 
 /* ── Shared form input ── */
 .form-input {
-  height: 36px; width: 100%; padding: 0 0.75rem;
+  height: 36px; padding: 0 0.75rem;
   border-radius: var(--radius); border: 1.5px solid var(--color-border);
   background-color: var(--color-background); color: var(--color-foreground);
   font-size: 0.875rem; font-family: var(--font-sans);
@@ -220,3 +220,19 @@
   box-shadow: 0 0 0 3px var(--color-primary-subtle);
 }
 .form-input::placeholder { color: var(--color-muted-foreground); }
+
+/* ── Avatar hue classes (8 OKLCH hues) ── */
+.avatar-h-0 { background-color: oklch(0.88 0.10  15); color: oklch(0.38 0.14  15); }
+.avatar-h-1 { background-color: oklch(0.88 0.10  45); color: oklch(0.38 0.14  45); }
+.avatar-h-2 { background-color: oklch(0.88 0.10 145); color: oklch(0.38 0.14 145); }
+.avatar-h-3 { background-color: oklch(0.88 0.10 200); color: oklch(0.38 0.14 200); }
+.avatar-h-4 { background-color: oklch(0.88 0.10 240); color: oklch(0.38 0.14 240); }
+.avatar-h-5 { background-color: oklch(0.88 0.10 285); color: oklch(0.38 0.14 285); }
+.avatar-h-6 { background-color: oklch(0.88 0.10 320); color: oklch(0.38 0.14 320); }
+.avatar-h-7 { background-color: oklch(0.88 0.10 355); color: oklch(0.38 0.14 355); }
+
+/* ── Membership tier badge classes ── */
+.badge-gold   { background-color: oklch(0.96 0.06  85); color: oklch(0.55 0.14  85); }
+.badge-silver { background-color: oklch(0.93 0.03 240); color: oklch(0.45 0.06 240); }
+.badge-bronze { background-color: oklch(0.94 0.05  50); color: oklch(0.50 0.10  50); }
+.badge-usc    { background-color: oklch(0.93 0.05 220); color: oklch(0.45 0.14 220); }

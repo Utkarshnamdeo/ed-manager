@@ -7,16 +7,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div
-          style={{
-            width: '2rem',
-            height: '2rem',
-            borderRadius: '9999px',
-            border: '4px solid var(--color-primary)',
-            borderTopColor: 'transparent',
-            animation: 'spin 0.75s linear infinite',
-          }}
-        />
+        <div className="size-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
       </div>
     )
   }
@@ -25,14 +16,14 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
 
   if (!appUser) {
     return (
-      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '0.75rem', padding: '2rem', textAlign: 'center' }}>
-        <p style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--color-foreground)' }}>
+      <div className="flex h-screen items-center justify-center flex-col gap-3 p-8 text-center">
+        <p className="text-base font-semibold text-foreground m-0">
           User profile not found
         </p>
-        <p style={{ fontSize: '0.875rem', color: 'var(--color-muted-foreground)', maxWidth: '360px' }}>
+        <p className="text-sm text-muted-foreground max-w-[360px] m-0">
           Make sure the Firebase emulators are running and seed data has been loaded, then refresh the page.
         </p>
-        <code style={{ fontSize: '0.8rem', backgroundColor: 'var(--color-muted)', padding: '0.5rem 0.75rem', borderRadius: '6px', color: 'var(--color-foreground)' }}>
+        <code className="text-[0.8rem] bg-muted px-3 py-2 rounded-[6px] text-foreground">
           firebase emulators:start --import=emulator-data
         </code>
       </div>

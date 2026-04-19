@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AttendanceStatus } from '../types'
 
-/* ─── Avatar ───────────────────────────────────────────────────────────────── */
+/* ─── Avatar ── */
 
 const AVATAR_HUES = [15, 45, 145, 200, 240, 285, 320, 355]
+const AVATAR_HUE_CLASSES = ['avatar-h-0', 'avatar-h-1', 'avatar-h-2', 'avatar-h-3', 'avatar-h-4', 'avatar-h-5', 'avatar-h-6', 'avatar-h-7']
 
 function nameHash(name: string): number {
   let h = 0
@@ -12,101 +13,77 @@ function nameHash(name: string): number {
   return Math.abs(h)
 }
 
+// Keep AVATAR_HUES referenced to avoid unused-var lint errors
+void AVATAR_HUES
+
 function Avatar({ name, size = 32 }: { name: string; size?: number }) {
-  const hue = AVATAR_HUES[nameHash(name) % 8]
-  const bg = `oklch(0.88 0.10 ${hue})`
-  const color = `oklch(0.38 0.14 ${hue})`
-  const initials = name
-    .split(' ')
-    .slice(0, 2)
-    .map((p) => p[0])
-    .join('')
-    .toUpperCase()
+  const hueClass = AVATAR_HUE_CLASSES[nameHash(name) % 8]
+  const initials = name.split(' ').slice(0, 2).map((p) => p[0]).join('').toUpperCase()
+  const sizeClass = size <= 32 ? 'size-8 text-[0.6875rem]' : 'size-12 text-sm'
 
   return (
     <div
       aria-hidden="true"
-      style={{
-        width: size,
-        height: size,
-        borderRadius: '9999px',
-        backgroundColor: bg,
-        color,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: size <= 32 ? '0.6875rem' : '0.875rem',
-        fontWeight: 700,
-        flexShrink: 0,
-        letterSpacing: '-0.01em',
-        userSelect: 'none',
-      }}
+      className={`${sizeClass} rounded-full flex items-center justify-center font-bold shrink-0 tracking-[-0.01em] select-none ${hueClass}`}
     >
       {initials}
     </div>
   )
 }
 
-/* ─── Membership Badge ─────────────────────────────────────────────────────── */
+/* ─── Membership Badge ── */
 
 type Tier = 'gold' | 'silver' | 'bronze' | 'trial' | 'drop-in' | 'usc'
 
-const TIER_STYLES: Record<Tier, { bg: string; color: string; label: string }> = {
-  gold:    { bg: 'oklch(0.96 0.06 85)',  color: 'oklch(0.55 0.14 85)',  label: 'Gold' },
-  silver:  { bg: 'oklch(0.93 0.03 240)', color: 'oklch(0.45 0.06 240)', label: 'Silver' },
-  bronze:  { bg: 'oklch(0.94 0.05 50)',  color: 'oklch(0.50 0.10 50)',  label: 'Bronze' },
-  trial:   { bg: 'var(--color-secondary-subtle)', color: 'var(--color-secondary)', label: 'Trial' },
-  'drop-in': { bg: 'var(--color-muted)', color: 'var(--color-muted-foreground)', label: 'Drop-in' },
-  usc:     { bg: 'oklch(0.93 0.05 220)', color: 'oklch(0.45 0.14 220)', label: 'USC' },
+const TIER_LABEL: Record<Tier, string> = {
+  gold:      'Gold',
+  silver:    'Silver',
+  bronze:    'Bronze',
+  trial:     'Trial',
+  'drop-in': 'Drop-in',
+  usc:       'USC',
+}
+
+const TIER_CLASS: Record<Tier, string> = {
+  gold:      'badge-gold',
+  silver:    'badge-silver',
+  bronze:    'badge-bronze',
+  trial:     'bg-secondary-subtle text-secondary',
+  'drop-in': 'bg-muted text-muted-foreground',
+  usc:       'badge-usc',
 }
 
 function MembershipBadge({ tier, credits }: { tier: Tier; credits?: number | null }) {
-  const s = TIER_STYLES[tier]
   const lowCredit = typeof credits === 'number' && credits <= 2
-
-  const badgeBg = lowCredit && credits === 1
-    ? 'var(--color-warning-subtle)'
+  const badgeClass = lowCredit && credits === 1
+    ? 'bg-warning-subtle text-[oklch(0.50_0.14_85)]'
     : lowCredit && credits === 0
-    ? 'var(--color-destructive-subtle)'
-    : s.bg
-
-  const badgeColor = lowCredit && credits === 1
-    ? 'oklch(0.50 0.14 85)'
-    : lowCredit && credits === 0
-    ? 'var(--color-destructive)'
-    : s.color
+    ? 'bg-destructive-subtle text-destructive'
+    : TIER_CLASS[tier]
 
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '0.25rem',
-        padding: '0.15rem 0.5rem',
-        borderRadius: '9999px',
-        fontSize: '0.6875rem',
-        fontWeight: 600,
-        backgroundColor: badgeBg,
-        color: badgeColor,
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {s.label}
-      {typeof credits === 'number' && tier !== 'gold' && (
-        <> · {credits}</>
-      )}
+    <span className={`inline-flex items-center gap-1 py-[0.15rem] px-2 rounded-full text-[0.6875rem] font-semibold whitespace-nowrap ${badgeClass}`}>
+      {TIER_LABEL[tier]}
+      {typeof credits === 'number' && tier !== 'gold' && <> · {credits}</>}
     </span>
   )
 }
 
-/* ─── Check-in Button Group ────────────────────────────────────────────────── */
+/* ─── Check-in Button Group ── */
 
-const CHECKIN_BUTTONS: { status: AttendanceStatus; label: string; title: string; selectedBg: string; selectedColor: string }[] = [
-  { status: 'present', label: '✓', title: 'Present', selectedBg: 'var(--color-success)', selectedColor: 'var(--color-success-foreground)' },
-  { status: 'late',    label: 'L', title: 'Late',    selectedBg: 'var(--color-warning)', selectedColor: 'var(--color-warning-foreground)' },
-  { status: 'absent',  label: '—', title: 'Absent',  selectedBg: 'var(--color-muted)',   selectedColor: 'var(--color-foreground-secondary)' },
-  { status: 'trial',   label: 'T', title: 'Trial',   selectedBg: 'var(--color-secondary)', selectedColor: 'var(--color-secondary-foreground)' },
-]
+const STATUS_CLASSES: Record<AttendanceStatus, { selected: string; unselected: string }> = {
+  present: { selected: 'bg-success text-success-foreground border-0',           unselected: 'bg-card text-muted-foreground border border-border' },
+  late:    { selected: 'bg-warning text-warning-foreground border-0',            unselected: 'bg-card text-muted-foreground border border-border' },
+  absent:  { selected: 'bg-muted text-foreground-secondary border-0',            unselected: 'bg-card text-muted-foreground border border-border' },
+  trial:   { selected: 'bg-secondary text-secondary-foreground border-0',        unselected: 'bg-card text-muted-foreground border border-border' },
+}
+
+const STATUS_LABELS: Record<AttendanceStatus, { label: string; title: string }> = {
+  present: { label: '✓', title: 'Present' },
+  late:    { label: 'L', title: 'Late' },
+  absent:  { label: '—', title: 'Absent' },
+  trial:   { label: 'T', title: 'Trial' },
+}
 
 function CheckInButtons({
   studentId,
@@ -118,10 +95,12 @@ function CheckInButtons({
   onChange: (id: string, status: AttendanceStatus) => void
 }) {
   return (
-    <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }} role="group" aria-label="Check-in status">
-      {CHECKIN_BUTTONS.map(({ status, label, title, selectedBg, selectedColor }) => {
+    <div className="flex gap-1 shrink-0" role="group" aria-label="Check-in status">
+      {(Object.keys(STATUS_LABELS) as AttendanceStatus[]).map((status) => {
         const isSelected = current === status
         const isDimmed = current !== null && !isSelected
+        const { label, title } = STATUS_LABELS[status]
+        const classes = STATUS_CLASSES[status]
         return (
           <button
             key={status}
@@ -129,23 +108,7 @@ function CheckInButtons({
             aria-label={title}
             aria-pressed={isSelected}
             onClick={() => onChange(studentId, status)}
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '6px',
-              border: isSelected ? 'none' : '1px solid var(--color-border)',
-              backgroundColor: isSelected ? selectedBg : 'var(--color-card)',
-              color: isSelected ? selectedColor : 'var(--color-muted-foreground)',
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: isDimmed ? 0.35 : 1,
-              transition: 'background-color 0.12s, opacity 0.12s, border-color 0.12s',
-              fontFamily: 'inherit',
-            }}
+            className={`size-8 rounded-[6px] text-xs font-bold flex items-center justify-center transition-[background-color,opacity,border-color] duration-[120ms] cursor-pointer ${isSelected ? classes.selected : classes.unselected} ${isDimmed ? 'opacity-35' : ''}`}
           >
             {label}
           </button>
@@ -155,7 +118,7 @@ function CheckInButtons({
   )
 }
 
-/* ─── Student Row ──────────────────────────────────────────────────────────── */
+/* ─── Student Row ── */
 
 interface MockStudent {
   id: string
@@ -174,74 +137,43 @@ function StudentRow({
   onStatusChange: (id: string, s: AttendanceStatus) => void
 }) {
   const isCheckedIn = status !== null
-  const rowBg = status === 'present'
-    ? 'oklch(0.97 0.02 145)'
+  const rowBgClass = status === 'present'
+    ? 'bg-[oklch(0.97_0.02_145)]'
     : status === 'late'
-    ? 'oklch(0.98 0.02 85)'
-    : 'transparent'
+    ? 'bg-[oklch(0.98_0.02_85)]'
+    : 'bg-transparent'
+
+  const creditColor = typeof student.credits === 'number' && student.credits <= 1
+    ? 'text-destructive'
+    : student.credits === 2
+    ? 'text-[oklch(0.52_0.14_85)]'
+    : 'text-muted-foreground'
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.75rem',
-        padding: '0.625rem 1rem',
-        borderBottom: '1px solid var(--color-border)',
-        backgroundColor: rowBg,
-        transition: 'background-color 0.15s',
-        minHeight: '52px',
-      }}
-    >
-      {/* Avatar */}
+    <div className={`flex items-center gap-3 px-4 py-2.5 border-b border-border transition-[background-color] duration-150 min-h-[52px] ${rowBgClass}`}>
       <Avatar name={student.name} size={32} />
 
-      {/* Name + badge */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontSize: '0.875rem',
-            fontWeight: isCheckedIn ? 600 : 500,
-            color: 'var(--color-foreground)',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
+      <div className="flex-1 min-w-0">
+        <div className={`text-sm ${isCheckedIn ? 'font-semibold' : 'font-medium'} text-foreground whitespace-nowrap overflow-hidden text-ellipsis`}>
           {student.name}
         </div>
-        <div style={{ marginTop: '2px' }}>
+        <div className="mt-[2px]">
           <MembershipBadge tier={student.tier} credits={student.credits} />
         </div>
       </div>
 
-      {/* Credit info */}
       {typeof student.credits === 'number' && student.tier !== 'gold' && (
-        <div
-          style={{
-            fontSize: '0.75rem',
-            fontWeight: 500,
-            color: student.credits <= 1
-              ? 'var(--color-destructive)'
-              : student.credits === 2
-              ? 'oklch(0.52 0.14 85)'
-              : 'var(--color-muted-foreground)',
-            flexShrink: 0,
-            minWidth: '60px',
-            textAlign: 'right',
-          }}
-        >
+        <div className={`text-xs font-medium shrink-0 min-w-[60px] text-right ${creditColor}`}>
           {student.credits === 0 ? 'Expired' : `${student.credits} left`}
         </div>
       )}
 
-      {/* Check-in buttons */}
       <CheckInButtons studentId={student.id} current={status} onChange={onStatusChange} />
     </div>
   )
 }
 
-/* ─── Session Card ─────────────────────────────────────────────────────────── */
+/* ─── Session Card ── */
 
 interface MockSession {
   id: string
@@ -255,11 +187,11 @@ interface MockSession {
   students: MockStudent[]
 }
 
-const SESSION_STATUS_DOT: Record<string, string> = {
-  active:    'var(--color-success)',
-  planned:   'var(--color-warning)',
-  completed: 'var(--color-muted-foreground)',
-  cancelled: 'var(--color-destructive)',
+const STATUS_DOT_CLASS: Record<string, string> = {
+  active:    'bg-success',
+  planned:   'bg-warning',
+  completed: 'bg-muted-foreground',
+  cancelled: 'bg-destructive',
 }
 
 function SessionCard({
@@ -277,114 +209,44 @@ function SessionCard({
 
   const checkedInCount = session.students.filter((s) => checkIns[s.id] !== null && checkIns[s.id] !== undefined).length
   const presentCount = session.students.filter((s) => checkIns[s.id] === 'present').length
-
   const isActive = session.status === 'active'
-  const leftBorderColor = isActive ? 'var(--color-primary)' : 'transparent'
 
   return (
-    <div
-      style={{
-        backgroundColor: 'var(--color-card)',
-        border: '1px solid var(--color-border)',
-        borderLeft: `4px solid ${leftBorderColor}`,
-        borderRadius: '0.875rem',
-        overflow: 'hidden',
-        opacity: session.status === 'completed' ? 0.75 : 1,
-      }}
-    >
+    <div className={`bg-card border border-border rounded-[0.875rem] overflow-hidden border-l-4 ${isActive ? 'border-l-primary' : 'border-l-transparent'} ${session.status === 'completed' ? 'opacity-75' : ''}`}>
+
       {/* Card Header */}
       <button
         onClick={() => session.status !== 'cancelled' && setExpanded((e) => !e)}
         disabled={session.status === 'cancelled'}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          width: '100%',
-          padding: '0.875rem 1rem',
-          background: 'none',
-          border: 'none',
-          cursor: session.status === 'cancelled' ? 'default' : 'pointer',
-          gap: '0.625rem',
-          textAlign: 'left',
-          fontFamily: 'inherit',
-        }}
+        className={`flex items-center w-full px-4 py-3.5 bg-transparent border-0 gap-2.5 text-left ${session.status === 'cancelled' ? 'cursor-default' : 'cursor-pointer'}`}
       >
-        {/* Status dot */}
-        <div
-          style={{
-            width: '8px',
-            height: '8px',
-            borderRadius: '9999px',
-            backgroundColor: SESSION_STATUS_DOT[session.status],
-            flexShrink: 0,
-          }}
-        />
+        <div className={`size-2 rounded-full shrink-0 ${STATUS_DOT_CLASS[session.status]}`} />
 
-        {/* Session name + meta */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <span
-              style={{
-                fontSize: '0.9375rem',
-                fontWeight: 700,
-                color: 'var(--color-foreground)',
-                letterSpacing: '-0.01em',
-                textDecoration: session.status === 'cancelled' ? 'line-through' : 'none',
-              }}
-            >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-[0.9375rem] font-bold text-foreground tracking-[-0.01em] ${session.status === 'cancelled' ? 'line-through' : ''}`}>
               {session.name}
             </span>
             {session.type && (
-              <span
-                style={{
-                  fontSize: '0.6875rem',
-                  fontWeight: 600,
-                  padding: '0.15rem 0.5rem',
-                  borderRadius: '9999px',
-                  backgroundColor: 'var(--color-warning-subtle)',
-                  color: 'oklch(0.50 0.14 85)',
-                }}
-              >
+              <span className="text-[0.6875rem] font-semibold px-2 py-[0.15rem] rounded-full bg-warning-subtle text-[oklch(0.50_0.14_85)]">
                 {session.type}
               </span>
             )}
           </div>
-          <div style={{ fontSize: '0.8125rem', color: 'var(--color-muted-foreground)', marginTop: '2px' }}>
+          <div className="text-[0.8125rem] text-muted-foreground mt-[2px]">
             {session.time} · {session.teacher} · {session.room}
           </div>
         </div>
 
-        {/* Attendance summary */}
-        <div
-          style={{
-            fontSize: '0.8125rem',
-            fontWeight: 600,
-            color: checkedInCount > 0 ? 'var(--color-foreground)' : 'var(--color-muted-foreground)',
-            flexShrink: 0,
-            textAlign: 'right',
-          }}
-        >
-          {presentCount} <span style={{ fontWeight: 400, color: 'var(--color-muted-foreground)' }}>/ {session.students.length}</span>
+        <div className={`text-[0.8125rem] font-semibold shrink-0 text-right ${checkedInCount > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>
+          {presentCount} <span className="font-normal text-muted-foreground">/ {session.students.length}</span>
         </div>
 
-        {/* Chevron */}
         {session.status !== 'cancelled' && (
           <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-            style={{
-              color: 'var(--color-muted-foreground)',
-              flexShrink: 0,
-              transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.2s ease',
-            }}
+            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+            className={`text-muted-foreground shrink-0 transition-transform duration-200 ${expanded ? 'rotate-180' : 'rotate-0'}`}
           >
             <polyline points="6 9 12 15 18 9" />
           </svg>
@@ -393,30 +255,11 @@ function SessionCard({
 
       {/* Expanded: roster */}
       {expanded && (
-        <div style={{ borderTop: '1px solid var(--color-border)' }}>
+        <div className="border-t border-border">
           {/* Search / filter bar */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              padding: '0.625rem 1rem',
-              borderBottom: '1px solid var(--color-border)',
-              backgroundColor: 'var(--color-muted)',
-            }}
-          >
-            <div style={{ position: 'relative', flex: 1 }}>
-              <span
-                style={{
-                  position: 'absolute',
-                  left: '0.5rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: 'var(--color-muted-foreground)',
-                  display: 'flex',
-                  pointerEvents: 'none',
-                }}
-              >
+          <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border bg-muted">
+            <div className="relative flex-1">
+              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground flex pointer-events-none">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
@@ -424,34 +267,18 @@ function SessionCard({
               <input
                 type="text"
                 placeholder="Search students…"
-                style={{
-                  width: '100%',
-                  padding: '0.375rem 0.625rem 0.375rem 1.75rem',
-                  fontSize: '0.8125rem',
-                  borderRadius: '0.375rem',
-                  border: '1px solid var(--color-border)',
-                  backgroundColor: 'var(--color-card)',
-                  color: 'var(--color-foreground)',
-                  outline: 'none',
-                  fontFamily: 'inherit',
-                }}
+                className="form-input w-full pl-7 text-[0.8125rem] rounded-md"
               />
             </div>
-            <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+            <div className="flex gap-1 shrink-0">
               {['All', 'Unchecked', 'Present'].map((f) => (
                 <span
                   key={f}
-                  style={{
-                    fontSize: '0.6875rem',
-                    fontWeight: 600,
-                    padding: '0.25rem 0.625rem',
-                    borderRadius: '9999px',
-                    backgroundColor: f === 'All' ? 'var(--color-primary)' : 'var(--color-card)',
-                    color: f === 'All' ? 'var(--color-primary-foreground)' : 'var(--color-muted-foreground)',
-                    border: f === 'All' ? 'none' : '1px solid var(--color-border)',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                  }}
+                  className={`text-[0.6875rem] font-semibold px-2.5 py-1 rounded-full cursor-pointer whitespace-nowrap ${
+                    f === 'All'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-card text-muted-foreground border border-border'
+                  }`}
                 >
                   {f}
                 </span>
@@ -470,31 +297,11 @@ function SessionCard({
           ))}
 
           {/* Footer */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '0.625rem 1rem',
-              backgroundColor: 'var(--color-muted)',
-              borderTop: '1px solid var(--color-border)',
-            }}
-          >
-            <span style={{ fontSize: '0.75rem', color: 'var(--color-muted-foreground)', fontWeight: 500 }}>
+          <div className="flex items-center justify-between px-4 py-2.5 bg-muted border-t border-border">
+            <span className="text-xs text-muted-foreground font-medium">
               {session.students.length} students · {presentCount} present · {checkedInCount - presentCount} other · {session.students.length - checkedInCount} unchecked
             </span>
-            <button
-              style={{
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                color: 'var(--color-primary)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-                fontFamily: 'inherit',
-              }}
-            >
+            <button className="text-[0.8125rem] font-semibold text-primary bg-transparent border-0 cursor-pointer p-0">
               + Add Drop-in
             </button>
           </div>
@@ -504,7 +311,7 @@ function SessionCard({
   )
 }
 
-/* ─── Attendance Page ──────────────────────────────────────────────────────── */
+/* ─── Attendance Page ── */
 
 const MOCK_SESSIONS: MockSession[] = [
   {
@@ -558,24 +365,14 @@ export function AttendancePage() {
   const activeCount = MOCK_SESSIONS.filter((s) => s.status === 'active').length
 
   return (
-    <div className="page-enter" style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <div className="page-enter p-7 flex flex-col gap-4">
 
       {/* Date header */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0.75rem 1rem',
-          backgroundColor: 'var(--color-card)',
-          border: '1px solid var(--color-border)',
-          borderRadius: '0.75rem',
-        }}
-      >
-        <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-foreground)', letterSpacing: '-0.01em' }}>
+      <div className="flex items-center justify-between px-4 py-3 bg-card border border-border rounded-[0.75rem]">
+        <span className="text-[0.9375rem] font-bold text-foreground tracking-[-0.01em]">
           {formattedDate}
         </span>
-        <span style={{ fontSize: '0.8125rem', color: 'var(--color-muted-foreground)', fontWeight: 500 }}>
+        <span className="text-[0.8125rem] text-muted-foreground font-medium">
           {sessionCount} sessions · {activeCount} active
         </span>
       </div>

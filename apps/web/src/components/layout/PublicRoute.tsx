@@ -6,17 +6,8 @@ export function PublicRoute({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>
-        <div
-          style={{
-            width: '2rem',
-            height: '2rem',
-            borderRadius: '9999px',
-            border: '4px solid var(--color-primary)',
-            borderTopColor: 'transparent',
-            animation: 'spin 0.75s linear infinite',
-          }}
-        />
+      <div className="flex h-screen items-center justify-center">
+        <div className="size-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
       </div>
     )
   }

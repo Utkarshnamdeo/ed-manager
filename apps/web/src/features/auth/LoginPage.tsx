@@ -27,79 +27,32 @@ export function LoginPage() {
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        minHeight: '100vh',
-        backgroundColor: 'var(--color-background)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1.5rem',
-      }}
-    >
+    <div className="flex min-h-screen bg-background items-center justify-center p-6">
       {/* Card */}
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '22rem',
-          backgroundColor: 'var(--color-card)',
-          borderRadius: '1.25rem',
-          border: '1px solid var(--color-border)',
-          padding: '2.5rem 2rem',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
-        }}
-      >
+      <div className="w-full max-w-[22rem] bg-card rounded-[1.25rem] border border-border py-10 px-8 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+
         {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '2rem' }}>
-          <div
-            style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '9px',
-              background: 'var(--color-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '0.8125rem',
-              fontWeight: 800,
-              color: 'var(--color-primary-foreground)',
-              flexShrink: 0,
-            }}
-          >
+        <div className="flex items-center gap-2.5 mb-8">
+          <div className="size-9 rounded-[9px] bg-primary flex items-center justify-center text-[0.8125rem] font-extrabold text-primary-foreground shrink-0">
             EM
           </div>
-          <span
-            style={{
-              fontSize: '1.0625rem',
-              fontWeight: 800,
-              color: 'var(--color-foreground)',
-              letterSpacing: '-0.02em',
-            }}
-          >
+          <span className="text-[1.0625rem] font-extrabold text-foreground tracking-[-0.02em]">
             {t('login.title')}
           </span>
         </div>
 
         {/* Heading */}
-        <div style={{ marginBottom: '1.75rem' }}>
-          <h1
-            style={{
-              fontSize: '1.5rem',
-              fontWeight: 800,
-              margin: '0 0 0.375rem',
-              letterSpacing: '-0.03em',
-              color: 'var(--color-foreground)',
-            }}
-          >
+        <div className="mb-7">
+          <h1 className="text-2xl font-extrabold m-0 mb-1.5 tracking-[-0.03em] text-foreground">
             {t('login.heading')}
           </h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--color-muted-foreground)', margin: 0 }}>
+          <p className="text-sm text-muted-foreground m-0">
             {t('login.subtitle')}
           </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Field
             id="email"
             label={t('login.email')}
@@ -122,14 +75,7 @@ export function LoginPage() {
           {error && (
             <div
               role="alert"
-              style={{
-                fontSize: '0.8125rem',
-                color: 'var(--color-destructive)',
-                backgroundColor: 'var(--color-destructive-subtle)',
-                padding: '0.625rem 0.875rem',
-                borderRadius: '0.5rem',
-                fontWeight: 500,
-              }}
+              className="text-[0.8125rem] text-destructive bg-destructive-subtle px-3.5 py-2.5 rounded-lg font-medium"
             >
               {error}
             </div>
@@ -138,20 +84,11 @@ export function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            style={{
-              marginTop: '0.25rem',
-              height: '42px',
-              borderRadius: '0.625rem',
-              border: 'none',
-              backgroundColor: loading ? 'var(--color-primary-hover)' : 'var(--color-primary)',
-              color: 'var(--color-primary-foreground)',
-              fontSize: '0.9375rem',
-              fontWeight: 700,
-              cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'background-color 0.15s',
-              width: '100%',
-              letterSpacing: '-0.01em',
-            }}
+            className={`mt-1 h-[42px] rounded-[0.625rem] border-0 text-[0.9375rem] font-bold tracking-[-0.01em] w-full transition-[background-color] duration-150 disabled:opacity-[0.55] ${
+              loading
+                ? 'bg-primary-hover text-primary-foreground cursor-not-allowed'
+                : 'bg-primary text-primary-foreground cursor-pointer'
+            }`}
           >
             {loading ? t('login.signingIn') : t('login.submit')}
           </button>
@@ -161,7 +98,7 @@ export function LoginPage() {
   )
 }
 
-/* ─── Field ────────────────────────────────────────────────────────────────── */
+/* ─── Field ── */
 
 function Field({
   id,
@@ -181,10 +118,10 @@ function Field({
   placeholder?: string
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+    <div className="flex flex-col gap-1.5">
       <label
         htmlFor={id}
-        style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-foreground-secondary)' }}
+        className="text-[0.8125rem] font-semibold text-foreground-secondary"
       >
         {label}
       </label>
@@ -196,28 +133,7 @@ function Field({
         required
         autoComplete={autoComplete}
         placeholder={placeholder}
-        style={{
-          height: '42px',
-          borderRadius: '0.625rem',
-          border: '1.5px solid var(--color-border)',
-          backgroundColor: 'var(--color-background)',
-          padding: '0 0.875rem',
-          fontSize: '0.9375rem',
-          color: 'var(--color-foreground)',
-          outline: 'none',
-          width: '100%',
-          transition: 'border-color 0.15s, box-shadow 0.15s',
-        }}
-        onFocus={(e) => {
-          e.target.style.borderColor = 'var(--color-primary)'
-          e.target.style.boxShadow = '0 0 0 3px var(--color-primary-subtle)'
-          e.target.style.backgroundColor = 'var(--color-card)'
-        }}
-        onBlur={(e) => {
-          e.target.style.borderColor = 'var(--color-border)'
-          e.target.style.boxShadow = 'none'
-          e.target.style.backgroundColor = 'var(--color-background)'
-        }}
+        className="h-[42px] rounded-[0.625rem] border-[1.5px] border-border bg-background px-3.5 text-[0.9375rem] text-foreground outline-none w-full transition-[border-color,box-shadow,background-color] duration-150 focus:border-primary focus:shadow-[0_0_0_3px_var(--color-primary-subtle)] focus:bg-card placeholder:text-muted-foreground"
       />
     </div>
   )

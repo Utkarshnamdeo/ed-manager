@@ -1,12 +1,12 @@
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 
-/* ─── Sparkline ────────────────────────────────────────────────────────────── */
+/* ─── Sparkline ── */
 
 function Sparkline({ points, color, id }: { points: string; color: string; id: string }) {
   const lastX = points.split(' ').pop()?.split(',')[0] ?? '200'
   return (
-    <svg viewBox="0 0 200 44" preserveAspectRatio="none" style={{ width: '100%', height: '44px', display: 'block' }} aria-hidden="true">
+    <svg viewBox="0 0 200 44" preserveAspectRatio="none" className="w-full h-[44px] block" aria-hidden="true">
       <defs>
         <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={color} stopOpacity="0.15" />
@@ -19,110 +19,112 @@ function Sparkline({ points, color, id }: { points: string; color: string; id: s
   )
 }
 
-/* ─── Stat Card ────────────────────────────────────────────────────────────── */
+/* ─── Stat Card ── */
 
 interface StatCardProps {
   label: string
   value: string
   badge: string
-  badgeBg: string
-  badgeColor: string
-  iconBg: string
-  iconColor: string
-  icon: React.ReactNode
+  badgeClass: string
+  iconClass: string
   sparkPoints: string
   sparkColor: string
   sparkId: string
   trend: string
   trendUp: boolean
+  icon: React.ReactNode
 }
 
 function StatCard(p: StatCardProps) {
   return (
-    <div style={{
-      backgroundColor: 'var(--color-card)',
-      border: '1px solid var(--color-border)',
-      borderRadius: '1rem',
-      padding: '1.25rem 1.25rem 0',
-      overflow: 'hidden',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0.875rem',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-        <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: p.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: p.iconColor }}>
+    <div className="bg-card border border-border rounded-[1rem] pt-5 px-5 pb-0 overflow-hidden flex flex-col gap-3.5">
+      <div className="flex items-start justify-between">
+        <div className={`size-10 rounded-[10px] flex items-center justify-center ${p.iconClass}`}>
           {p.icon}
         </div>
-        <span style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.02em', padding: '0.2rem 0.5rem', borderRadius: '9999px', backgroundColor: p.badgeBg, color: p.badgeColor }}>
+        <span className={`text-[0.6875rem] font-bold tracking-[0.02em] px-2 py-[0.2rem] rounded-full ${p.badgeClass}`}>
           {p.badge}
         </span>
       </div>
       <div>
-        <div style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-muted-foreground)', marginBottom: '0.25rem' }}>
+        <div className="text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-muted-foreground mb-1">
           {p.label}
         </div>
-        <div style={{ fontSize: '1.875rem', fontWeight: 800, color: 'var(--color-foreground)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+        <div className="text-[1.875rem] font-extrabold text-foreground tracking-[-0.03em] leading-[1.1]">
           {p.value}
         </div>
-        <div style={{ fontSize: '0.75rem', fontWeight: 500, color: p.trendUp ? 'var(--color-success)' : 'var(--color-destructive)', marginTop: '0.25rem' }}>
+        <div className={`text-xs font-medium mt-1 ${p.trendUp ? 'text-success' : 'text-destructive'}`}>
           {p.trend}
         </div>
       </div>
-      <div style={{ margin: '0 -1.25rem' }}>
+      <div className="-mx-5">
         <Sparkline points={p.sparkPoints} color={p.sparkColor} id={p.sparkId} />
       </div>
     </div>
   )
 }
 
-/* ─── Schedule Row ─────────────────────────────────────────────────────────── */
+/* ─── Schedule Row ── */
+
+const SCHEDULE_DOT_CLASS = {
+  active:    'bg-success',
+  planned:   'bg-warning',
+  completed: 'bg-muted-foreground',
+} as const
+
+const SCHEDULE_BADGE_CLASS = {
+  active:    'bg-success-subtle text-success',
+  planned:   'bg-warning-subtle text-[oklch(0.48_0.14_85)]',
+  completed: 'bg-muted text-muted-foreground',
+} as const
+
+const SCHEDULE_LABEL = {
+  active:    'Active',
+  planned:   'Planned',
+  completed: 'Done',
+} as const
 
 function ScheduleRow({ name, time, teacher, enrolled, capacity, status }: {
   name: string; time: string; teacher: string
   enrolled: number; capacity: number; status: 'active' | 'planned' | 'completed'
 }) {
-  const dot = { active: 'var(--color-success)', planned: 'var(--color-warning)', completed: 'var(--color-muted-foreground)' }[status]
-  const badgeBg = { active: 'var(--color-success-subtle)', planned: 'var(--color-warning-subtle)', completed: 'var(--color-muted)' }[status]
-  const badgeColor = { active: 'var(--color-success)', planned: 'oklch(0.48 0.14 85)', completed: 'var(--color-muted-foreground)' }[status]
-  const label = { active: 'Active', planned: 'Planned', completed: 'Done' }[status]
-
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--color-border)' }}>
-      <div style={{ width: '8px', height: '8px', borderRadius: '9999px', backgroundColor: dot, flexShrink: 0 }} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{name}</div>
-        <div style={{ fontSize: '0.75rem', color: 'var(--color-muted-foreground)', marginTop: '1px' }}>{time} · {teacher}</div>
+    <div className="flex items-center gap-4 px-5 py-3.5 border-b border-border last:border-b-0">
+      <div className={`size-2 rounded-full shrink-0 ${SCHEDULE_DOT_CLASS[status]}`} />
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold">{name}</div>
+        <div className="text-xs text-muted-foreground mt-[1px]">{time} · {teacher}</div>
       </div>
-      <div style={{ fontSize: '0.875rem', fontWeight: 600, textAlign: 'right', flexShrink: 0 }}>
-        {enrolled} <span style={{ fontWeight: 400, color: 'var(--color-muted-foreground)' }}>/ {capacity}</span>
+      <div className="text-sm font-semibold text-right shrink-0">
+        {enrolled} <span className="font-normal text-muted-foreground">/ {capacity}</span>
       </div>
-      <span style={{ fontSize: '0.6875rem', fontWeight: 700, padding: '0.2rem 0.625rem', borderRadius: '9999px', backgroundColor: badgeBg, color: badgeColor, flexShrink: 0 }}>
-        {label}
+      <span className={`text-[0.6875rem] font-bold px-2.5 py-[0.2rem] rounded-full shrink-0 ${SCHEDULE_BADGE_CLASS[status]}`}>
+        {SCHEDULE_LABEL[status]}
       </span>
     </div>
   )
 }
 
-/* ─── Dashboard Page ───────────────────────────────────────────────────────── */
+/* ─── Dashboard Page ── */
 
 export function DashboardPage() {
   const { t } = useTranslation()
   const { appUser } = useAuth()
 
   return (
-    <div className="page-enter" style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div className="page-enter p-7 flex flex-col gap-6">
 
       {/* Welcome line */}
-      <p style={{ margin: 0, fontSize: '0.9375rem', color: 'var(--color-muted-foreground)' }}>
+      <p className="m-0 text-[0.9375rem] text-muted-foreground">
         {t('dashboard.welcome', { name: appUser?.displayName ?? '' })}
       </p>
 
       {/* Stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+      <div className="grid grid-cols-4 gap-4">
         <StatCard
           label="Today's Sessions" value="4" badge="3 active"
-          badgeBg="var(--color-success-subtle)" badgeColor="var(--color-success)"
-          iconBg="var(--color-primary-subtle)" iconColor="var(--color-primary)"
+          badgeClass="bg-success-subtle text-success"
+          iconClass="bg-primary-subtle text-primary"
           sparkPoints="0,36 40,28 80,32 120,18 160,22 200,14"
           sparkColor="oklch(0.55 0.22 265)" sparkId="sp-sessions"
           trend="↑ 1 more than yesterday" trendUp={true}
@@ -130,8 +132,8 @@ export function DashboardPage() {
         />
         <StatCard
           label="Total Students" value="127" badge="Active"
-          badgeBg="var(--color-secondary-subtle)" badgeColor="var(--color-secondary)"
-          iconBg="var(--color-secondary-subtle)" iconColor="var(--color-secondary)"
+          badgeClass="bg-secondary-subtle text-secondary"
+          iconClass="bg-secondary-subtle text-secondary"
           sparkPoints="0,36 40,24 80,30 120,20 160,26 200,16"
           sparkColor="oklch(0.55 0.22 285)" sparkId="sp-students"
           trend="↑ 3 enrolled this week" trendUp={true}
@@ -139,8 +141,8 @@ export function DashboardPage() {
         />
         <StatCard
           label="Active Passes" value="89" badge="70%"
-          badgeBg="var(--color-success-subtle)" badgeColor="var(--color-success)"
-          iconBg="var(--color-success-subtle)" iconColor="var(--color-success)"
+          badgeClass="bg-success-subtle text-success"
+          iconClass="bg-success-subtle text-success"
           sparkPoints="0,36 40,30 80,34 120,22 160,18 200,14"
           sparkColor="oklch(0.60 0.18 145)" sparkId="sp-passes"
           trend="↑ 4 new this month" trendUp={true}
@@ -148,8 +150,8 @@ export function DashboardPage() {
         />
         <StatCard
           label="Check-ins This Week" value="156" badge="+12%"
-          badgeBg="var(--color-warning-subtle)" badgeColor="oklch(0.48 0.14 85)"
-          iconBg="var(--color-warning-subtle)" iconColor="oklch(0.55 0.16 85)"
+          badgeClass="bg-warning-subtle text-[oklch(0.48_0.14_85)]"
+          iconClass="bg-warning-subtle text-[oklch(0.55_0.16_85)]"
           sparkPoints="0,36 40,28 80,34 120,14 160,24 200,20"
           sparkColor="oklch(0.70 0.18 85)" sparkId="sp-checkins"
           trend="↑ 17 vs last week" trendUp={true}
@@ -157,14 +159,14 @@ export function DashboardPage() {
         />
       </div>
 
-      {/* Today's schedule — 2 sessions only */}
-      <div style={{ backgroundColor: 'var(--color-card)', border: '1px solid var(--color-border)', borderRadius: '1rem', overflow: 'hidden' }}>
-        <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* Today's schedule */}
+      <div className="bg-card border border-border rounded-[1rem] overflow-hidden">
+        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
           <div>
-            <h2 style={{ fontSize: '0.9375rem', fontWeight: 700, margin: 0, letterSpacing: '-0.01em' }}>Today's Schedule</h2>
-            <p style={{ fontSize: '0.75rem', color: 'var(--color-muted-foreground)', margin: '2px 0 0' }}>2 upcoming · 1 done</p>
+            <h2 className="text-[0.9375rem] font-bold m-0 tracking-[-0.01em]">Today's Schedule</h2>
+            <p className="text-xs text-muted-foreground m-0 mt-[2px]">2 upcoming · 1 done</p>
           </div>
-          <a href="/attendance" style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-primary)', textDecoration: 'none' }}>
+          <a href="/attendance" className="text-[0.8125rem] font-bold text-primary no-underline">
             Open check-in →
           </a>
         </div>
@@ -174,15 +176,15 @@ export function DashboardPage() {
       </div>
 
       {/* Dev: Firebase Emulator Status */}
-      <div style={{ backgroundColor: 'var(--color-card)', border: '1px solid var(--color-border)', borderRadius: '1rem', padding: '1rem 1.25rem' }}>
-        <h2 style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-muted-foreground)', margin: '0 0 0.625rem' }}>
+      <div className="bg-card border border-border rounded-[1rem] px-5 py-4">
+        <h2 className="text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-muted-foreground m-0 mb-2.5">
           {t('dashboard.emulatorStatus')}
         </h2>
-        <div style={{ display: 'flex', gap: '1.5rem', fontFamily: 'ui-monospace, monospace', fontSize: '0.8125rem' }}>
+        <div className="flex gap-6 font-mono text-[0.8125rem]">
           {[['Auth', 9099], ['Firestore', 8080], ['Functions', 5001], ['UI', 4000]].map(([label, port]) => (
-            <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-              <span style={{ fontSize: '0.6875rem', color: 'var(--color-muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
-              <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>:{port}</span>
+            <div key={label} className="flex flex-col gap-[1px]">
+              <span className="text-[0.6875rem] text-muted-foreground uppercase tracking-[0.05em]">{label}</span>
+              <span className="text-success font-semibold">:{port}</span>
             </div>
           ))}
         </div>
@@ -192,7 +194,7 @@ export function DashboardPage() {
   )
 }
 
-/* ─── Icons ────────────────────────────────────────────────────────────────── */
+/* ─── Icons ── */
 
 function IconCalendar() {
   return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>

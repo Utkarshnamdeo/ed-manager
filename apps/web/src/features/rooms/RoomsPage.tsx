@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useRooms, useCreateRoom, useUpdateRoom } from '../../hooks/useRooms'
 import type { Room } from '../../types'
 
-/* ─── Icons ────────────────────────────────────────────────────────────────── */
+/* ─── Icons ── */
 
 function IconEdit() {
   return (
@@ -23,7 +23,7 @@ function IconPlus() {
   )
 }
 
-/* ─── Room Row ─────────────────────────────────────────────────────────────── */
+/* ─── Room Row ── */
 
 function RoomRow({ room, canManage }: { room: Room; canManage: boolean }) {
   const { t } = useTranslation('rooms')
@@ -56,12 +56,8 @@ function RoomRow({ room, canManage }: { room: Room; canManage: boolean }) {
 
   if (confirmDeactivate) {
     return (
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: '0.75rem',
-        padding: '0.75rem 1.25rem', borderTop: '1px solid var(--color-border)',
-        backgroundColor: 'var(--color-destructive-subtle)',
-      }}>
-        <span style={{ flex: 1, fontSize: '0.875rem', color: 'var(--color-foreground)' }}>
+      <div className="flex items-center gap-3 px-5 py-3 border-t border-border bg-destructive-subtle">
+        <span className="flex-1 text-sm text-foreground">
           {t('actions.deactivateConfirm', { name: room.name })}
         </span>
         <button onClick={handleCancel} className="btn-secondary">{t('actions.cancel')}</button>
@@ -73,30 +69,23 @@ function RoomRow({ room, canManage }: { room: Room; canManage: boolean }) {
   }
 
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: '0.75rem',
-      padding: '0.75rem 1.25rem', borderTop: '1px solid var(--color-border)',
-      opacity: room.active ? 1 : 0.5,
-      transition: 'opacity 0.15s',
-    }}>
+    <div className={`flex items-center gap-3 px-5 py-3 border-t border-border transition-opacity duration-150 ${room.active ? 'opacity-100' : 'opacity-50'}`}>
       {editing ? (
         <>
           <input
-            className="form-input"
+            className="form-input flex-[2]"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t('form.name')}
-            style={{ flex: 2 }}
             autoFocus
           />
           <input
-            className="form-input"
+            className="form-input w-[110px]"
             type="number"
             min="1"
             value={capacity}
             onChange={(e) => setCapacity(e.target.value)}
             placeholder={t('form.capacity')}
-            style={{ width: '110px' }}
           />
           <button onClick={handleSave} disabled={updateRoom.isPending || !name.trim()} className="btn-primary">
             {updateRoom.isPending ? '…' : t('actions.save')}
@@ -105,39 +94,29 @@ function RoomRow({ room, canManage }: { room: Room; canManage: boolean }) {
         </>
       ) : (
         <>
-          <div style={{ flex: 2, fontSize: '0.9375rem', fontWeight: 600, color: 'var(--color-foreground)' }}>
+          <div className="flex-[2] text-[0.9375rem] font-semibold text-foreground">
             {room.name}
           </div>
-          <div style={{ width: '110px', fontSize: '0.875rem', color: 'var(--color-muted-foreground)' }}>
+          <div className="w-[110px] text-sm text-muted-foreground">
             {room.capacity != null ? room.capacity : '—'}
           </div>
           {canManage && (
-            <div style={{ display: 'flex', gap: '0.25rem' }}>
+            <div className="flex gap-1">
               <button
                 onClick={() => setEditing(true)}
                 title={t('actions.edit')}
-                style={{
-                  width: 32, height: 32, borderRadius: '6px', border: 'none',
-                  backgroundColor: 'transparent', cursor: 'pointer',
-                  color: 'var(--color-muted-foreground)', display: 'flex',
-                  alignItems: 'center', justifyContent: 'center', transition: 'background-color 0.1s',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-muted)')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                className="size-8 rounded-[6px] border-0 bg-transparent cursor-pointer text-muted-foreground flex items-center justify-center transition-[background-color] duration-100 hover:bg-muted"
               >
                 <IconEdit />
               </button>
               <button
                 onClick={() => room.active ? setConfirmDeactivate(true) : handleToggleActive()}
                 title={room.active ? t('actions.deactivate') : t('actions.activate')}
-                style={{
-                  padding: '0 0.625rem', height: 32, borderRadius: '6px', border: 'none',
-                  backgroundColor: 'transparent', cursor: 'pointer', fontSize: '0.75rem',
-                  fontWeight: 500, color: room.active ? 'var(--color-destructive)' : 'var(--color-success)',
-                  transition: 'background-color 0.1s',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = room.active ? 'var(--color-destructive-subtle)' : 'var(--color-success-subtle)')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                className={`px-2.5 h-8 rounded-[6px] border-0 bg-transparent cursor-pointer text-xs font-medium transition-[background-color] duration-100 ${
+                  room.active
+                    ? 'text-destructive hover:bg-destructive-subtle'
+                    : 'text-success hover:bg-success-subtle'
+                }`}
               >
                 {room.active ? t('actions.deactivate') : t('actions.activate')}
               </button>
@@ -149,7 +128,7 @@ function RoomRow({ room, canManage }: { room: Room; canManage: boolean }) {
   )
 }
 
-/* ─── Add Room Row ─────────────────────────────────────────────────────────── */
+/* ─── Add Room Row ── */
 
 function AddRoomRow({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation('rooms')
@@ -168,28 +147,22 @@ function AddRoomRow({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: '0.75rem',
-      padding: '0.75rem 1.25rem', borderTop: '1px solid var(--color-border)',
-      backgroundColor: 'var(--color-background)',
-    }}>
+    <div className="flex items-center gap-3 px-5 py-3 border-t border-border bg-background">
       <input
-        className="form-input"
+        className="form-input flex-[2]"
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder={t('form.name')}
-        style={{ flex: 2 }}
         autoFocus
         onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onClose() }}
       />
       <input
-        className="form-input"
+        className="form-input w-[110px]"
         type="number"
         min="1"
         value={capacity}
         onChange={(e) => setCapacity(e.target.value)}
         placeholder={t('form.capacity')}
-        style={{ width: '110px' }}
         onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onClose() }}
       />
       <button onClick={handleSave} disabled={createRoom.isPending || !name.trim()} className="btn-primary">
@@ -200,7 +173,7 @@ function AddRoomRow({ onClose }: { onClose: () => void }) {
   )
 }
 
-/* ─── Rooms Page ───────────────────────────────────────────────────────────── */
+/* ─── Rooms Page ── */
 
 export function RoomsPage() {
   const { t } = useTranslation('rooms')
@@ -211,18 +184,17 @@ export function RoomsPage() {
   const [showAddRow, setShowAddRow] = useState(false)
 
   return (
-    <div className="page-enter" style={{ padding: '1.75rem', maxWidth: '700px' }}>
+    <div className="page-enter p-7 max-w-[700px]">
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, letterSpacing: '-0.025em', color: 'var(--color-foreground)' }}>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-extrabold m-0 tracking-[-0.025em] text-foreground">
           {t('title')}
         </h1>
         {canManage && !showAddRow && (
           <button
             onClick={() => setShowAddRow(true)}
-            className="btn-primary"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}
+            className="btn-primary flex items-center gap-1.5"
           >
             <IconPlus />
             {t('addRoom')}
@@ -231,35 +203,31 @@ export function RoomsPage() {
       </div>
 
       {/* List */}
-      <div style={{ backgroundColor: 'var(--color-card)', border: '1px solid var(--color-border)', borderRadius: '0.75rem', overflow: 'hidden' }}>
+      <div className="bg-card border border-border rounded-[0.75rem] overflow-hidden">
 
         {/* Column headers */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '0.75rem',
-          padding: '0.5rem 1.25rem',
-          backgroundColor: 'var(--color-muted)', borderBottom: '1px solid var(--color-border)',
-        }}>
-          <div style={{ flex: 2, fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+        <div className="flex items-center gap-3 px-5 py-2 bg-muted border-b border-border">
+          <div className="flex-[2] text-xs font-semibold text-muted-foreground uppercase tracking-[0.04em]">
             {t('form.name')}
           </div>
-          <div style={{ width: '110px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <div className="w-[110px] text-xs font-semibold text-muted-foreground uppercase tracking-[0.04em]">
             {t('form.capacity')}
           </div>
-          {canManage && <div style={{ width: '120px' }} />}
+          {canManage && <div className="w-[120px]" />}
         </div>
 
         {isLoading && (
-          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-muted-foreground)', fontSize: '0.875rem' }}>…</div>
+          <div className="p-12 text-center text-muted-foreground text-sm">…</div>
         )}
 
         {isError && (
-          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-destructive)', fontSize: '0.875rem' }}>
+          <div className="p-12 text-center text-destructive text-sm">
             {t('errors.failedToLoad', { ns: 'common' })}
           </div>
         )}
 
         {rooms && rooms.length === 0 && !showAddRow && (
-          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-muted-foreground)', fontSize: '0.875rem' }}>
+          <div className="p-12 text-center text-muted-foreground text-sm">
             {t('noRooms')}
           </div>
         )}

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { auth } from '../../lib/firebase'
 import { useAuth } from '../../contexts/AuthContext'
 
-/* ─── Page title map ───────────────────────────────────────────────────────── */
+/* ─── Page title map ── */
 
 const PAGE_TITLE_KEYS: Record<string, string> = {
   '/dashboard':  'nav.dashboard',
@@ -16,7 +16,6 @@ const PAGE_TITLE_KEYS: Record<string, string> = {
   '/settings':   'nav.settings',
 }
 
-
 function usePageTitle() {
   const { t } = useTranslation()
   const { pathname } = useLocation()
@@ -26,7 +25,7 @@ function usePageTitle() {
   return key ? t(key) : t('app.name')
 }
 
-/* ─── Icons ────────────────────────────────────────────────────────────────── */
+/* ─── Icons ── */
 
 function IconDashboard() {
   return (
@@ -131,24 +130,17 @@ function IconBell() {
   )
 }
 
-/* ─── Avatar utility ───────────────────────────────────────────────────────── */
+/* ─── Helpers ── */
 
 function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .slice(0, 2)
-    .map((p) => p[0])
-    .join('')
-    .toUpperCase()
+  return name.split(' ').slice(0, 2).map((p) => p[0]).join('').toUpperCase()
 }
-
-/* ─── Nav class helper ─────────────────────────────────────────────────────── */
 
 function navClass({ isActive }: { isActive: boolean }) {
   return isActive ? 'sidebar-nav-item-active' : 'sidebar-nav-item'
 }
 
-/* ─── Language Toggle ──────────────────────────────────────────────────────── */
+/* ─── Language Toggle ── */
 
 function LanguageToggle() {
   const { i18n, t } = useTranslation()
@@ -158,15 +150,7 @@ function LanguageToggle() {
   return (
     <div
       aria-label={t('language.toggle')}
-      style={{
-        display: 'flex',
-        height: '36px',
-        borderRadius: '9999px',
-        border: '1px solid var(--color-border)',
-        backgroundColor: 'var(--color-card)',
-        overflow: 'hidden',
-        flexShrink: 0,
-      }}
+      className="flex h-9 rounded-full border border-border bg-card overflow-hidden shrink-0"
     >
       {langs.map((lang) => {
         const isActive = current === lang
@@ -175,18 +159,11 @@ function LanguageToggle() {
             key={lang}
             onClick={() => i18n.changeLanguage(lang)}
             aria-pressed={isActive}
-            style={{
-              width: '36px',
-              height: '100%',
-              border: 'none',
-              backgroundColor: isActive ? 'var(--color-primary-subtle)' : 'transparent',
-              color: isActive ? 'var(--color-primary)' : 'var(--color-muted-foreground)',
-              fontSize: '0.6875rem',
-              fontWeight: isActive ? 700 : 500,
-              cursor: isActive ? 'default' : 'pointer',
-              letterSpacing: '0.03em',
-              transition: 'background-color 0.15s, color 0.15s',
-            }}
+            className={`w-9 h-full border-0 text-[0.6875rem] tracking-[0.03em] transition-[background-color,color] duration-150 ${
+              isActive
+                ? 'bg-primary-subtle text-primary font-bold cursor-default'
+                : 'bg-transparent text-muted-foreground font-medium cursor-pointer'
+            }`}
           >
             {t(`language.${lang}`)}
           </button>
@@ -196,7 +173,7 @@ function LanguageToggle() {
   )
 }
 
-/* ─── Shell ────────────────────────────────────────────────────────────────── */
+/* ─── Shell ── */
 
 export function Shell() {
   const { t } = useTranslation()
@@ -211,8 +188,6 @@ export function Shell() {
 
   const isAdmin = appUser?.role === 'admin'
   const isStaff = appUser?.role === 'staff'
-  // Nav visibility: all staff can access Students and Reports pages.
-  // Permission flags gate actions/sections *within* those pages, not the nav entry.
   const canViewStudents = isAdmin || isStaff
   const canViewReports = isAdmin || isStaff
 
@@ -222,64 +197,22 @@ export function Shell() {
     : ''
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+    <div className="flex h-screen overflow-hidden">
 
       {/* ── Light Sidebar (BankDash-style) ── */}
-      <aside
-        style={{
-          width: '15rem',
-          flexShrink: 0,
-          backgroundColor: 'var(--color-sidebar-bg)',
-          borderRight: '1px solid var(--color-sidebar-border)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}
-      >
+      <aside className="w-60 shrink-0 bg-sidebar-bg border-r border-r-sidebar-border flex flex-col overflow-hidden">
+
         {/* Logo block */}
-        <div
-          style={{
-            height: '64px',
-            padding: '0 1.25rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.625rem',
-            borderBottom: '1px solid var(--color-sidebar-border)',
-            flexShrink: 0,
-          }}
-        >
-          <div
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '8px',
-              background: 'var(--color-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '0.75rem',
-              fontWeight: 800,
-              color: 'var(--color-primary-foreground)',
-              letterSpacing: '-0.01em',
-              flexShrink: 0,
-            }}
-          >
+        <div className="h-16 px-5 flex items-center gap-2.5 border-b border-b-sidebar-border shrink-0">
+          <div className="size-8 rounded-[8px] bg-primary flex items-center justify-center text-[0.75rem] font-extrabold text-primary-foreground tracking-[-0.01em] shrink-0">
             EM
           </div>
           <div>
-            <div
-              style={{
-                fontSize: '0.9375rem',
-                fontWeight: 800,
-                color: 'var(--color-foreground)',
-                letterSpacing: '-0.02em',
-                lineHeight: 1.1,
-              }}
-            >
+            <div className="text-[0.9375rem] font-extrabold text-foreground tracking-[-0.02em] leading-[1.1]">
               {t('app.name')}
             </div>
             {appUser && (
-              <div style={{ fontSize: '0.6875rem', color: 'var(--color-muted-foreground)', marginTop: '1px' }}>
+              <div className="text-[0.6875rem] text-muted-foreground mt-[1px]">
                 {roleLabel}
               </div>
             )}
@@ -288,14 +221,7 @@ export function Shell() {
 
         {/* Navigation — items go edge-to-edge for left border effect */}
         <nav
-          style={{
-            flex: 1,
-            paddingTop: '0.5rem',
-            paddingBottom: '0.5rem',
-            display: 'flex',
-            flexDirection: 'column',
-            overflowY: 'auto',
-          }}
+          className="flex-1 py-2 flex flex-col overflow-y-auto"
           aria-label="Main navigation"
         >
           <NavLink to="/dashboard" className={navClass}>
@@ -341,12 +267,8 @@ export function Shell() {
         </nav>
 
         {/* Footer */}
-        <div style={{ borderTop: '1px solid var(--color-sidebar-border)', paddingTop: '0.375rem', paddingBottom: '0.5rem' }}>
-          <button
-            onClick={handleSignOut}
-            className="sidebar-nav-item"
-            style={{ border: 'none' }}
-          >
+        <div className="border-t border-t-sidebar-border pt-[0.375rem] pb-2">
+          <button onClick={handleSignOut} className="sidebar-nav-item">
             <IconSignOut />
             {t('nav.signOut')}
           </button>
@@ -354,67 +276,25 @@ export function Shell() {
       </aside>
 
       {/* ── Right side: topbar + scrollable content ── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* Shell Topbar */}
-        <header
-          style={{
-            height: '64px',
-            flexShrink: 0,
-            borderBottom: '1px solid var(--color-border)',
-            backgroundColor: 'var(--color-card)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '0 1.75rem',
-            gap: '1rem',
-          }}
-        >
-          {/* Page title */}
-          <h1
-            style={{
-              fontSize: '1.375rem',
-              fontWeight: 800,
-              margin: 0,
-              letterSpacing: '-0.025em',
-              color: 'var(--color-foreground)',
-            }}
-          >
+        <header className="h-16 shrink-0 border-b border-border bg-card flex items-center justify-between px-7 gap-4">
+
+          <h1 className="text-[1.375rem] font-extrabold m-0 tracking-[-0.025em] text-foreground">
             {pageTitle}
           </h1>
 
-          {/* Right actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div className="flex items-center gap-3">
             {/* Search */}
-            <div style={{ position: 'relative' }}>
-              <span
-                style={{
-                  position: 'absolute',
-                  left: '0.75rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: 'var(--color-muted-foreground)',
-                  display: 'flex',
-                  pointerEvents: 'none',
-                }}
-              >
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground flex pointer-events-none">
                 <IconSearch />
               </span>
               <input
                 type="text"
                 placeholder={t('search.placeholder')}
-                style={{
-                  height: '36px',
-                  width: '220px',
-                  padding: '0 1rem 0 2.25rem',
-                  borderRadius: '9999px',
-                  border: '1px solid var(--color-border)',
-                  backgroundColor: 'var(--color-background)',
-                  fontSize: '0.8125rem',
-                  color: 'var(--color-foreground)',
-                  outline: 'none',
-                  transition: 'border-color 0.15s, box-shadow 0.15s',
-                }}
+                className="h-9 w-[220px] pl-9 pr-4 rounded-full border border-border bg-background text-[0.8125rem] text-foreground outline-none transition-[border-color,box-shadow] duration-150"
               />
             </div>
 
@@ -424,20 +304,7 @@ export function Shell() {
             {/* Bell */}
             <button
               aria-label="Notifications"
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '9999px',
-                border: '1px solid var(--color-border)',
-                backgroundColor: 'var(--color-card)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                color: 'var(--color-muted-foreground)',
-                transition: 'background-color 0.15s',
-                flexShrink: 0,
-              }}
+              className="size-9 rounded-full border border-border bg-card flex items-center justify-center cursor-pointer text-muted-foreground transition-[background-color] duration-150 shrink-0"
             >
               <IconBell />
             </button>
@@ -445,21 +312,7 @@ export function Shell() {
             {/* User avatar */}
             <div
               title={appUser?.displayName}
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '9999px',
-                background: 'var(--color-primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: 'var(--color-primary-foreground)',
-                flexShrink: 0,
-                cursor: 'default',
-                userSelect: 'none',
-              }}
+              className="size-9 rounded-full bg-primary flex items-center justify-center text-[0.75rem] font-bold text-primary-foreground shrink-0 cursor-default select-none"
             >
               {userInitials}
             </div>
@@ -467,13 +320,7 @@ export function Shell() {
         </header>
 
         {/* Scrollable page content */}
-        <main
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            backgroundColor: 'var(--color-background)',
-          }}
-        >
+        <main className="flex-1 overflow-y-auto bg-background">
           <Outlet />
         </main>
       </div>
