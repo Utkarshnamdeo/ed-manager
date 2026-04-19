@@ -21,6 +21,7 @@
 ## Coding Conventions
 
 - All data fetching via TanStack Query. No raw `fetch` or `useEffect` for server state.
+- never use input type = "number" for number inputs, instead use input type text with inputMode='numeric'
 - React Context for client state. Multiple contexts are fine — one per domain.
 - Tailwind only. No inline styles, no CSS modules.
 - Every feature needs at minimum: a typed hook, a component, and a smoke test.
@@ -150,35 +151,43 @@ These rules drive the UI card picker and are validated server-side in the Cloud 
 `isSpecial` = session `type` is `special | workshop | event | party`.
 
 ### Mutual exclusions (always)
+
 - `gold` selected → all other cards disabled.
 - `trial` selected → all other cards disabled.
 - `2silver` selected → all other cards disabled.
 - `2bronze` selected → all other cards disabled.
 
 ### `2silver` / `2bronze` card visibility
+
 - Only visible when `isSpecial = true`. Hidden entirely for regular classes.
 
 ### Silver selected
+
 - Regular class: stands alone — all other cards disabled.
 - Special class: one secondary allowed — `cash`, `usc`, or `eversports` (mutually exclusive).
 
 ### Bronze selected
+
 - Regular class: stands alone — all other cards disabled.
 - Special class: same secondary rules as Silver.
 
 ### USC selected (no school pass)
+
 - Regular class: stands alone — all other cards disabled.
 - Special class: one addition allowed — `eversports`, `cash`, `silver`, or `bronze`.
 
 ### Eversports selected (no school pass)
+
 - Regular class: stands alone — all other cards disabled.
 - Special class: `cash` can be added only.
 
 ### Cash selected (no school pass)
+
 - Regular class: stands alone — all other cards disabled.
 - Special class: `usc` or `eversports` can be added as base provider.
 
 ### Cash amount field
+
 - Visible whenever `cash` is in the combination array.
 - Pre-filled from `config/pricing.dropInCashRate` or surcharge rate for pass+cash.
 - Staff can override per record. Stored as `cashAmount` alongside `cashDefault` snapshot.
@@ -213,24 +222,29 @@ These rules drive the UI card picker and are validated server-side in the Cloud 
 ## Membership Rules
 
 ### Gold
+
 - Unlimited classes, all types including special.
 - No credit deduction. Valid while the membership period is active.
 - Combination is always `['gold']`.
 
 ### Silver (10-class pass)
+
 - `creditsRemaining` starts at 10. Expires after 3 months. Credits do not roll over.
 - Regular class: 1 credit → `['silver']`.
 - Special class, pick one: `['2silver']`, `['silver', 'cash']`, `['silver', 'usc']`, `['silver', 'eversports']`.
 
 ### Bronze (5-class pass)
+
 - `creditsRemaining` starts at 5. Expires after 2 months. Credits do not roll over.
 - Identical deduction rules to Silver.
 
 ### Credit shortfall
+
 - If deduction would take `creditsRemaining` below 0: deduct what remains, set `creditsRemaining = 0`, `active: false`, write `shortfall: true` and `shortfallAmount` on the record.
 - Staff resolve shortfall manually.
 
 ### Trial
+
 - No pass required. Combination is `['trial']`. Zero deduction. All other cards locked.
 
 ---
@@ -238,6 +252,7 @@ These rules drive the UI card picker and are validated server-side in the Cloud 
 ## Firestore Collections
 
 ### `users`
+
 ```
 uid               string
 email             string
@@ -259,6 +274,7 @@ createdAt         timestamp
 ```
 
 ### `students`
+
 ```
 id                   string
 firstName            string
@@ -273,6 +289,7 @@ createdAt            timestamp
 ```
 
 ### `memberships`
+
 ```
 id                string
 studentId         string
@@ -286,6 +303,7 @@ createdAt         timestamp
 ```
 
 ### `teachers`
+
 ```
 id                string
 firstName         string
@@ -303,6 +321,7 @@ createdAt         timestamp
 ```
 
 ### `rooms`
+
 ```
 id                string
 name              string
@@ -311,6 +330,7 @@ active            boolean
 ```
 
 ### `classTemplates`
+
 ```
 id                string
 name              string
@@ -329,6 +349,7 @@ createdAt         timestamp
 ```
 
 ### `classSessions`
+
 ```
 id                string
 templateId        string | null
@@ -350,7 +371,9 @@ createdAt         timestamp
 ```
 
 ### `attendanceRecords`
+
 Immutable once written — never update after creation.
+
 ```
 id                string
 sessionId         string
@@ -376,7 +399,9 @@ markedBy          string               (uid)
 ```
 
 ### `backupLogs`
+
 Written only by Cloud Functions (Admin SDK). Read-only from client.
+
 ```
 id            string
 triggeredBy   'scheduled' | 'manual'
@@ -392,6 +417,7 @@ error         string | null
 ```
 
 ### `config/pricing`
+
 ```
 dropInCashRate              number   (default 13)
 silverCashSurcharge         number
@@ -408,6 +434,7 @@ updatedBy                   string
 ```
 
 ### `config/backup`
+
 ```
 nasPath         string
 retentionCount  number   (default 30)
@@ -417,6 +444,7 @@ updatedBy       string
 ```
 
 ### `config/externalProviders`
+
 ```
 providers   Array<{ id: string, name: string, active: boolean }>
 ```
@@ -426,47 +454,56 @@ providers   Array<{ id: string, name: string, active: boolean }>
 ## Cloud Functions
 
 ### `onAttendanceCreated` (Firestore trigger)
+
 1. Read `combination: CombinationToken[]` and `isSpecial` from the session.
 2. Derive credits to deduct: `'silver'` → 1, `'2silver'` → 2, `'bronze'` → 1, `'2bronze'` → 2, else → 0.
 3. Run deduction in a Firestore transaction. Cap at remaining balance, write `shortfall` if underfunded.
 4. Snapshot `estimatedValue` from `config/pricing`.
 
 ### `sendStepUpCode` (HTTPS Callable)
+
 - Authenticated. Generates a 6-digit single-use code for the calling user.
 - Stores hashed code + expiry in `users/{uid}/stepUpCodes` subcollection (server-side only).
 - Sends code to user's registered email.
 
 ### `verifyStepUpCode` (HTTPS Callable)
+
 - Validates submitted code against the stored hash.
 - Returns a short-lived signed token the client uses to unlock the financial view.
 - Marks code as used immediately on validation.
 
 ### `manualBackup` (HTTPS Callable)
+
 - Admin only. Exports all core collections to a timestamped JSON at the configured NAS path.
 - Writes a `backupLogs` document.
 
 ### `scheduledBackup` (Cloud Scheduler)
+
 - Daily at 02:00 Europe/Berlin. Same logic as `manualBackup`.
 
 ### `cleanupOldBackups` (Cloud Scheduler)
+
 - Weekly. Deletes `backupLogs` documents older than 90 days.
 
 ---
 
-## Testing — what NOT to test (the "what to test" is obvious; the exclusions prevent wasted effort):
-  - Don't test: Tailwind classes, Radix UI internals, static markup
-  - Do test: hook logic, Firestore query behavior, combination/credit calculation logic
+## Testing — what NOT to test (the "what to test" is obvious; the exclusions prevent wasted effort)
+
+- Don't test: Tailwind classes, Radix UI internals, static markup
+- Do test: hook logic, Firestore query behavior, combination/credit calculation logic
 
 ---
 
-## CLAUDE.md update triggers — currently missing, leads to bloat:
-  - Update only when: new dependency affects architecture, a convention changes,
-  - a non-obvious constraint exists that code alone doesn't communicate.
-  - Do NOT update for: bug fixes, refactors, individual feature implementation details.
+## CLAUDE.md update triggers — currently missing, leads to bloat
 
---- 
+- Update only when: new dependency affects architecture, a convention changes,
+- a non-obvious constraint exists that code alone doesn't communicate.
+- Do NOT update for: bug fixes, refactors, individual feature implementation details.
 
-## Task workflow — the "write plan → get approval → code" discipline is valuable:
+---
+
+## Task workflow — the "write plan → get approval → code" discipline is valuable
+
   Before starting any feature: read spec.md + relevant code, write a plan, get approval.
 
 ---
