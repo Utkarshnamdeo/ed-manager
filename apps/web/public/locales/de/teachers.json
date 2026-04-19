@@ -1,0 +1,33 @@
+{
+  "title": "Lehrkräfte",
+  "addTeacher": "Lehrkraft hinzufügen",
+  "noTeachers": "Noch keine Lehrkräfte",
+  "tabs": {
+    "details": "Details",
+    "compensation": "Vergütung"
+  },
+  "form": {
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "email": "E-Mail",
+    "ratePerStudent": "Satz pro Schüler (€)",
+    "monthlyFloor": "Monatliches Minimum (€)",
+    "monthlyFloorHint": "Mindestbetrag pro Monat. Leer lassen für kein Minimum.",
+    "reportVisibility": "Berichtsansicht für Lehrkraft",
+    "showAttendanceDetail": "Anwesenheitsdetails",
+    "showEarningsPerSession": "Verdienst pro Stunde",
+    "showTotalEarnings": "Gesamtverdienst"
+  },
+  "actions": {
+    "edit": "Bearbeiten",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "deactivate": "Deaktivieren",
+    "activate": "Aktivieren",
+    "deactivateConfirm": "{{name}} deaktivieren? Diese Person erscheint nicht mehr in neuen Stunden."
+  },
+  "status": {
+    "active": "Aktiv",
+    "inactive": "Inaktiv"
+  }
+}

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { AttendanceStatus } from '../types'
 
 /* ─── Avatar ───────────────────────────────────────────────────────────────── */
@@ -536,8 +537,9 @@ const MOCK_SESSIONS: MockSession[] = [
 ]
 
 export function AttendancePage() {
+  const { i18n } = useTranslation()
   const today = new Date()
-  const formattedDate = today.toLocaleDateString('en-GB', {
+  const formattedDate = today.toLocaleDateString(i18n.language, {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   })
 

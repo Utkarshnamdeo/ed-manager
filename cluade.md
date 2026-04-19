@@ -10,6 +10,7 @@
 Dance school attendance management app. Firebase backend, React 19 frontend, TypeScript throughout. Staff use it daily at the front desk to run class check-ins and track student memberships.
 
 Before writing any code, read **spec.md** for types, collections, business rules, and conventions.
+If UI features needs to be implemented please check **design.md**, only access **design.md** if UI features needs to be worked on.  
 
 ---
 
@@ -97,11 +98,13 @@ apps/
 | Settings | `/settings` | admin only |
 
 ### Dashboard
+
 - Today's sessions: class name, teacher, room, roster count, quick check-in link.
 - Subscription vs. open/drop-in sessions shown distinctly.
 - Key stats: total active students, USC attendances this month, average students per session.
 
 ### Calendar (week view)
+
 - Mon–Sun grid. Sessions as blocks — colour-coded by dance style.
 - Prev/next week, jump-to-date, Today button.
 - Click empty slot → new session form pre-filled with day + time.
@@ -110,6 +113,7 @@ apps/
 - Admin: mark date ranges as closures; sessions on closed dates auto-cancel or get flagged.
 
 ### Check-in
+
 - Roster pre-populated from template `regularStudentIds`.
 - One-tap status per student: Present / Late / Absent / Trial.
 - Expandable row: combination picker, cash amount input, notes.
@@ -118,12 +122,14 @@ apps/
 - "Add as new student" inline form — name + membership type only required.
 
 ### Students
+
 - Searchable list. Filter by membership tier, active/inactive.
 - Profile: contact info, active membership, credits remaining, attendance history.
 - Manual credit adjustment with required reason field.
 - CSV import (admin only): preview → validate → confirm → import as inactive.
 
 ### Reports
+
 - Date-range filter (1 / 3 / 6 / 12 months).
 - Section A — Attendance by category: all staff.
 - Section B — Estimated revenue per class: `viewFinancials` + step-up verification.
@@ -132,6 +138,7 @@ apps/
 - Export (Excel, CSV): `exportReports` flag + step-up for financial data.
 
 ### Settings
+
 - Pricing config — `configureSystem` required.
 - Backup config — NAS path, retention count, schedule toggle, manual trigger, log viewer.
 - External providers — add/enable/disable providers.
@@ -143,8 +150,8 @@ apps/
 
 ## Current build status
 
-**Completed:** steps 1–3 — monorepo scaffold, auth, Firestore security rules.
-**In progress:** step 4 — Teachers + Rooms CRUD.
+**Completed:** steps 1–4 — monorepo scaffold, auth, Firestore security rules, Teachers + Rooms CRUD.
+**In progress:** step 5 — Student management.
 
 > Update this section after every completed build step.
 > Format: `Completed: steps 1–N. In progress: step N+1 — [name].`

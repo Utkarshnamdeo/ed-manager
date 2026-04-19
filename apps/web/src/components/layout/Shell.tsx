@@ -6,21 +6,24 @@ import { useAuth } from '../../contexts/AuthContext'
 
 /* ─── Page title map ───────────────────────────────────────────────────────── */
 
-const PAGE_TITLES: Record<string, string> = {
-  '/dashboard':  'Dashboard',
-  '/attendance': 'Attendance',
-  '/students':   'Students',
-  '/reports':    'Reports',
-  '/settings':   'Settings',
+const PAGE_TITLE_KEYS: Record<string, string> = {
+  '/dashboard':  'nav.dashboard',
+  '/attendance': 'nav.attendance',
+  '/students':   'nav.students',
+  '/teachers':   'nav.teachers',
+  '/rooms':      'nav.rooms',
+  '/reports':    'nav.reports',
+  '/settings':   'nav.settings',
 }
 
+
 function usePageTitle() {
+  const { t } = useTranslation()
   const { pathname } = useLocation()
-  return (
-    Object.entries(PAGE_TITLES).find(
-      ([path]) => pathname === path || pathname.startsWith(path + '/')
-    )?.[1] ?? 'Elite Manager'
-  )
+  const key = Object.entries(PAGE_TITLE_KEYS).find(
+    ([path]) => pathname === path || pathname.startsWith(path + '/')
+  )?.[1]
+  return key ? t(key) : t('app.name')
 }
 
 /* ─── Icons ────────────────────────────────────────────────────────────────── */
@@ -79,6 +82,27 @@ function IconSettings() {
   )
 }
 
+function IconTeachers() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      <polyline points="17 11 19 13 23 9" />
+    </svg>
+  )
+}
+
+function IconRooms() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
+  )
+}
+
 function IconSignOut() {
   return (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -124,6 +148,54 @@ function navClass({ isActive }: { isActive: boolean }) {
   return isActive ? 'sidebar-nav-item-active' : 'sidebar-nav-item'
 }
 
+/* ─── Language Toggle ──────────────────────────────────────────────────────── */
+
+function LanguageToggle() {
+  const { i18n, t } = useTranslation()
+  const current = i18n.language.startsWith('de') ? 'de' : 'en'
+  const langs = ['en', 'de'] as const
+
+  return (
+    <div
+      aria-label={t('language.toggle')}
+      style={{
+        display: 'flex',
+        height: '36px',
+        borderRadius: '9999px',
+        border: '1px solid var(--color-border)',
+        backgroundColor: 'var(--color-card)',
+        overflow: 'hidden',
+        flexShrink: 0,
+      }}
+    >
+      {langs.map((lang) => {
+        const isActive = current === lang
+        return (
+          <button
+            key={lang}
+            onClick={() => i18n.changeLanguage(lang)}
+            aria-pressed={isActive}
+            style={{
+              width: '36px',
+              height: '100%',
+              border: 'none',
+              backgroundColor: isActive ? 'var(--color-primary-subtle)' : 'transparent',
+              color: isActive ? 'var(--color-primary)' : 'var(--color-muted-foreground)',
+              fontSize: '0.6875rem',
+              fontWeight: isActive ? 700 : 500,
+              cursor: isActive ? 'default' : 'pointer',
+              letterSpacing: '0.03em',
+              transition: 'background-color 0.15s, color 0.15s',
+            }}
+          >
+            {t(`language.${lang}`)}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 /* ─── Shell ────────────────────────────────────────────────────────────────── */
 
 export function Shell() {
@@ -139,8 +211,10 @@ export function Shell() {
 
   const isAdmin = appUser?.role === 'admin'
   const isStaff = appUser?.role === 'staff'
-  const canViewStudents = isAdmin || (isStaff && !!appUser?.permissions?.manageStudents)
-  const canViewReports = isAdmin || (isStaff && !!appUser?.permissions?.exportReports)
+  // Nav visibility: all staff can access Students and Reports pages.
+  // Permission flags gate actions/sections *within* those pages, not the nav entry.
+  const canViewStudents = isAdmin || isStaff
+  const canViewReports = isAdmin || isStaff
 
   const userInitials = appUser?.displayName ? getInitials(appUser.displayName) : '??'
   const roleLabel = appUser?.role
@@ -202,7 +276,7 @@ export function Shell() {
                 lineHeight: 1.1,
               }}
             >
-              Elite Manager
+              {t('app.name')}
             </div>
             {appUser && (
               <div style={{ fontSize: '0.6875rem', color: 'var(--color-muted-foreground)', marginTop: '1px' }}>
@@ -240,6 +314,16 @@ export function Shell() {
               {t('nav.students')}
             </NavLink>
           )}
+
+          <NavLink to="/teachers" className={navClass}>
+            <IconTeachers />
+            {t('nav.teachers')}
+          </NavLink>
+
+          <NavLink to="/rooms" className={navClass}>
+            <IconRooms />
+            {t('nav.rooms')}
+          </NavLink>
 
           {canViewReports && (
             <NavLink to="/reports" className={navClass}>
@@ -318,7 +402,7 @@ export function Shell() {
               </span>
               <input
                 type="text"
-                placeholder="Search for something"
+                placeholder={t('search.placeholder')}
                 style={{
                   height: '36px',
                   width: '220px',
@@ -333,6 +417,9 @@ export function Shell() {
                 }}
               />
             </div>
+
+            {/* Language toggle */}
+            <LanguageToggle />
 
             {/* Bell */}
             <button

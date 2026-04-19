@@ -1,0 +1,22 @@
+{
+  "title": "Räume",
+  "addRoom": "Raum hinzufügen",
+  "noRooms": "Noch keine Räume",
+  "form": {
+    "name": "Raumname",
+    "capacity": "Kapazität",
+    "capacityHint": "Leer lassen für unbegrenzte Kapazität."
+  },
+  "actions": {
+    "edit": "Bearbeiten",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "deactivate": "Deaktivieren",
+    "activate": "Aktivieren",
+    "deactivateConfirm": "{{name}} deaktivieren?"
+  },
+  "status": {
+    "active": "Aktiv",
+    "inactive": "Inaktiv"
+  }
+}

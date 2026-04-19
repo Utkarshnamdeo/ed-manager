@@ -1,0 +1,33 @@
+{
+  "title": "Teachers",
+  "addTeacher": "Add Teacher",
+  "noTeachers": "No teachers yet",
+  "tabs": {
+    "details": "Details",
+    "compensation": "Compensation"
+  },
+  "form": {
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "ratePerStudent": "Rate per student (€)",
+    "monthlyFloor": "Monthly floor (€)",
+    "monthlyFloorHint": "Minimum monthly payout. Leave empty for no floor.",
+    "reportVisibility": "Report visibility for teacher",
+    "showAttendanceDetail": "Attendance detail",
+    "showEarningsPerSession": "Earnings per session",
+    "showTotalEarnings": "Total earnings"
+  },
+  "actions": {
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "deactivate": "Deactivate",
+    "activate": "Activate",
+    "deactivateConfirm": "Deactivate {{name}}? They will no longer appear in new sessions."
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  }
+}

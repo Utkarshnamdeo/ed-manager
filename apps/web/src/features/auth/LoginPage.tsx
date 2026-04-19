@@ -76,7 +76,7 @@ export function LoginPage() {
               letterSpacing: '-0.02em',
             }}
           >
-            Elite Manager
+            {t('login.title')}
           </span>
         </div>
 
@@ -91,10 +91,10 @@ export function LoginPage() {
               color: 'var(--color-foreground)',
             }}
           >
-            Welcome back
+            {t('login.heading')}
           </h1>
           <p style={{ fontSize: '0.875rem', color: 'var(--color-muted-foreground)', margin: 0 }}>
-            Sign in to your workspace
+            {t('login.subtitle')}
           </p>
         </div>
 
@@ -107,7 +107,7 @@ export function LoginPage() {
             value={email}
             onChange={setEmail}
             autoComplete="email"
-            placeholder="you@example.com"
+            placeholder={t('login.emailPlaceholder')}
           />
           <Field
             id="password"
@@ -116,7 +116,7 @@ export function LoginPage() {
             value={password}
             onChange={setPassword}
             autoComplete="current-password"
-            placeholder="••••••••"
+            placeholder={t('login.passwordPlaceholder')}
           />
 
           {error && (
@@ -153,7 +153,7 @@ export function LoginPage() {
               letterSpacing: '-0.01em',
             }}
           >
-            {loading ? 'Signing in…' : t('login.submit')}
+            {loading ? t('login.signingIn') : t('login.submit')}
           </button>
         </form>
       </div>

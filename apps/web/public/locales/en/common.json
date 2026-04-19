@@ -22,5 +22,13 @@
   },
   "attendance": {
     "placeholder": "Today's sessions will appear here — coming in step 9."
+  },
+  "search": {
+    "placeholder": "Search…"
+  },
+  "language": {
+    "en": "EN",
+    "de": "DE",
+    "toggle": "Switch language"
   }
 }

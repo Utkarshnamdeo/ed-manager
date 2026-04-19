@@ -147,3 +147,76 @@
 .page-enter {
   animation: fadeSlideIn 0.18s ease-out both;
 }
+
+/* ── Drawer animations ── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+/* ── Shared button styles ── */
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 36px; padding: 0 0.875rem; border-radius: var(--radius);
+  border: none; cursor: pointer;
+  background-color: var(--color-primary); color: var(--color-primary-foreground);
+  font-size: 0.875rem; font-weight: 600; font-family: var(--font-sans);
+  transition: background-color 0.15s;
+  white-space: nowrap;
+}
+.btn-primary:hover:not(:disabled) { background-color: var(--color-primary-hover); }
+.btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.btn-secondary {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 36px; padding: 0 0.875rem; border-radius: var(--radius);
+  border: 1px solid var(--color-border); cursor: pointer;
+  background-color: var(--color-card); color: var(--color-foreground);
+  font-size: 0.875rem; font-weight: 500; font-family: var(--font-sans);
+  transition: background-color 0.15s;
+  white-space: nowrap;
+}
+.btn-secondary:hover:not(:disabled) { background-color: var(--color-muted); }
+.btn-secondary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.btn-destructive {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 36px; padding: 0 0.875rem; border-radius: var(--radius);
+  border: none; cursor: pointer;
+  background-color: var(--color-destructive); color: var(--color-destructive-foreground);
+  font-size: 0.875rem; font-weight: 600; font-family: var(--font-sans);
+  transition: background-color 0.15s;
+  white-space: nowrap;
+}
+.btn-destructive:hover:not(:disabled) { background-color: var(--color-destructive-hover); }
+.btn-destructive:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.btn-destructive-outline {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 36px; padding: 0 0.875rem; border-radius: var(--radius);
+  border: 1px solid var(--color-destructive); cursor: pointer;
+  background-color: transparent; color: var(--color-destructive);
+  font-size: 0.875rem; font-weight: 500; font-family: var(--font-sans);
+  transition: background-color 0.15s;
+  white-space: nowrap;
+}
+.btn-destructive-outline:hover:not(:disabled) { background-color: var(--color-destructive-subtle); }
+.btn-destructive-outline:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ── Shared form input ── */
+.form-input {
+  height: 36px; width: 100%; padding: 0 0.75rem;
+  border-radius: var(--radius); border: 1.5px solid var(--color-border);
+  background-color: var(--color-background); color: var(--color-foreground);
+  font-size: 0.875rem; font-family: var(--font-sans);
+  outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.form-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-subtle);
+}
+.form-input::placeholder { color: var(--color-muted-foreground); }

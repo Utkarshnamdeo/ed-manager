@@ -87,8 +87,61 @@ const users = [
   },
 ]
 
+const teachers = [
+  {
+    id: 'teacher-1',
+    firstName: 'Maria',
+    lastName: 'Lopez',
+    email: 'maria.lopez@danceacademy.com',
+    ratePerStudent: 3.5,
+    monthlyFloor: 400,
+    reportVisibility: {
+      showAttendanceDetail: true,
+      showEarningsPerSession: true,
+      showTotalEarnings: false,
+    },
+    active: true,
+  },
+  {
+    id: 'teacher-2',
+    firstName: 'Carlos',
+    lastName: 'Ferreira',
+    email: 'carlos.ferreira@danceacademy.com',
+    ratePerStudent: 4.0,
+    monthlyFloor: null,
+    reportVisibility: {
+      showAttendanceDetail: false,
+      showEarningsPerSession: false,
+      showTotalEarnings: false,
+    },
+    active: true,
+  },
+  {
+    id: 'teacher-3',
+    firstName: 'Ana',
+    lastName: 'Souza',
+    email: 'ana.souza@danceacademy.com',
+    ratePerStudent: 3.0,
+    monthlyFloor: 300,
+    reportVisibility: {
+      showAttendanceDetail: true,
+      showEarningsPerSession: false,
+      showTotalEarnings: false,
+    },
+    active: true,
+  },
+]
+
+const rooms = [
+  { id: 'room-1', name: 'Studio A', capacity: 20, active: true },
+  { id: 'room-2', name: 'Studio B', capacity: 15, active: true },
+  { id: 'room-3', name: 'Main Hall', capacity: 40, active: true },
+]
+
 async function main() {
   console.log('Seeding Firebase Emulator…\n')
+
+  // Users
   for (const user of users) {
     try {
       const uid = await createAuthUser(user.email, user.password)
@@ -103,6 +156,23 @@ async function main() {
       }
     }
   }
+
+  // Teachers
+  console.log('')
+  for (const teacher of teachers) {
+    const { id, ...data } = teacher
+    await upsertDoc('teachers', id, data)
+    console.log(`✓  Teacher: ${teacher.firstName} ${teacher.lastName}`)
+  }
+
+  // Rooms
+  console.log('')
+  for (const room of rooms) {
+    const { id, ...data } = room
+    await upsertDoc('rooms', id, data)
+    console.log(`✓  Room: ${room.name}`)
+  }
+
   console.log('\nDone. Login: admin@danceacademy.com / password123')
 }
 

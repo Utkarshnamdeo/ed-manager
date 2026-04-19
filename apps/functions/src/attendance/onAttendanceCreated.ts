@@ -1,6 +1,10 @@
 import { onDocumentCreated } from 'firebase-functions/v2/firestore'
 import { getFirestore } from 'firebase-admin/firestore'
 
+type CombinationToken =
+  | 'gold' | 'silver' | '2silver' | 'bronze' | '2bronze'
+  | 'usc' | 'eversports' | 'cash' | 'trial'
+
 // Credit deduction — atomic, server-side only. Never implement client-side.
 export const onAttendanceCreated = onDocumentCreated(
   'attendanceRecords/{recordId}',
@@ -8,7 +12,7 @@ export const onAttendanceCreated = onDocumentCreated(
     const record = event.data?.data()
     if (!record) return
 
-    const combination: string[] = record.combination ?? []
+    const combination: CombinationToken[] = record.combination ?? []
     let silverDeduction = 0
     let bronzeDeduction = 0
 

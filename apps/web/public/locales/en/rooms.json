@@ -1,0 +1,22 @@
+{
+  "title": "Rooms",
+  "addRoom": "Add Room",
+  "noRooms": "No rooms yet",
+  "form": {
+    "name": "Room name",
+    "capacity": "Capacity",
+    "capacityHint": "Leave empty for no limit."
+  },
+  "actions": {
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "deactivate": "Deactivate",
+    "activate": "Activate",
+    "deactivateConfirm": "Deactivate {{name}}?"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  }
+}

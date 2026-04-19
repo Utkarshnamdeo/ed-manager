@@ -22,5 +22,13 @@
   },
   "attendance": {
     "placeholder": "Die heutigen Stunden erscheinen hier – kommt in Schritt 9."
+  },
+  "search": {
+    "placeholder": "Suchen…"
+  },
+  "language": {
+    "en": "EN",
+    "de": "DE",
+    "toggle": "Sprache wechseln"
   }
 }
