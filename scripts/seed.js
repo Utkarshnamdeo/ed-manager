@@ -20,12 +20,26 @@ async function createAuthUser(email, password) {
   return data.localId
 }
 
+async function signInAuthUser(email, password) {
+  const res = await fetch(
+    `${AUTH_BASE}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo-key`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, returnSecureToken: false }),
+    },
+  )
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error?.message ?? JSON.stringify(data))
+  return data.localId
+}
+
 function toFields(obj) {
   const out = {}
   for (const [k, v] of Object.entries(obj)) {
     if (v === null) out[k] = { nullValue: null }
     else if (typeof v === 'boolean') out[k] = { booleanValue: v }
-    else if (typeof v === 'number') out[k] = { integerValue: String(v) }
+    else if (typeof v === 'number') out[k] = Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v }
     else if (typeof v === 'string') out[k] = { stringValue: v }
     else if (typeof v === 'object') out[k] = { mapValue: { fields: toFields(v) } }
   }
@@ -36,7 +50,11 @@ async function upsertDoc(collection, docId, data) {
   const url = `${FIRESTORE_BASE}/v1/projects/${PROJECT}/databases/(default)/documents/${collection}/${docId}`
   const res = await fetch(url, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      // 'owner' token bypasses Firestore security rules in the emulator
+      'Authorization': 'Bearer owner',
+    },
     body: JSON.stringify({ fields: toFields(data) }),
   })
   if (!res.ok) throw new Error(await res.text())
@@ -149,7 +167,14 @@ async function main() {
       console.log(`✓  ${user.email}  (${user.doc.role})`)
     } catch (err) {
       if (err.message.includes('EMAIL_EXISTS')) {
-        console.log(`–  ${user.email}  (already exists, skipped)`)
+        try {
+          const uid = await signInAuthUser(user.email, user.password)
+          await upsertDoc('users', uid, user.doc)
+          console.log(`↻  ${user.email}  (auth existed — firestore doc updated)`)
+        } catch (innerErr) {
+          console.error(`✗  ${user.email}: ${innerErr.message}`)
+          process.exit(1)
+        }
       } else {
         console.error(`✗  ${user.email}: ${err.message}`)
         process.exit(1)
