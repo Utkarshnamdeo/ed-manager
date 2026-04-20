@@ -1,1 +1,92 @@
-{}
+{
+  "title": "Classes",
+  "tabs": {
+    "templates": "Templates",
+    "sessions": "Sessions"
+  },
+  "addTemplate": "New Template",
+  "addSession": "New Session",
+  "addToDay": "+ Add",
+  "noTemplates": "No class templates yet.",
+  "noSessions": "No sessions found.",
+  "form": {
+    "name": "Name",
+    "style": "Style",
+    "level": "Level",
+    "type": "Type",
+    "dayOfWeek": "Day of week",
+    "startTime": "Start time",
+    "endTime": "End time",
+    "teacher": "Teacher",
+    "room": "Room",
+    "capacity": "Capacity",
+    "notes": "Notes",
+    "isSubscription": "Subscription class",
+    "template": "Template (optional)",
+    "date": "Date"
+  },
+  "days": {
+    "0": "Mon",
+    "1": "Tue",
+    "2": "Wed",
+    "3": "Thu",
+    "4": "Fri",
+    "5": "Sat",
+    "6": "Sun"
+  },
+  "style": {
+    "bachata": "Bachata",
+    "kizomba": "Kizomba",
+    "salsa": "Salsa",
+    "zouk": "Zouk",
+    "afro": "Afro",
+    "other": "Other"
+  },
+  "level": {
+    "beginner": "Beginner",
+    "intermediate": "Intermediate",
+    "advanced": "Advanced",
+    "open": "Open"
+  },
+  "type": {
+    "regular": "Regular",
+    "special": "Special",
+    "workshop": "Workshop",
+    "event": "Event",
+    "party": "Party"
+  },
+  "status": {
+    "planned": "Planned",
+    "active": "Active",
+    "completed": "Done",
+    "cancelled": "Cancelled"
+  },
+  "filter": {
+    "today": "Today",
+    "thisWeek": "This week",
+    "thisMonth": "This month",
+    "custom": "Custom"
+  },
+  "drawer": {
+    "details": "Details",
+    "roster": "Roster",
+    "sessions": "Sessions"
+  },
+  "actions": {
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "deactivate": "Deactivate",
+    "activate": "Activate",
+    "deactivateConfirm": "Deactivate {{name}}?",
+    "openCheckin": "Open check-in →"
+  },
+  "roster": {
+    "noStudents": "No regular students.",
+    "addStudent": "Add student",
+    "removeStudent": "Remove"
+  },
+  "errors": {
+    "failedToLoad": "Failed to load classes."
+  }
+}

@@ -1,1 +1,80 @@
-{}
+{
+  "title": "Schüler",
+  "addStudent": "Neuer Schüler",
+  "noStudents": "Keine Schüler gefunden.",
+  "form": {
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "notes": "Notizen"
+  },
+  "filter": {
+    "all": "Alle",
+    "gold": "Gold",
+    "silver": "Silber",
+    "bronze": "Bronze",
+    "noPass": "Kein Pass"
+  },
+  "columns": {
+    "name": "Name",
+    "membership": "Mitgliedschaft",
+    "expiry": "Ablauf",
+    "lastClass": "Letzter Kurs",
+    "actions": "Aktionen"
+  },
+  "drawer": {
+    "profile": "Profil",
+    "membership": "Mitgliedschaft",
+    "history": "Verlauf"
+  },
+  "membership": {
+    "active": "Aktive Mitgliedschaft",
+    "none": "Keine aktive Mitgliedschaft",
+    "creditsLeft": "{{count}} Credits verbleibend",
+    "expired": "Abgelaufen",
+    "expiresIn": "Läuft in {{days}} Tagen ab",
+    "expiresToday": "Läuft heute ab",
+    "started": "Beginn",
+    "expires": "Ablauf",
+    "assignNew": "+ Neue Mitgliedschaft zuweisen",
+    "past": "Vergangene Mitgliedschaften",
+    "deactivate": "Deaktivieren"
+  },
+  "assignMembership": {
+    "title": "Mitgliedschaft zuweisen",
+    "tier": "Stufe",
+    "startDate": "Startdatum",
+    "expiryDate": "Ablaufdatum",
+    "creditsTotal": "Credits",
+    "assign": "Zuweisen"
+  },
+  "tier": {
+    "gold": "Gold",
+    "silver": "Silber",
+    "bronze": "Bronze"
+  },
+  "history": {
+    "noHistory": "Kein Anwesenheitsverlauf.",
+    "creditsUsed": "Credits verwendet",
+    "date": "Datum",
+    "session": "Einheit",
+    "status": "Status",
+    "combination": "Kombination"
+  },
+  "actions": {
+    "edit": "Bearbeiten",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "deactivate": "Deaktivieren",
+    "activate": "Aktivieren",
+    "deactivateConfirm": "{{name}} deaktivieren?"
+  },
+  "status": {
+    "active": "Aktiv",
+    "inactive": "Inaktiv"
+  },
+  "errors": {
+    "failedToLoad": "Schüler konnten nicht geladen werden."
+  }
+}

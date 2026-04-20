@@ -1,1 +1,80 @@
-{}
+{
+  "title": "Students",
+  "addStudent": "New Student",
+  "noStudents": "No students found.",
+  "form": {
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "phone": "Phone",
+    "notes": "Notes"
+  },
+  "filter": {
+    "all": "All",
+    "gold": "Gold",
+    "silver": "Silver",
+    "bronze": "Bronze",
+    "noPass": "No pass"
+  },
+  "columns": {
+    "name": "Name",
+    "membership": "Membership",
+    "expiry": "Expiry",
+    "lastClass": "Last class",
+    "actions": "Actions"
+  },
+  "drawer": {
+    "profile": "Profile",
+    "membership": "Membership",
+    "history": "History"
+  },
+  "membership": {
+    "active": "Active membership",
+    "none": "No active membership",
+    "creditsLeft": "{{count}} credits left",
+    "expired": "Expired",
+    "expiresIn": "Expires in {{days}} days",
+    "expiresToday": "Expires today",
+    "started": "Started",
+    "expires": "Expires",
+    "assignNew": "+ Assign New Membership",
+    "past": "Past memberships",
+    "deactivate": "Deactivate"
+  },
+  "assignMembership": {
+    "title": "Assign Membership",
+    "tier": "Tier",
+    "startDate": "Start date",
+    "expiryDate": "Expiry date",
+    "creditsTotal": "Credits",
+    "assign": "Assign"
+  },
+  "tier": {
+    "gold": "Gold",
+    "silver": "Silver",
+    "bronze": "Bronze"
+  },
+  "history": {
+    "noHistory": "No attendance history.",
+    "creditsUsed": "credits used",
+    "date": "Date",
+    "session": "Session",
+    "status": "Status",
+    "combination": "Combination"
+  },
+  "actions": {
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "deactivate": "Deactivate",
+    "activate": "Activate",
+    "deactivateConfirm": "Deactivate {{name}}?"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "errors": {
+    "failedToLoad": "Failed to load students."
+  }
+}

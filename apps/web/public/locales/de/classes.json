@@ -1,1 +1,92 @@
-{}
+{
+  "title": "Kurse",
+  "tabs": {
+    "templates": "Vorlagen",
+    "sessions": "Einheiten"
+  },
+  "addTemplate": "Neue Vorlage",
+  "addSession": "Neue Einheit",
+  "addToDay": "+ Hinzufügen",
+  "noTemplates": "Noch keine Kursvorlagen.",
+  "noSessions": "Keine Einheiten gefunden.",
+  "form": {
+    "name": "Name",
+    "style": "Stil",
+    "level": "Level",
+    "type": "Typ",
+    "dayOfWeek": "Wochentag",
+    "startTime": "Startzeit",
+    "endTime": "Endzeit",
+    "teacher": "Lehrkraft",
+    "room": "Raum",
+    "capacity": "Kapazität",
+    "notes": "Notizen",
+    "isSubscription": "Abonnement-Kurs",
+    "template": "Vorlage (optional)",
+    "date": "Datum"
+  },
+  "days": {
+    "0": "Mo",
+    "1": "Di",
+    "2": "Mi",
+    "3": "Do",
+    "4": "Fr",
+    "5": "Sa",
+    "6": "So"
+  },
+  "style": {
+    "bachata": "Bachata",
+    "kizomba": "Kizomba",
+    "salsa": "Salsa",
+    "zouk": "Zouk",
+    "afro": "Afro",
+    "other": "Andere"
+  },
+  "level": {
+    "beginner": "Anfänger",
+    "intermediate": "Mittelstufe",
+    "advanced": "Fortgeschritten",
+    "open": "Offen"
+  },
+  "type": {
+    "regular": "Regulär",
+    "special": "Spezial",
+    "workshop": "Workshop",
+    "event": "Veranstaltung",
+    "party": "Party"
+  },
+  "status": {
+    "planned": "Geplant",
+    "active": "Aktiv",
+    "completed": "Beendet",
+    "cancelled": "Abgesagt"
+  },
+  "filter": {
+    "today": "Heute",
+    "thisWeek": "Diese Woche",
+    "thisMonth": "Diesen Monat",
+    "custom": "Benutzerdefiniert"
+  },
+  "drawer": {
+    "details": "Details",
+    "roster": "Teilnehmer",
+    "sessions": "Einheiten"
+  },
+  "actions": {
+    "edit": "Bearbeiten",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "deactivate": "Deaktivieren",
+    "activate": "Aktivieren",
+    "deactivateConfirm": "{{name}} deaktivieren?",
+    "openCheckin": "Check-in öffnen →"
+  },
+  "roster": {
+    "noStudents": "Keine regulären Schüler.",
+    "addStudent": "Schüler hinzufügen",
+    "removeStudent": "Entfernen"
+  },
+  "errors": {
+    "failedToLoad": "Kurse konnten nicht geladen werden."
+  }
+}
