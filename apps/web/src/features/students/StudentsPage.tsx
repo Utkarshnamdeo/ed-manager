@@ -161,6 +161,7 @@ type FilterTier = 'all' | MembershipTier | 'noPass'
 
 export function StudentsPage() {
   const { t } = useTranslation('students')
+  const { t: tCommon } = useTranslation('common')
   const { appUser } = useAuth()
   const canManage = appUser?.role === 'admin' || !!appUser?.permissions?.manageStudents
 
@@ -245,7 +246,7 @@ export function StudentsPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search…"
+            placeholder={tCommon('search.placeholder')}
             className="h-9 w-full pl-8 pr-3 rounded-full border border-border bg-background text-[0.8125rem] text-foreground outline-none transition-[border-color] duration-150 focus:border-primary"
           />
         </div>

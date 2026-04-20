@@ -70,7 +70,6 @@ export function ClassesPage() {
         {tab === 'sessions' && (
           <SessionsTab
             canManage={canManage}
-            onAddSession={() => setShowCreateSession(true)}
           />
         )}
       </div>

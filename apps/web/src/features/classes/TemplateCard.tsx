@@ -53,7 +53,7 @@ export function TemplateCard({ template, teacher, room, onClick }: TemplateCardP
       {/* Footer row */}
       <div className="flex items-center gap-2 mt-1.5">
         <span className="text-[0.6875rem] font-semibold text-muted-foreground">
-          {template.regularStudentIds.length} students
+          {t('roster.studentCount', { count: template.regularStudentIds.length })}
         </span>
         {template.isSubscription && (
           <span className="text-[0.6rem] font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full bg-primary text-primary-foreground">

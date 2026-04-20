@@ -4,7 +4,6 @@ import type { AttendanceStatus } from '../types'
 
 /* ─── Avatar ── */
 
-const AVATAR_HUES = [15, 45, 145, 200, 240, 285, 320, 355]
 const AVATAR_HUE_CLASSES = ['avatar-h-0', 'avatar-h-1', 'avatar-h-2', 'avatar-h-3', 'avatar-h-4', 'avatar-h-5', 'avatar-h-6', 'avatar-h-7']
 
 function nameHash(name: string): number {
@@ -12,9 +11,6 @@ function nameHash(name: string): number {
   for (const c of name) h = c.charCodeAt(0) + ((h << 5) - h)
   return Math.abs(h)
 }
-
-// Keep AVATAR_HUES referenced to avoid unused-var lint errors
-void AVATAR_HUES
 
 function Avatar({ name, size = 32 }: { name: string; size?: number }) {
   const hueClass = AVATAR_HUE_CLASSES[nameHash(name) % 8]

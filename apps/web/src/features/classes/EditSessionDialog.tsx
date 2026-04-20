@@ -109,7 +109,7 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[0.8125rem] font-semibold text-foreground-secondary mb-1.5">Status</label>
+                  <label className="block text-[0.8125rem] font-semibold text-foreground-secondary mb-1.5">{t('columns.status')}</label>
                   <select className="form-input w-full" value={form.status} onChange={(e) => setField('status', e.target.value as typeof form.status)}>
                     {statuses.map((s) => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
                   </select>

@@ -9,6 +9,7 @@ import {
   updateDoc,
   doc,
   serverTimestamp,
+  deleteField,
 } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { queryClient } from '../lib/queryClient'
@@ -80,8 +81,15 @@ type UpdateMembershipInput = Partial<Omit<Membership, 'id' | 'createdAt'>> & {
 
 export function useUpdateMembership() {
   return useMutation({
-    mutationFn: async ({ id, studentId: _sid, ...updates }: UpdateMembershipInput) => {
+    mutationFn: async ({ id, studentId, ...updates }: UpdateMembershipInput) => {
       await updateDoc(doc(db, COLLECTION, id), updates)
+      // When deactivating a membership, clear denormalized fields on the student doc
+      if (updates.active === false) {
+        await updateDoc(doc(db, 'students', studentId), {
+          activeMembershipId: deleteField(),
+          membershipTier: deleteField(),
+        })
+      }
     },
     onSuccess: (_result, input) => {
       queryClient.invalidateQueries({ queryKey: membershipQueryKey(input.studentId) })

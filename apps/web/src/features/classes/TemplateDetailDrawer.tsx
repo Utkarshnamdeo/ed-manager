@@ -136,13 +136,13 @@ function DetailsTab({
         {editing
           ? (
             <select className="form-input w-full" value={form.teacherId} onChange={(e) => setField('teacherId', e.target.value)}>
-              {teachers.map((t) => <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>)}
+              {teachers.map((tc) => <option key={tc.id} value={tc.id}>{tc.firstName} {tc.lastName}</option>)}
             </select>
           )
           : (
             <div className="text-[0.9375rem] text-foreground py-2">
-              {teachers.find((t) => t.id === template.teacherId)?.firstName ?? '—'}{' '}
-              {teachers.find((t) => t.id === template.teacherId)?.lastName ?? ''}
+              {teachers.find((tc) => tc.id === template.teacherId)?.firstName ?? '—'}{' '}
+              {teachers.find((tc) => tc.id === template.teacherId)?.lastName ?? ''}
             </div>
           )}
       </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { startOfDay, endOfDay, addDays, startOfMonth, endOfMonth } from 'date-fns'
 import { useClassSessionsByDateRange } from '../../hooks/useClassSessions'
@@ -26,7 +27,6 @@ const STATUS_BADGE: Record<string, string> = {
 
 interface SessionsTabProps {
   canManage: boolean
-  onAddSession: () => void
 }
 
 export function SessionsTab({ canManage }: SessionsTabProps) {
@@ -99,11 +99,11 @@ export function SessionsTab({ canManage }: SessionsTabProps) {
           {/* Column header */}
           <div className="grid grid-cols-[2rem_9rem_1fr_9rem_6rem_6rem_2rem] gap-3 items-center px-4 py-2 bg-muted border-b border-border">
             <div />
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date & Time</div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Class</div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('columns.dateTime')}</div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('columns.class')}</div>
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('form.teacher')}</div>
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('form.room')}</div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('columns.status')}</div>
             <div />
           </div>
 
@@ -174,12 +174,12 @@ export function SessionsTab({ canManage }: SessionsTabProps) {
                     )}
                     {!session.notes && <div className="flex-1" />}
 
-                    <a
-                      href="/attendance"
+                    <Link
+                      to="/attendance"
                       className="text-[0.8125rem] font-semibold text-primary no-underline"
                     >
                       {t('actions.openCheckin')}
-                    </a>
+                    </Link>
 
                     {canManage && session.status !== 'cancelled' && (
                       <>
@@ -194,7 +194,7 @@ export function SessionsTab({ canManage }: SessionsTabProps) {
                           disabled={updateSession.isPending}
                           className="text-[0.8125rem] font-semibold text-destructive bg-transparent border-0 cursor-pointer"
                         >
-                          {t('actions.deactivate')}
+                          {t('actions.cancelSession')}
                         </button>
                       </>
                     )}
