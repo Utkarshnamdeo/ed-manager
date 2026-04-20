@@ -7,12 +7,21 @@
     {
       "source": "apps/functions",
       "codebase": "default",
-      "ignore": ["node_modules", "lib"]
+      "predeploy": [
+        "npm --prefix apps/functions run build"
+      ],
+      "ignore": [
+        "node_modules"
+      ]
     }
   ],
   "hosting": {
     "public": "apps/web/dist",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
     "rewrites": [
       {
         "source": "**",
