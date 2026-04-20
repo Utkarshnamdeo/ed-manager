@@ -72,10 +72,16 @@
     "roster": "Roster",
     "sessions": "Sessions"
   },
+  "columns": {
+    "dateTime": "Date & Time",
+    "class": "Class",
+    "status": "Status"
+  },
   "actions": {
     "edit": "Edit",
     "save": "Save",
     "cancel": "Cancel",
+    "cancelSession": "Cancel session",
     "deactivate": "Deactivate",
     "activate": "Activate",
     "deactivateConfirm": "Deactivate {{name}}?",
@@ -84,7 +90,9 @@
   "roster": {
     "noStudents": "No regular students.",
     "addStudent": "Add student",
-    "removeStudent": "Remove"
+    "removeStudent": "Remove",
+    "studentCount": "{{count}} student",
+    "studentCount_other": "{{count}} students"
   },
   "errors": {
     "failedToLoad": "Failed to load classes."

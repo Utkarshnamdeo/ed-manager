@@ -72,10 +72,16 @@
     "roster": "Teilnehmer",
     "sessions": "Einheiten"
   },
+  "columns": {
+    "dateTime": "Datum & Uhrzeit",
+    "class": "Kurs",
+    "status": "Status"
+  },
   "actions": {
     "edit": "Bearbeiten",
     "save": "Speichern",
     "cancel": "Abbrechen",
+    "cancelSession": "Einheit absagen",
     "deactivate": "Deaktivieren",
     "activate": "Aktivieren",
     "deactivateConfirm": "{{name}} deaktivieren?",
@@ -84,7 +90,9 @@
   "roster": {
     "noStudents": "Keine regulären Schüler.",
     "addStudent": "Schüler hinzufügen",
-    "removeStudent": "Entfernen"
+    "removeStudent": "Entfernen",
+    "studentCount": "{{count}} Schüler",
+    "studentCount_other": "{{count}} Schüler"
   },
   "errors": {
     "failedToLoad": "Kurse konnten nicht geladen werden."
