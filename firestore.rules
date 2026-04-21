@@ -52,37 +52,37 @@ service cloud.firestore {
     match /students/{studentId} {
       allow read: if isAdminOrStaff() || isTeacher();
       allow create, update: if isAdmin() || (isStaff() && can('manageStudents'));
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     match /memberships/{membershipId} {
       allow read: if isAdminOrStaff();
       allow create, update: if isAdmin() || (isStaff() && can('manageStudents'));
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     match /teachers/{teacherId} {
       allow read: if isActive();
       allow create, update: if isAdmin() || (isStaff() && can('manageTeachers'));
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     match /rooms/{roomId} {
       allow read: if isActive();
       allow create, update: if isAdmin() || (isStaff() && can('manageRooms'));
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     match /classTemplates/{templateId} {
       allow read: if isActive();
       allow create, update: if isAdmin() || (isStaff() && can('manageClasses'));
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     match /classSessions/{sessionId} {
       allow read: if isActive();
       allow create, update: if isAdmin() || (isStaff() && can('manageClasses'));
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     match /attendanceRecords/{recordId} {
