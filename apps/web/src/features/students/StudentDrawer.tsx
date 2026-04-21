@@ -143,25 +143,31 @@ function ProfileTab({ student, canManage }: { student: Student; canManage: boole
 
 /* ─── Membership Card ── */
 
-function MembershipCard({ membership, onDeactivate, canManage }: {
+function MembershipCard({ membership, onDeactivate, onRenew, canManage }: {
   membership: Membership
   onDeactivate: () => void
+  onRenew: () => void
   canManage: boolean
 }) {
   const { t } = useTranslation('students')
   const today = new Date()
   const daysLeft = differenceInDays(membership.expiryDate, today)
+  const creditsLeft = membership.creditsRemaining ?? 0
   const pct = membership.creditsTotal != null && membership.creditsTotal > 0
-    ? Math.round(((membership.creditsRemaining ?? 0) / membership.creditsTotal) * 100)
+    ? Math.round((creditsLeft / membership.creditsTotal) * 100)
     : 0
 
+  const isExpiringSoon = daysLeft >= 0 && daysLeft <= 7
+  const isExpired = daysLeft < 0
+  const isLowCredits = membership.creditsTotal != null && creditsLeft <= 2 && creditsLeft > 0
+
   const expiryColor =
-    daysLeft < 0 ? 'text-destructive' :
-    daysLeft < 14 ? 'text-[oklch(0.52_0.14_85)]' :
+    isExpired ? 'text-destructive' :
+    isExpiringSoon ? 'text-[oklch(0.52_0.14_85)]' :
     'text-muted-foreground'
 
   const expiryText =
-    daysLeft < 0 ? t('membership.expired') :
+    isExpired ? t('membership.expired') :
     daysLeft === 0 ? t('membership.expiresToday') :
     t('membership.expiresIn', { days: daysLeft })
 
@@ -171,22 +177,35 @@ function MembershipCard({ membership, onDeactivate, canManage }: {
         <div className="flex items-center gap-2">
           <MembershipBadge tier={membership.tier} />
           <span className="text-sm font-semibold text-foreground capitalize">{membership.tier} Pass</span>
+          {(isExpiringSoon || isLowCredits) && (
+            <span className="text-[0.6rem] font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full bg-warning-subtle text-[oklch(0.50_0.14_85)]">
+              {isExpiringSoon ? t('membership.expiringAlert') : t('membership.lowCreditsAlert')}
+            </span>
+          )}
         </div>
         {canManage && membership.active && (
-          <button onClick={onDeactivate} className="text-xs text-destructive bg-transparent border-0 cursor-pointer">
-            {t('membership.deactivate')}
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={onRenew} className="text-xs font-semibold text-primary bg-transparent border-0 cursor-pointer">
+              {t('membership.renew')}
+            </button>
+            <button onClick={onDeactivate} className="text-xs text-destructive bg-transparent border-0 cursor-pointer">
+              {t('membership.deactivate')}
+            </button>
+          </div>
         )}
       </div>
 
       {membership.creditsTotal != null && (
         <>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{membership.creditsRemaining ?? 0} / {membership.creditsTotal} credits</span>
+            <span>{creditsLeft} / {membership.creditsTotal} credits remaining</span>
+            {isLowCredits && <span className="text-[oklch(0.52_0.14_85)]">Low</span>}
           </div>
           <div className="h-2 rounded-full bg-background overflow-hidden">
             <div
-              className="h-full bg-primary rounded-full"
+              className={`h-full rounded-full transition-[width] duration-300 ${
+                pct <= 20 ? 'bg-destructive' : pct <= 40 ? 'bg-warning' : 'bg-primary'
+              }`}
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -210,6 +229,7 @@ function MembershipTab({ student, canManage }: { student: Student; canManage: bo
   const { data: memberships } = useMembershipsByStudent(student.id)
   const updateMembership = useUpdateMembership()
   const [showAssign, setShowAssign] = useState(false)
+  const [renewTier, setRenewTier] = useState<import('../../types').MembershipTier | undefined>(undefined)
   const [showPast, setShowPast] = useState(false)
 
   const active = (memberships ?? []).find((m) => m.active)
@@ -219,10 +239,20 @@ function MembershipTab({ student, canManage }: { student: Student; canManage: bo
     await updateMembership.mutateAsync({ id: m.id, studentId: student.id, active: false })
   }
 
+  function handleRenew(m: Membership) {
+    setRenewTier(m.tier)
+    setShowAssign(true)
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {active ? (
-        <MembershipCard membership={active} onDeactivate={() => handleDeactivate(active)} canManage={canManage} />
+        <MembershipCard
+          membership={active}
+          onDeactivate={() => handleDeactivate(active)}
+          onRenew={() => handleRenew(active)}
+          canManage={canManage}
+        />
       ) : (
         <p className="text-sm text-muted-foreground py-2">{t('membership.none')}</p>
       )}
@@ -241,14 +271,26 @@ function MembershipTab({ student, canManage }: { student: Student; canManage: bo
           </button>
           {showPast && (
             <div className="mt-2 flex flex-col gap-2">
-              {past.map((m) => (
-                <div key={m.id} className="flex items-center gap-2 px-3 py-2 bg-muted rounded-[0.5rem]">
-                  <MembershipBadge tier={m.tier} />
-                  <span className="text-xs text-muted-foreground flex-1">
-                    {m.startDate.toLocaleDateString()} – {m.expiryDate.toLocaleDateString()}
-                  </span>
-                </div>
-              ))}
+              {past.map((m) => {
+                const creditsUsed = m.creditsTotal != null && m.creditsRemaining != null
+                  ? m.creditsTotal - m.creditsRemaining
+                  : null
+                return (
+                  <div key={m.id} className="flex items-center gap-2 px-3 py-2.5 bg-muted rounded-[0.5rem]">
+                    <MembershipBadge tier={m.tier} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs text-muted-foreground">
+                        {m.startDate.toLocaleDateString()} – {m.expiryDate.toLocaleDateString()}
+                      </div>
+                      {creditsUsed !== null && (
+                        <div className="text-xs text-muted-foreground/70 mt-0.5">
+                          {t('membership.creditsUsed', { used: creditsUsed, total: m.creditsTotal })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
@@ -256,7 +298,7 @@ function MembershipTab({ student, canManage }: { student: Student; canManage: bo
 
       {canManage && (
         <button
-          onClick={() => setShowAssign(true)}
+          onClick={() => { setRenewTier(undefined); setShowAssign(true) }}
           className="text-[0.8125rem] font-semibold text-primary bg-transparent border-0 cursor-pointer p-0 text-left"
         >
           {t('membership.assignNew')}
@@ -264,7 +306,11 @@ function MembershipTab({ student, canManage }: { student: Student; canManage: bo
       )}
 
       {showAssign && (
-        <AssignMembershipDialog studentId={student.id} onClose={() => setShowAssign(false)} />
+        <AssignMembershipDialog
+          studentId={student.id}
+          defaultTier={renewTier}
+          onClose={() => { setShowAssign(false); setRenewTier(undefined) }}
+        />
       )}
     </div>
   )

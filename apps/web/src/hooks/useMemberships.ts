@@ -35,6 +35,21 @@ function docToMembership(id: string, data: Record<string, unknown>): Membership 
   }
 }
 
+export function useActiveMemberships() {
+  return useQuery({
+    queryKey: ['memberships', 'active'],
+    queryFn: async () => {
+      const q = query(
+        collection(db, COLLECTION),
+        where('active', '==', true),
+      )
+      const snap = await getDocs(q)
+      return snap.docs.map((d) => docToMembership(d.id, d.data()))
+    },
+    staleTime: 60_000,
+  })
+}
+
 export function useMembershipsByStudent(studentId: string) {
   return useQuery({
     queryKey: membershipQueryKey(studentId),

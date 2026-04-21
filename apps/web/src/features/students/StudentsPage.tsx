@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { differenceInDays } from 'date-fns'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../contexts/AuthContext'
 import { useStudents, useCreateStudent } from '../../hooks/useStudents'
+import { useActiveMemberships } from '../../hooks/useMemberships'
 import { StudentDrawer } from './StudentDrawer'
-import type { MembershipTier, Student } from '../../types'
+import type { MembershipTier, Student, Membership } from '../../types'
 
 /* ─── Helpers ── */
 
@@ -121,8 +123,22 @@ function AddStudentForm({ onClose }: { onClose: () => void }) {
 
 /* ─── Student Row ── */
 
-function StudentRow({ student, onOpen }: { student: Student; onOpen: () => void }) {
+function StudentRow({ student, membership, onOpen }: {
+  student: Student
+  membership: Membership | undefined
+  onOpen: () => void
+}) {
+  const { t } = useTranslation('students')
   const fullName = `${student.firstName} ${student.lastName}`
+
+  const today = new Date()
+  const daysLeft = membership ? differenceInDays(membership.expiryDate, today) : null
+  const creditsLeft = membership?.creditsRemaining ?? null
+
+  const isExpiringSoon = daysLeft !== null && daysLeft >= 0 && daysLeft <= 7
+  const isExpired = daysLeft !== null && daysLeft < 0
+  const isLowCredits = creditsLeft !== null && creditsLeft <= 2 && !isExpired
+
   return (
     <div className="grid grid-cols-[1fr_10rem_4rem] gap-4 items-center px-5 py-3.5 border-t border-border hover:bg-muted transition-[background-color] duration-100">
       {/* Name */}
@@ -136,9 +152,19 @@ function StudentRow({ student, onOpen }: { student: Student; onOpen: () => void 
         </div>
       </div>
 
-      {/* Membership */}
-      <div>
-        <MembershipBadge tier={student.membershipTier} />
+      {/* Membership + alert */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <MembershipBadge tier={student.membershipTier} credits={creditsLeft} />
+        {(isExpiringSoon || isExpired) && (
+          <span className="text-[0.6rem] font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full bg-warning-subtle text-[oklch(0.50_0.14_85)]">
+            {isExpired ? t('membership.expired') : t('membership.expiringAlert')}
+          </span>
+        )}
+        {isLowCredits && !isExpiringSoon && (
+          <span className="text-[0.6rem] font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full bg-warning-subtle text-[oklch(0.50_0.14_85)]">
+            {t('membership.lowCreditsAlert')}
+          </span>
+        )}
       </div>
 
       {/* Actions */}
@@ -166,6 +192,10 @@ export function StudentsPage() {
   const canManage = appUser?.role === 'admin' || !!appUser?.permissions?.manageStudents
 
   const { data: students, isLoading, isError } = useStudents()
+  const { data: activeMemberships = [] } = useActiveMemberships()
+  const membershipByStudent = Object.fromEntries(
+    activeMemberships.map((m) => [m.studentId, m as Membership])
+  )
   const [search, setSearch] = useState('')
   const [tierFilter, setTierFilter] = useState<FilterTier>('all')
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
@@ -282,6 +312,7 @@ export function StudentsPage() {
           <StudentRow
             key={student.id}
             student={student}
+            membership={membershipByStudent[student.id]}
             onOpen={() => setSelectedStudent(student)}
           />
         ))}

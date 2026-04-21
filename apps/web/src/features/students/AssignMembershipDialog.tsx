@@ -7,6 +7,7 @@ import type { MembershipTier } from '../../types'
 
 interface AssignMembershipDialogProps {
   studentId: string
+  defaultTier?: MembershipTier
   onClose: () => void
 }
 
@@ -26,15 +27,18 @@ const DEFAULT_CREDITS: Record<MembershipTier, number | null> = {
   bronze: 5,
 }
 
-export function AssignMembershipDialog({ studentId, onClose }: AssignMembershipDialogProps) {
+export function AssignMembershipDialog({ studentId, defaultTier, onClose }: AssignMembershipDialogProps) {
   const { t } = useTranslation('students')
   const createMembership = useCreateMembership()
 
   const today = new Date()
-  const [tier, setTier] = useState<MembershipTier>('silver')
+  const initialTier = defaultTier ?? 'silver'
+  const [tier, setTier] = useState<MembershipTier>(initialTier)
   const [startDate, setStartDate] = useState(toDateInput(today))
-  const [expiryDate, setExpiryDate] = useState(toDateInput(addDays(today, EXPIRY_DAYS['silver'])))
-  const [creditsTotal, setCreditsTotal] = useState<string>('10')
+  const [expiryDate, setExpiryDate] = useState(toDateInput(addDays(today, EXPIRY_DAYS[initialTier])))
+  const [creditsTotal, setCreditsTotal] = useState<string>(
+    DEFAULT_CREDITS[initialTier] != null ? String(DEFAULT_CREDITS[initialTier]) : ''
+  )
 
   function handleTierChange(newTier: MembershipTier) {
     setTier(newTier)

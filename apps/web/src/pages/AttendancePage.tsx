@@ -1,10 +1,24 @@
 import { useState } from 'react'
+import { addDays, format, isToday } from 'date-fns'
 import { useTranslation } from 'react-i18next'
-import type { AttendanceStatus } from '../types'
+import { useClassSessionsByDate } from '../hooks/useClassSessions'
+import { useStudents } from '../hooks/useStudents'
+import { useTeachers } from '../hooks/useTeachers'
+import { useRooms } from '../hooks/useRooms'
+import { useClassTemplates } from '../hooks/useClassTemplates'
+import { useAttendanceRecordsBySession } from '../hooks/useAttendanceRecords'
+import { useCreateAttendanceRecord } from '../hooks/useAttendanceRecords'
+import { usePricingConfig } from '../hooks/usePricingConfig'
+import { useAuth } from '../contexts/AuthContext'
+import { CombinationPickerDialog } from '../features/attendance/CombinationPickerDialog'
+import type { ClassSession, Student, Teacher, Room, AttendanceStatus, ClassTemplate } from '../types'
 
-/* ─── Avatar ── */
+/* ─── Avatar ─────────────────────────────────────────────── */
 
-const AVATAR_HUE_CLASSES = ['avatar-h-0', 'avatar-h-1', 'avatar-h-2', 'avatar-h-3', 'avatar-h-4', 'avatar-h-5', 'avatar-h-6', 'avatar-h-7']
+const AVATAR_HUE_CLASSES = [
+  'avatar-h-0','avatar-h-1','avatar-h-2','avatar-h-3',
+  'avatar-h-4','avatar-h-5','avatar-h-6','avatar-h-7',
+]
 
 function nameHash(name: string): number {
   let h = 0
@@ -12,176 +26,107 @@ function nameHash(name: string): number {
   return Math.abs(h)
 }
 
-function Avatar({ name, size = 32 }: { name: string; size?: number }) {
+function Avatar({ name }: { name: string }) {
   const hueClass = AVATAR_HUE_CLASSES[nameHash(name) % 8]
   const initials = name.split(' ').slice(0, 2).map((p) => p[0]).join('').toUpperCase()
-  const sizeClass = size <= 32 ? 'size-8 text-[0.6875rem]' : 'size-12 text-sm'
-
   return (
     <div
       aria-hidden="true"
-      className={`${sizeClass} rounded-full flex items-center justify-center font-bold shrink-0 tracking-[-0.01em] select-none ${hueClass}`}
+      className={`size-8 rounded-full flex items-center justify-center font-bold shrink-0 tracking-[-0.01em] select-none text-[0.6875rem] ${hueClass}`}
     >
       {initials}
     </div>
   )
 }
 
-/* ─── Membership Badge ── */
+/* ─── Membership Badge ────────────────────────────────────── */
 
-type Tier = 'gold' | 'silver' | 'bronze' | 'trial' | 'drop-in' | 'usc'
-
-const TIER_LABEL: Record<Tier, string> = {
-  gold:      'Gold',
-  silver:    'Silver',
-  bronze:    'Bronze',
-  trial:     'Trial',
-  'drop-in': 'Drop-in',
-  usc:       'USC',
+const TIER_CLASS: Record<string, string> = {
+  gold:   'badge-gold',
+  silver: 'badge-silver',
+  bronze: 'badge-bronze',
 }
 
-const TIER_CLASS: Record<Tier, string> = {
-  gold:      'badge-gold',
-  silver:    'badge-silver',
-  bronze:    'badge-bronze',
-  trial:     'bg-secondary-subtle text-secondary',
-  'drop-in': 'bg-muted text-muted-foreground',
-  usc:       'badge-usc',
-}
-
-function MembershipBadge({ tier, credits }: { tier: Tier; credits?: number | null }) {
-  const lowCredit = typeof credits === 'number' && credits <= 2
-  const badgeClass = lowCredit && credits === 1
-    ? 'bg-warning-subtle text-[oklch(0.50_0.14_85)]'
-    : lowCredit && credits === 0
-    ? 'bg-destructive-subtle text-destructive'
-    : TIER_CLASS[tier]
-
+function MembershipBadge({ tier }: { tier: string | null }) {
+  if (!tier) return <span className="inline-flex items-center py-[0.15rem] px-2 rounded-full text-[0.6875rem] font-semibold bg-muted text-muted-foreground">No pass</span>
   return (
-    <span className={`inline-flex items-center gap-1 py-[0.15rem] px-2 rounded-full text-[0.6875rem] font-semibold whitespace-nowrap ${badgeClass}`}>
-      {TIER_LABEL[tier]}
-      {typeof credits === 'number' && tier !== 'gold' && <> · {credits}</>}
+    <span className={`inline-flex items-center py-[0.15rem] px-2 rounded-full text-[0.6875rem] font-semibold whitespace-nowrap capitalize ${TIER_CLASS[tier] ?? 'bg-muted text-muted-foreground'}`}>
+      {tier}
     </span>
   )
 }
 
-/* ─── Check-in Button Group ── */
+/* ─── Check-in Button Group ───────────────────────────────── */
 
-const STATUS_CLASSES: Record<AttendanceStatus, { selected: string; unselected: string }> = {
-  present: { selected: 'bg-success text-success-foreground border-0',           unselected: 'bg-card text-muted-foreground border border-border' },
-  late:    { selected: 'bg-warning text-warning-foreground border-0',            unselected: 'bg-card text-muted-foreground border border-border' },
-  absent:  { selected: 'bg-muted text-foreground-secondary border-0',            unselected: 'bg-card text-muted-foreground border border-border' },
-  trial:   { selected: 'bg-secondary text-secondary-foreground border-0',        unselected: 'bg-card text-muted-foreground border border-border' },
+const STATUS_BUTTON_CLASSES: Record<AttendanceStatus, { selected: string; unselected: string }> = {
+  present: { selected: 'bg-success text-success-foreground border-0',    unselected: 'bg-card text-muted-foreground border border-border' },
+  late:    { selected: 'bg-warning text-warning-foreground border-0',     unselected: 'bg-card text-muted-foreground border border-border' },
+  absent:  { selected: 'bg-muted text-foreground-secondary border-0',     unselected: 'bg-card text-muted-foreground border border-border' },
+  trial:   { selected: 'bg-secondary text-secondary-foreground border-0', unselected: 'bg-card text-muted-foreground border border-border' },
 }
 
-const STATUS_LABELS: Record<AttendanceStatus, { label: string; title: string }> = {
+const STATUS_BUTTON_LABELS: Record<AttendanceStatus, { label: string; title: string }> = {
   present: { label: '✓', title: 'Present' },
   late:    { label: 'L', title: 'Late' },
   absent:  { label: '—', title: 'Absent' },
   trial:   { label: 'T', title: 'Trial' },
 }
 
-function CheckInButtons({
-  studentId,
-  current,
-  onChange,
-}: {
-  studentId: string
-  current: AttendanceStatus | null
-  onChange: (id: string, status: AttendanceStatus) => void
-}) {
-  return (
-    <div className="flex gap-1 shrink-0" role="group" aria-label="Check-in status">
-      {(Object.keys(STATUS_LABELS) as AttendanceStatus[]).map((status) => {
-        const isSelected = current === status
-        const isDimmed = current !== null && !isSelected
-        const { label, title } = STATUS_LABELS[status]
-        const classes = STATUS_CLASSES[status]
-        return (
-          <button
-            key={status}
-            title={title}
-            aria-label={title}
-            aria-pressed={isSelected}
-            onClick={() => onChange(studentId, status)}
-            className={`size-8 rounded-[6px] text-xs font-bold flex items-center justify-center transition-[background-color,opacity,border-color] duration-[120ms] cursor-pointer ${isSelected ? classes.selected : classes.unselected} ${isDimmed ? 'opacity-35' : ''}`}
-          >
-            {label}
-          </button>
-        )
-      })}
-    </div>
-  )
+/* ─── Student Row ─────────────────────────────────────────── */
+
+interface StudentRowProps {
+  student: Student
+  currentStatus: AttendanceStatus | null
+  onStatusClick: (s: AttendanceStatus) => void
+  locked: boolean
 }
 
-/* ─── Student Row ── */
-
-interface MockStudent {
-  id: string
-  name: string
-  tier: Tier
-  credits: number | null
-}
-
-function StudentRow({
-  student,
-  status,
-  onStatusChange,
-}: {
-  student: MockStudent
-  status: AttendanceStatus | null
-  onStatusChange: (id: string, s: AttendanceStatus) => void
-}) {
-  const isCheckedIn = status !== null
-  const rowBgClass = status === 'present'
-    ? 'bg-[oklch(0.97_0.02_145)]'
-    : status === 'late'
-    ? 'bg-[oklch(0.98_0.02_85)]'
-    : 'bg-transparent'
-
-  const creditColor = typeof student.credits === 'number' && student.credits <= 1
-    ? 'text-destructive'
-    : student.credits === 2
-    ? 'text-[oklch(0.52_0.14_85)]'
-    : 'text-muted-foreground'
+function StudentRow({ student, currentStatus, onStatusClick, locked }: StudentRowProps) {
+  const rowBgClass =
+    currentStatus === 'present' ? 'bg-[oklch(0.97_0.02_145)]' :
+    currentStatus === 'late'    ? 'bg-[oklch(0.98_0.02_85)]'  :
+    'bg-transparent'
 
   return (
     <div className={`flex items-center gap-3 px-4 py-2.5 border-b border-border transition-[background-color] duration-150 min-h-[52px] ${rowBgClass}`}>
-      <Avatar name={student.name} size={32} />
+      <Avatar name={`${student.firstName} ${student.lastName}`} />
 
       <div className="flex-1 min-w-0">
-        <div className={`text-sm ${isCheckedIn ? 'font-semibold' : 'font-medium'} text-foreground whitespace-nowrap overflow-hidden text-ellipsis`}>
-          {student.name}
+        <div className={`text-sm font-medium text-foreground whitespace-nowrap overflow-hidden text-ellipsis ${currentStatus ? 'font-semibold' : ''}`}>
+          {student.firstName} {student.lastName}
         </div>
         <div className="mt-[2px]">
-          <MembershipBadge tier={student.tier} credits={student.credits} />
+          <MembershipBadge tier={student.membershipTier} />
         </div>
       </div>
 
-      {typeof student.credits === 'number' && student.tier !== 'gold' && (
-        <div className={`text-xs font-medium shrink-0 min-w-[60px] text-right ${creditColor}`}>
-          {student.credits === 0 ? 'Expired' : `${student.credits} left`}
-        </div>
-      )}
-
-      <CheckInButtons studentId={student.id} current={status} onChange={onStatusChange} />
+      {/* Check-in buttons */}
+      <div className="flex gap-1 shrink-0" role="group" aria-label="Check-in status">
+        {(Object.keys(STATUS_BUTTON_LABELS) as AttendanceStatus[]).map((status) => {
+          const isSelected = currentStatus === status
+          const isDimmed = currentStatus !== null && !isSelected
+          const { label, title } = STATUS_BUTTON_LABELS[status]
+          const cls = STATUS_BUTTON_CLASSES[status]
+          return (
+            <button
+              key={status}
+              title={title}
+              aria-label={title}
+              aria-pressed={isSelected}
+              disabled={locked && !isSelected}
+              onClick={() => onStatusClick(status)}
+              className={`size-8 rounded-[6px] text-xs font-bold flex items-center justify-center transition-[background-color,opacity,border-color] duration-[120ms] cursor-pointer ${isSelected ? cls.selected : cls.unselected} ${isDimmed ? 'opacity-35' : ''} ${locked && !isSelected ? 'cursor-not-allowed' : ''}`}
+            >
+              {label}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
 
-/* ─── Session Card ── */
-
-interface MockSession {
-  id: string
-  name: string
-  type?: string
-  time: string
-  teacher: string
-  room: string
-  status: 'active' | 'planned' | 'completed' | 'cancelled'
-  capacity: number
-  students: MockStudent[]
-}
+/* ─── Session Card ────────────────────────────────────────── */
 
 const STATUS_DOT_CLASS: Record<string, string> = {
   active:    'bg-success',
@@ -190,55 +135,144 @@ const STATUS_DOT_CLASS: Record<string, string> = {
   cancelled: 'bg-destructive',
 }
 
-function SessionCard({
-  session,
-  defaultExpanded,
-  checkIns,
-  onCheckIn,
-}: {
-  session: MockSession
-  defaultExpanded: boolean
-  checkIns: Record<string, AttendanceStatus | null>
-  onCheckIn: (studentId: string, status: AttendanceStatus) => void
-}) {
-  const [expanded, setExpanded] = useState(defaultExpanded)
+interface SessionCardProps {
+  session: ClassSession
+  teacher: Teacher | undefined
+  room: Room | undefined
+  template: ClassTemplate | undefined
+  studentMap: Record<string, Student>
+  markedById: string
+}
 
-  const checkedInCount = session.students.filter((s) => checkIns[s.id] !== null && checkIns[s.id] !== undefined).length
-  const presentCount = session.students.filter((s) => checkIns[s.id] === 'present').length
+interface PendingCheckIn {
+  student: Student
+  status: AttendanceStatus
+}
+
+function SessionCard({ session, teacher, room, template, studentMap, markedById }: SessionCardProps) {
+  const { data: pricingConfig } = usePricingConfig()
+  const { data: records = [] } = useAttendanceRecordsBySession(session.id)
+  const createRecord = useCreateAttendanceRecord()
+
+  const [expanded, setExpanded] = useState(session.status === 'active')
+  const [pending, setPending] = useState<PendingCheckIn | null>(null)
+  const [rosterSearch, setRosterSearch] = useState('')
+  const [rosterFilter, setRosterFilter] = useState<'all' | 'unchecked' | 'present'>('all')
+
+  // Build roster: template regulars + any drop-ins already checked in
+  const regularIds = template?.regularStudentIds ?? []
+  const checkedInIds = records.map((r) => r.studentId)
+  const rosterIds = [...new Set([...regularIds, ...checkedInIds])]
+  const roster = rosterIds.map((id) => studentMap[id]).filter(Boolean)
+
+  // Map studentId → attendance record
+  const recordMap = Object.fromEntries(records.map((r) => [r.studentId, r]))
+
+  // Counts
+  const presentCount = records.filter((r) => r.status === 'present').length
+  const checkedInCount = records.length
   const isActive = session.status === 'active'
+  const isCancelled = session.status === 'cancelled'
+
+  const teacherName = teacher ? `${teacher.firstName} ${teacher.lastName}` : '—'
+  const roomName = room?.name ?? '—'
+  const timeLabel = `${session.startTime}–${session.endTime}`
+
+  function handleStatusClick(student: Student, status: AttendanceStatus) {
+    if (recordMap[student.id]) return // already checked in, immutable
+
+    if (status === 'absent') {
+      // Direct write — no combination needed
+      createRecord.mutate({
+        sessionId: session.id,
+        studentId: student.id,
+        status: 'absent',
+        combination: [],
+        membershipId: null,
+        membershipSnapshot: null,
+        cashAmount: null,
+        cashDefault: pricingConfig?.dropInCashRate ?? null,
+        estimatedValue: 0,
+        shortfall: false,
+        shortfallAmount: null,
+        markedBy: markedById,
+      })
+      return
+    }
+
+    // present / late / trial → open combination picker
+    setPending({ student, status })
+  }
+
+  function handlePickerConfirm(result: {
+    combination: import('../types').AttendanceCombination
+    cashAmount: number | null
+    estimatedValue: number
+    membershipId: string | null
+    membershipSnapshot: import('../types').AttendanceRecord['membershipSnapshot']
+  }) {
+    if (!pending) return
+    createRecord.mutate({
+      sessionId: session.id,
+      studentId: pending.student.id,
+      status: pending.status,
+      combination: result.combination,
+      membershipId: result.membershipId,
+      membershipSnapshot: result.membershipSnapshot,
+      cashAmount: result.cashAmount,
+      cashDefault: pricingConfig?.dropInCashRate ?? null,
+      estimatedValue: result.estimatedValue,
+      shortfall: false,
+      shortfallAmount: null,
+      markedBy: markedById,
+    })
+    setPending(null)
+  }
+
+  // Filtered roster
+  const filteredRoster = roster.filter((student) => {
+    const record = recordMap[student.id]
+    if (rosterFilter === 'unchecked' && record) return false
+    if (rosterFilter === 'present' && record?.status !== 'present') return false
+    if (rosterSearch) {
+      const name = `${student.firstName} ${student.lastName}`.toLowerCase()
+      if (!name.includes(rosterSearch.toLowerCase())) return false
+    }
+    return true
+  })
 
   return (
     <div className={`bg-card border border-border rounded-[0.875rem] overflow-hidden border-l-4 ${isActive ? 'border-l-primary' : 'border-l-transparent'} ${session.status === 'completed' ? 'opacity-75' : ''}`}>
 
       {/* Card Header */}
       <button
-        onClick={() => session.status !== 'cancelled' && setExpanded((e) => !e)}
-        disabled={session.status === 'cancelled'}
-        className={`flex items-center w-full px-4 py-3.5 bg-transparent border-0 gap-2.5 text-left ${session.status === 'cancelled' ? 'cursor-default' : 'cursor-pointer'}`}
+        onClick={() => !isCancelled && setExpanded((e) => !e)}
+        disabled={isCancelled}
+        className={`flex items-center w-full px-4 py-3.5 bg-transparent border-0 gap-2.5 text-left ${isCancelled ? 'cursor-default' : 'cursor-pointer'}`}
       >
-        <div className={`size-2 rounded-full shrink-0 ${STATUS_DOT_CLASS[session.status]}`} />
+        <div className={`size-2 rounded-full shrink-0 ${STATUS_DOT_CLASS[session.status] ?? 'bg-muted-foreground'}`} />
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className={`text-[0.9375rem] font-bold text-foreground tracking-[-0.01em] ${session.status === 'cancelled' ? 'line-through' : ''}`}>
+            <span className={`text-[0.9375rem] font-bold text-foreground tracking-[-0.01em] ${isCancelled ? 'line-through' : ''}`}>
               {session.name}
             </span>
-            {session.type && (
-              <span className="text-[0.6875rem] font-semibold px-2 py-[0.15rem] rounded-full bg-warning-subtle text-[oklch(0.50_0.14_85)]">
+            {session.isSpecial && (
+              <span className="text-[0.6875rem] font-semibold px-2 py-[0.15rem] rounded-full bg-warning-subtle text-[oklch(0.50_0.14_85)] capitalize">
                 {session.type}
               </span>
             )}
           </div>
           <div className="text-[0.8125rem] text-muted-foreground mt-[2px]">
-            {session.time} · {session.teacher} · {session.room}
+            {timeLabel} · {teacherName} · {roomName}
           </div>
         </div>
 
         <div className={`text-[0.8125rem] font-semibold shrink-0 text-right ${checkedInCount > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>
-          {presentCount} <span className="font-normal text-muted-foreground">/ {session.students.length}</span>
+          {presentCount} <span className="font-normal text-muted-foreground">/ {roster.length}</span>
         </div>
 
-        {session.status !== 'cancelled' && (
+        {!isCancelled && (
           <svg
             width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
@@ -250,7 +284,7 @@ function SessionCard({
       </button>
 
       {/* Expanded: roster */}
-      {expanded && (
+      {expanded && !isCancelled && (
         <div className="border-t border-border">
           {/* Search / filter bar */}
           <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border bg-muted">
@@ -262,125 +296,161 @@ function SessionCard({
               </span>
               <input
                 type="text"
+                value={rosterSearch}
+                onChange={(e) => setRosterSearch(e.target.value)}
                 placeholder="Search students…"
                 className="form-input w-full pl-7 text-[0.8125rem] rounded-md"
               />
             </div>
             <div className="flex gap-1 shrink-0">
-              {['All', 'Unchecked', 'Present'].map((f) => (
-                <span
+              {(['all', 'unchecked', 'present'] as const).map((f) => (
+                <button
                   key={f}
-                  className={`text-[0.6875rem] font-semibold px-2.5 py-1 rounded-full cursor-pointer whitespace-nowrap ${
-                    f === 'All'
+                  onClick={() => setRosterFilter(f)}
+                  className={`text-[0.6875rem] font-semibold px-2.5 py-1 rounded-full cursor-pointer whitespace-nowrap border-0 capitalize ${
+                    rosterFilter === f
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-card text-muted-foreground border border-border'
                   }`}
                 >
                   {f}
-                </span>
+                </button>
               ))}
             </div>
           </div>
 
           {/* Student rows */}
-          {session.students.map((student) => (
-            <StudentRow
-              key={student.id}
-              student={student}
-              status={checkIns[student.id] ?? null}
-              onStatusChange={onCheckIn}
-            />
-          ))}
+          {filteredRoster.length === 0 ? (
+            <div className="px-4 py-6 text-center text-muted-foreground text-sm">
+              {roster.length === 0 ? 'No students on roster yet.' : 'No students match the filter.'}
+            </div>
+          ) : (
+            filteredRoster.map((student) => {
+              const record = recordMap[student.id]
+              return (
+                <StudentRow
+                  key={student.id}
+                  student={student}
+                  currentStatus={record?.status ?? null}
+                  onStatusClick={(s) => handleStatusClick(student, s)}
+                  locked={!!record}
+                />
+              )
+            })
+          )}
 
           {/* Footer */}
           <div className="flex items-center justify-between px-4 py-2.5 bg-muted border-t border-border">
             <span className="text-xs text-muted-foreground font-medium">
-              {session.students.length} students · {presentCount} present · {checkedInCount - presentCount} other · {session.students.length - checkedInCount} unchecked
+              {roster.length} on roster · {presentCount} present · {checkedInCount - presentCount} other · {roster.length - checkedInCount} unchecked
             </span>
-            <button className="text-[0.8125rem] font-semibold text-primary bg-transparent border-0 cursor-pointer p-0">
-              + Add Drop-in
-            </button>
           </div>
         </div>
+      )}
+
+      {/* Combination picker dialog */}
+      {pending && (
+        <CombinationPickerDialog
+          student={pending.student}
+          session={session}
+          status={pending.status}
+          pricingConfig={pricingConfig ?? null}
+          markedBy={markedById}
+          onConfirm={handlePickerConfirm}
+          onClose={() => setPending(null)}
+        />
       )}
     </div>
   )
 }
 
-/* ─── Attendance Page ── */
-
-const MOCK_SESSIONS: MockSession[] = [
-  {
-    id: 's1',
-    name: 'Bachata Beginner',
-    time: '19:00–20:30',
-    teacher: 'Maria Lopez',
-    room: 'Room A',
-    status: 'active',
-    capacity: 20,
-    students: [
-      { id: 'st1', name: 'Ana Schmidt',  tier: 'silver', credits: 8 },
-      { id: 'st2', name: 'Marco Bauer', tier: 'gold',   credits: null },
-      { id: 'st3', name: 'Emma Reyes',  tier: 'bronze', credits: 2 },
-    ],
-  },
-  {
-    id: 's2',
-    name: 'Kizomba Intermediate',
-    time: '20:30–22:00',
-    teacher: 'Carlos Ferreira',
-    room: 'Room B',
-    status: 'planned',
-    capacity: 15,
-    students: [
-      { id: 'st4', name: 'Jonas Weber', tier: 'silver', credits: 3 },
-      { id: 'st5', name: 'Mia Klein',   tier: 'gold',   credits: null },
-    ],
-  },
-]
+/* ─── Attendance Page ─────────────────────────────────────── */
 
 export function AttendancePage() {
-  const { i18n } = useTranslation()
-  const today = new Date()
-  const formattedDate = today.toLocaleDateString(i18n.language, {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-  })
+  const { t } = useTranslation('attendance')
+  const { appUser } = useAuth()
+  const [selectedDate, setSelectedDate] = useState(() => new Date())
 
-  const allStudentIds = MOCK_SESSIONS.flatMap((s) => s.students.map((st) => st.id))
+  const { data: sessions = [], isLoading, isError } = useClassSessionsByDate(selectedDate)
+  const { data: students = [] } = useStudents()
+  const { data: teachers = [] } = useTeachers()
+  const { data: rooms = [] } = useRooms()
+  const { data: templates = [] } = useClassTemplates()
 
-  const [liveCheckIns, setLiveCheckIns] = useState<Record<string, AttendanceStatus | null>>(() => ({
-    ...Object.fromEntries(allStudentIds.map((id) => [id, null as AttendanceStatus | null])),
-    st2: 'present' as AttendanceStatus,
-  }))
+  const studentMap = Object.fromEntries(students.map((s) => [s.id, s]))
+  const teacherMap = Object.fromEntries(teachers.map((tc) => [tc.id, tc]))
+  const roomMap = Object.fromEntries(rooms.map((r) => [r.id, r]))
+  const templateMap = Object.fromEntries(templates.map((tmpl) => [tmpl.id, tmpl]))
 
-  function handleCheckIn(studentId: string, status: AttendanceStatus) {
-    setLiveCheckIns((prev) => ({ ...prev, [studentId]: prev[studentId] === status ? null : status }))
-  }
+  const dateLabel = isToday(selectedDate)
+    ? `Today, ${format(selectedDate, 'MMMM d')}`
+    : format(selectedDate, 'EEEE, MMMM d')
 
-  const sessionCount = MOCK_SESSIONS.length
-  const activeCount = MOCK_SESSIONS.filter((s) => s.status === 'active').length
+  const sessionCount = sessions.length
+  const activeCount = sessions.filter((s) => s.status === 'active').length
 
   return (
     <div className="page-enter p-7 flex flex-col gap-4">
 
-      {/* Date header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-card border border-border rounded-[0.75rem]">
-        <span className="text-[0.9375rem] font-bold text-foreground tracking-[-0.01em]">
-          {formattedDate}
+      {/* Date navigation header */}
+      <div className="flex items-center gap-2 px-4 py-3 bg-card border border-border rounded-[0.75rem]">
+        <button
+          onClick={() => setSelectedDate((d) => addDays(d, -1))}
+          aria-label="Previous day"
+          className="size-8 flex items-center justify-center rounded-[0.5rem] border border-border hover:bg-muted transition-colors cursor-pointer bg-card shrink-0"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+
+        <span className="text-[0.9375rem] font-bold text-foreground tracking-[-0.01em] flex-1 text-center">
+          {dateLabel}
         </span>
-        <span className="text-[0.8125rem] text-muted-foreground font-medium">
-          {sessionCount} sessions · {activeCount} active
+
+        <button
+          onClick={() => setSelectedDate((d) => addDays(d, 1))}
+          aria-label="Next day"
+          className="size-8 flex items-center justify-center rounded-[0.5rem] border border-border hover:bg-muted transition-colors cursor-pointer bg-card shrink-0"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+
+        <span className="text-[0.8125rem] text-muted-foreground font-medium shrink-0 ml-2">
+          {sessionCount} {sessionCount === 1 ? 'session' : 'sessions'}{activeCount > 0 ? ` · ${activeCount} active` : ''}
         </span>
       </div>
 
+      {/* Loading / error states */}
+      {isLoading && (
+        <div className="py-10 text-center text-muted-foreground text-sm">Loading…</div>
+      )}
+
+      {isError && (
+        <div className="py-10 text-center text-destructive text-sm">
+          {t('errors.failedToLoad')}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!isLoading && !isError && sessions.length === 0 && (
+        <div className="py-10 text-center text-muted-foreground text-sm">
+          {t('noSessions')}
+        </div>
+      )}
+
       {/* Session cards */}
-      {MOCK_SESSIONS.map((session) => (
+      {!isLoading && sessions.map((session) => (
         <SessionCard
           key={session.id}
           session={session}
-          defaultExpanded={session.status === 'active'}
-          checkIns={liveCheckIns}
-          onCheckIn={handleCheckIn}
+          teacher={teacherMap[session.teacherId]}
+          room={roomMap[session.roomId]}
+          template={session.templateId ? templateMap[session.templateId] : undefined}
+          studentMap={studentMap}
+          markedById={appUser?.uid ?? ''}
         />
       ))}
     </div>

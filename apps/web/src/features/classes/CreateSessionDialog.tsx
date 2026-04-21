@@ -9,16 +9,19 @@ import type { DanceStyle, ClassLevel, ClassType, ClassTemplate } from '../../typ
 
 interface CreateSessionDialogProps {
   onClose: () => void
+  defaultDate?: Date
 }
 
-export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
+export function CreateSessionDialog({ onClose, defaultDate }: CreateSessionDialogProps) {
   const { t } = useTranslation('classes')
   const createSession = useCreateClassSession()
   const { data: templates } = useClassTemplates()
   const { data: teachers } = useTeachers()
   const { data: rooms } = useRooms()
 
-  const todayStr = new Date().toISOString().split('T')[0]
+  const defaultDateStr = defaultDate
+    ? defaultDate.toISOString().split('T')[0]
+    : new Date().toISOString().split('T')[0]
 
   const [form, setForm] = useState({
     templateId: '' as string | null,
@@ -26,7 +29,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     style: 'bachata' as DanceStyle,
     level: 'beginner' as ClassLevel,
     type: 'regular' as ClassType,
-    date: todayStr,
+    date: defaultDateStr,
     startTime: '19:00',
     endTime: '20:30',
     teacherId: teachers?.[0]?.id ?? '',
