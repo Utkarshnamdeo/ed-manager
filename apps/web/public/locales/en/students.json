@@ -38,8 +38,12 @@
     "started": "Started",
     "expires": "Expires",
     "assignNew": "+ Assign New Membership",
+    "renew": "Renew",
     "past": "Past memberships",
-    "deactivate": "Deactivate"
+    "deactivate": "Deactivate",
+    "expiringAlert": "Expiring soon",
+    "lowCreditsAlert": "Low credits",
+    "creditsUsed": "{{used}} of {{total}} credits used"
   },
   "assignMembership": {
     "title": "Assign Membership",

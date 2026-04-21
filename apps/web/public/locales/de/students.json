@@ -38,8 +38,12 @@
     "started": "Beginn",
     "expires": "Ablauf",
     "assignNew": "+ Neue Mitgliedschaft zuweisen",
+    "renew": "Verlängern",
     "past": "Vergangene Mitgliedschaften",
-    "deactivate": "Deaktivieren"
+    "deactivate": "Deaktivieren",
+    "expiringAlert": "Läuft bald ab",
+    "lowCreditsAlert": "Wenig Credits",
+    "creditsUsed": "{{used}} von {{total}} Credits verbraucht"
   },
   "assignMembership": {
     "title": "Mitgliedschaft zuweisen",
