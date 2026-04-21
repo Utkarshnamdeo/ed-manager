@@ -72,7 +72,10 @@
     "cancel": "Cancel",
     "deactivate": "Deactivate",
     "activate": "Activate",
-    "deactivateConfirm": "Deactivate {{name}}?"
+    "deactivateConfirm": "Deactivate {{name}}?",
+    "delete": "Delete",
+    "deleteConfirm": "Permanently delete {{name}} and all their data?",
+    "deleteWarning": "This cannot be undone."
   },
   "status": {
     "active": "Active",

@@ -82,10 +82,16 @@
     "save": "Speichern",
     "cancel": "Abbrechen",
     "cancelSession": "Einheit absagen",
+    "cancelSessionConfirm": "Einheit {{name}} absagen? Sie wird als abgesagt markiert.",
     "deactivate": "Deaktivieren",
     "activate": "Aktivieren",
     "deactivateConfirm": "{{name}} deaktivieren?",
-    "openCheckin": "Check-in öffnen →"
+    "openCheckin": "Check-in öffnen →",
+    "delete": "Löschen",
+    "deleteTemplate": "Vorlage löschen",
+    "deleteSession": "Einheit löschen",
+    "deleteConfirm": "{{name}} dauerhaft löschen?",
+    "deleteWarning": "Dies kann nicht rückgängig gemacht werden."
   },
   "roster": {
     "noStudents": "Keine regulären Schüler.",

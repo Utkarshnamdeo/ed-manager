@@ -72,7 +72,10 @@
     "cancel": "Abbrechen",
     "deactivate": "Deaktivieren",
     "activate": "Aktivieren",
-    "deactivateConfirm": "{{name}} deaktivieren?"
+    "deactivateConfirm": "{{name}} deaktivieren?",
+    "delete": "Löschen",
+    "deleteConfirm": "{{name}} und alle Daten dauerhaft löschen?",
+    "deleteWarning": "Dies kann nicht rückgängig gemacht werden."
   },
   "status": {
     "active": "Aktiv",

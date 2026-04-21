@@ -13,7 +13,10 @@
     "cancel": "Cancel",
     "deactivate": "Deactivate",
     "activate": "Activate",
-    "deactivateConfirm": "Deactivate {{name}}?"
+    "deactivateConfirm": "Deactivate {{name}}?",
+    "delete": "Delete",
+    "deleteConfirm": "Permanently delete {{name}}?",
+    "deleteWarning": "This cannot be undone."
   },
   "status": {
     "active": "Active",

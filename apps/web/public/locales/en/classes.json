@@ -82,10 +82,16 @@
     "save": "Save",
     "cancel": "Cancel",
     "cancelSession": "Cancel session",
+    "cancelSessionConfirm": "Cancel session {{name}}? This will mark it as cancelled.",
     "deactivate": "Deactivate",
     "activate": "Activate",
     "deactivateConfirm": "Deactivate {{name}}?",
-    "openCheckin": "Open check-in →"
+    "openCheckin": "Open check-in →",
+    "delete": "Delete",
+    "deleteTemplate": "Delete template",
+    "deleteSession": "Delete session",
+    "deleteConfirm": "Permanently delete {{name}}?",
+    "deleteWarning": "This cannot be undone."
   },
   "roster": {
     "noStudents": "No regular students.",

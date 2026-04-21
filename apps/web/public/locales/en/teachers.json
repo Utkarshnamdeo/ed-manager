@@ -24,7 +24,10 @@
     "cancel": "Cancel",
     "deactivate": "Deactivate",
     "activate": "Activate",
-    "deactivateConfirm": "Deactivate {{name}}? They will no longer appear in new sessions."
+    "deactivateConfirm": "Deactivate {{name}}? They will no longer appear in new sessions.",
+    "delete": "Delete",
+    "deleteConfirm": "Permanently delete {{name}}?",
+    "deleteWarning": "This cannot be undone."
   },
   "status": {
     "active": "Active",
