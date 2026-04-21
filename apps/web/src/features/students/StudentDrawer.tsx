@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { differenceInDays } from 'date-fns'
-import { useUpdateStudent } from '../../hooks/useStudents'
+import { useUpdateStudent, useDeleteStudent } from '../../hooks/useStudents'
 import { useMembershipsByStudent, useUpdateMembership } from '../../hooks/useMemberships'
 import { useAttendanceRecordsByStudent } from '../../hooks/useAttendanceRecords'
 import { MembershipBadge } from './StudentsPage'
 import { AssignMembershipDialog } from './AssignMembershipDialog'
-import type { Student, Membership } from '../../types'
+import type { Student, Membership, MembershipTier } from '../../types'
 
 /* ─── Icons ── */
 
@@ -40,11 +40,13 @@ function DrawerAvatar({ name }: { name: string }) {
 
 /* ─── Profile Tab ── */
 
-function ProfileTab({ student, canManage }: { student: Student; canManage: boolean }) {
+function ProfileTab({ student, canManage, onClose }: { student: Student; canManage: boolean; onClose: () => void }) {
   const { t } = useTranslation('students')
   const updateStudent = useUpdateStudent()
+  const deleteStudent = useDeleteStudent()
   const [editing, setEditing] = useState(false)
   const [confirmDeactivate, setConfirmDeactivate] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [form, setForm] = useState({
     firstName: student.firstName,
     lastName: student.lastName,
@@ -80,6 +82,11 @@ function ProfileTab({ student, canManage }: { student: Student; canManage: boole
     setConfirmDeactivate(false)
   }
 
+  async function handleDelete() {
+    await deleteStudent.mutateAsync(student.id)
+    onClose()
+  }
+
   const fields = [
     { key: 'firstName', label: t('form.firstName') },
     { key: 'lastName',  label: t('form.lastName') },
@@ -101,7 +108,20 @@ function ProfileTab({ student, canManage }: { student: Student; canManage: boole
 
       {canManage && (
         <div className="pt-2 border-t border-border flex items-center justify-between gap-2">
-          {confirmDeactivate ? (
+          {confirmDelete ? (
+            <div className="flex flex-col gap-2 flex-1">
+              <p className="text-[0.8125rem] text-foreground m-0">
+                {t('actions.deleteConfirm', { name: `${student.firstName} ${student.lastName}` })}
+              </p>
+              <p className="text-xs text-destructive m-0">{t('actions.deleteWarning')}</p>
+              <div className="flex gap-2">
+                <button onClick={() => setConfirmDelete(false)} className="btn-secondary flex-1">{t('actions.cancel')}</button>
+                <button onClick={handleDelete} disabled={deleteStudent.isPending} className="btn-destructive flex-1">
+                  {deleteStudent.isPending ? '…' : t('actions.delete')}
+                </button>
+              </div>
+            </div>
+          ) : confirmDeactivate ? (
             <div className="flex flex-col gap-2 flex-1">
               <p className="text-[0.8125rem] text-foreground m-0">
                 {t('actions.deactivateConfirm', { name: `${student.firstName} ${student.lastName}` })}
@@ -115,12 +135,20 @@ function ProfileTab({ student, canManage }: { student: Student; canManage: boole
             </div>
           ) : (
             <>
-              <button
-                onClick={() => student.active ? setConfirmDeactivate(true) : handleToggleActive()}
-                className={student.active ? 'btn-destructive-outline' : 'btn-secondary'}
-              >
-                {student.active ? t('actions.deactivate') : t('actions.activate')}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="btn-destructive-outline"
+                >
+                  {t('actions.delete')}
+                </button>
+                <button
+                  onClick={() => student.active ? setConfirmDeactivate(true) : handleToggleActive()}
+                  className={student.active ? 'btn-secondary' : 'btn-secondary'}
+                >
+                  {student.active ? t('actions.deactivate') : t('actions.activate')}
+                </button>
+              </div>
               <div className="flex gap-2 ml-auto">
                 {editing ? (
                   <>
@@ -229,7 +257,7 @@ function MembershipTab({ student, canManage }: { student: Student; canManage: bo
   const { data: memberships } = useMembershipsByStudent(student.id)
   const updateMembership = useUpdateMembership()
   const [showAssign, setShowAssign] = useState(false)
-  const [renewTier, setRenewTier] = useState<import('../../types').MembershipTier | undefined>(undefined)
+  const [renewTier, setRenewTier] = useState<MembershipTier | undefined>(undefined)
   const [showPast, setShowPast] = useState(false)
 
   const active = (memberships ?? []).find((m) => m.active)
@@ -408,7 +436,7 @@ export function StudentDrawer({ student, canManage, onClose }: StudentDrawerProp
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-6">
-          {tab === 'profile'     && <ProfileTab student={student} canManage={canManage} />}
+          {tab === 'profile'     && <ProfileTab student={student} canManage={canManage} onClose={onClose} />}
           {tab === 'membership'  && <MembershipTab student={student} canManage={canManage} />}
           {tab === 'history'     && <HistoryTab student={student} />}
         </div>

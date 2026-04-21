@@ -17,7 +17,6 @@ interface CombinationPickerDialogProps {
   session: ClassSession
   status: AttendanceStatus
   pricingConfig: PricingConfig | null
-  markedBy: string
   onConfirm: (result: PickerResult) => void
   onClose: () => void
 }
@@ -32,19 +31,103 @@ function calcEstimatedValue(
 
   let value = 0
   for (const token of combination) {
-    if (token === 'usc')        value += pricingConfig.uscRatePerCheckin
+    if (token === 'usc')            value += pricingConfig.uscRatePerCheckin
     else if (token === 'eversports') value += pricingConfig.eversportsRatePerCheckin
-    else if (token === 'cash')  value += cashAmount ?? 0
-    else if (token === 'trial') value += pricingConfig.trialRate
-    // gold / silver / bronze / 2silver / 2bronze: pass-based, value is 0 for now
+    else if (token === 'cash')       value += cashAmount ?? 0
+    else if (token === 'trial')      value += pricingConfig.trialRate
+    // gold / silver / bronze / 2silver / 2bronze: pass-based
   }
   if (isSpecial) value += pricingConfig.specialClassSurcharge
 
   return Math.round(value * 100) / 100
 }
 
-// Tokens that cannot be combined with anything else
-const EXCLUSIVE_TOKENS = new Set<CombinationToken>(['gold', 'trial', 'usc', 'eversports', '2silver', '2bronze'])
+/* ─── Disable logic (ported from attendanceCombinationPicker.html) ─── */
+
+function computeDisabled(s: Set<CombinationToken>, isSpecial: boolean): Set<CombinationToken> {
+  const disabled = new Set<CombinationToken>()
+
+  if (s.has('gold'))    (['silver','2silver','bronze','2bronze','usc','eversports','cash','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
+  if (s.has('trial'))   (['gold','silver','2silver','bronze','2bronze','usc','eversports','cash'] as CombinationToken[]).forEach(x => disabled.add(x))
+  if (s.has('2silver')) (['gold','silver','bronze','2bronze','usc','eversports','cash','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
+  if (s.has('2bronze')) (['gold','silver','bronze','2silver','usc','eversports','cash','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
+
+  if (s.has('silver') && !s.has('usc') && !s.has('eversports') && !s.has('cash')) {
+    ;(['gold','2silver','bronze','2bronze','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
+    if (!isSpecial) { disabled.add('usc'); disabled.add('eversports'); disabled.add('cash') }
+  }
+  if (s.has('silver') && (s.has('usc') || s.has('eversports') || s.has('cash'))) {
+    ;(['gold','2silver','bronze','2bronze','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
+    if (s.has('usc'))        { disabled.add('eversports'); disabled.add('cash') }
+    if (s.has('eversports')) { disabled.add('usc'); disabled.add('cash') }
+    if (s.has('cash'))       { disabled.add('usc'); disabled.add('eversports') }
+  }
+
+  if (s.has('bronze') && !s.has('usc') && !s.has('eversports') && !s.has('cash')) {
+    ;(['gold','2silver','silver','2bronze','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
+    if (!isSpecial) { disabled.add('usc'); disabled.add('eversports'); disabled.add('cash') }
+  }
+  if (s.has('bronze') && (s.has('usc') || s.has('eversports') || s.has('cash'))) {
+    ;(['gold','2silver','silver','2bronze','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
+    if (s.has('usc'))        { disabled.add('eversports'); disabled.add('cash') }
+    if (s.has('eversports')) { disabled.add('usc'); disabled.add('cash') }
+    if (s.has('cash'))       { disabled.add('usc'); disabled.add('eversports') }
+  }
+
+  if (s.has('usc') && !s.has('silver') && !s.has('bronze')) {
+    ;(['gold','2silver','2bronze','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
+    if (!isSpecial) { disabled.add('eversports'); disabled.add('cash'); disabled.add('silver'); disabled.add('bronze') }
+    if (s.has('eversports')) disabled.add('cash')
+    if (s.has('cash'))       disabled.add('eversports')
+  }
+
+  if (s.has('eversports') && !s.has('usc') && !s.has('silver') && !s.has('bronze')) {
+    ;(['gold','2silver','2bronze','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
+    if (!isSpecial) { (['silver','bronze','usc','cash'] as CombinationToken[]).forEach(x => disabled.add(x)) }
+    else            { if (s.has('cash')) disabled.add('usc') }
+  }
+
+  if (s.has('cash') && !s.has('silver') && !s.has('bronze') && !s.has('usc') && !s.has('eversports')) {
+    ;(['gold','2silver','2bronze','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
+    if (!isSpecial) { (['silver','bronze','usc','eversports'] as CombinationToken[]).forEach(x => disabled.add(x)) }
+  }
+
+  return disabled
+}
+
+/* ─── Token Button ─────────────────────────────────────────── */
+
+function TokenButton({ label, sublabel, selected, disabled, onToggle }: {
+  label: string
+  sublabel?: string
+  selected: boolean
+  disabled: boolean
+  onToggle: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => !disabled && onToggle()}
+      disabled={disabled}
+      className={`flex flex-col items-center justify-center px-2 py-2.5 rounded-[0.625rem] border text-center transition-[background-color,border-color,opacity] duration-100 cursor-pointer min-h-[56px] ${
+        selected
+          ? 'bg-primary text-primary-foreground border-primary'
+          : disabled
+          ? 'bg-muted text-muted-foreground border-border opacity-40 cursor-not-allowed'
+          : 'bg-card text-foreground border-border hover:border-border-strong hover:bg-muted/50'
+      }`}
+    >
+      <span className="text-[0.8125rem] font-medium leading-tight">{label}</span>
+      {sublabel && (
+        <span className={`text-[0.6875rem] mt-0.5 leading-tight ${selected ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+          {sublabel}
+        </span>
+      )}
+    </button>
+  )
+}
+
+/* ─── Combination Picker Dialog ────────────────────────────── */
 
 export function CombinationPickerDialog({
   student,
@@ -65,74 +148,35 @@ export function CombinationPickerDialog({
 
   const tier = student.membershipTier
   const creditsLeft = activeMembership?.creditsRemaining ?? null
-  const isSpecial = session.isSpecial
+  const isSpecial = session.type !== 'regular'
 
   const cashAmount = parseFloat(cashInput) || null
-  const estimatedValue = calcEstimatedValue(selection, cashAmount, isSpecial, pricingConfig)
-
-  // Build final combination for submission (handle double-click logic on single tokens)
-  const finalCombination: AttendanceCombination = selection
+  const selectionSet = new Set(selection)
+  const disabled = computeDisabled(selectionSet, isSpecial)
+  const estimatedValue = calcEstimatedValue(selection, cashAmount, session.isSpecial, pricingConfig)
 
   function toggleToken(token: CombinationToken) {
     setSelection((prev) => {
-      // Deselect if already selected
-      if (prev.includes(token)) return prev.filter((t) => t !== token)
-
-      // Exclusive tokens replace everything
-      if (EXCLUSIVE_TOKENS.has(token)) return [token]
-
-      // Cash: can be second item, not duplicate
-      if (token === 'cash') {
-        const withoutCash = prev.filter((t) => t !== 'cash')
-        if (withoutCash.length >= 2) return prev // no room
-        return [...withoutCash, 'cash']
+      const next = new Set(prev)
+      if (next.has(token)) {
+        next.delete(token)
+      } else {
+        next.add(token)
       }
-
-      // silver / bronze: can combine with each other + cash
-      if (token === 'silver' || token === 'bronze') {
-        // Clear exclusive tokens from existing selection
-        const filtered = prev.filter((t) => !EXCLUSIVE_TOKENS.has(t))
-        const nonCash = filtered.filter((t) => t !== 'cash')
-        const hasCash = filtered.includes('cash')
-
-        if (nonCash.length === 0) {
-          return hasCash ? [token, 'cash'] : [token]
-        }
-        if (nonCash.length === 1 && !nonCash.includes(token)) {
-          // silver + bronze or bronze + silver (valid combo)
-          return hasCash ? [...nonCash, token] : [...nonCash, token]
-        }
-        // Already have 2 non-cash tokens, can't add more
-        return prev
-      }
-
-      return [token]
+      // Auto-remove now-disabled tokens
+      const nowDisabled = computeDisabled(next, isSpecial)
+      for (const d of nowDisabled) next.delete(d)
+      return [...next]
     })
   }
 
-  function isSelected(token: CombinationToken) {
-    return selection.includes(token)
-  }
-
-  function isDisabled(token: CombinationToken): boolean {
-    if (selection.length === 0) return false
-    // Can always add cash as a second item (if room)
-    if (token === 'cash') return selection.includes('cash') || selection.filter(t => !EXCLUSIVE_TOKENS.has(t) && t !== 'cash').length >= 2
-    // Exclusive tokens: disabled if any non-exclusive already selected (unless just itself)
-    if (EXCLUSIVE_TOKENS.has(token)) return selection.length > 0 && !selection.includes(token)
-    // silver/bronze: disabled if 2 non-cash tokens already selected
-    if (token === 'silver' || token === 'bronze') {
-      const nonCash = selection.filter(t => t !== 'cash')
-      return nonCash.length >= 2
-    }
-    return false
-  }
+  function isSelected(token: CombinationToken) { return selectionSet.has(token) }
+  function isDisabled(token: CombinationToken) { return disabled.has(token) && !selectionSet.has(token) }
 
   function handleConfirm() {
-    if (finalCombination.length === 0) return
-
+    if (selection.length === 0) return
     onConfirm({
-      combination: finalCombination,
+      combination: selection,
       cashAmount: selection.includes('cash') ? cashAmount : null,
       estimatedValue,
       membershipId: activeMembership?.id ?? null,
@@ -142,40 +186,10 @@ export function CombinationPickerDialog({
     })
   }
 
-  function TokenButton({ token, label, sublabel, disabled: extraDisabled }: {
-    token: CombinationToken
-    label: string
-    sublabel?: string
-    disabled?: boolean
-  }) {
-    const sel = isSelected(token)
-    const dis = isDisabled(token) || !!extraDisabled
-
-    return (
-      <button
-        type="button"
-        onClick={() => !dis && toggleToken(token)}
-        disabled={dis}
-        className={`flex flex-col items-start px-3 py-2.5 rounded-[0.625rem] border text-left transition-[background-color,border-color,opacity] duration-100 cursor-pointer min-w-[5rem] ${
-          sel
-            ? 'bg-primary text-primary-foreground border-primary'
-            : dis
-            ? 'bg-muted text-muted-foreground border-border opacity-40 cursor-not-allowed'
-            : 'bg-card text-foreground border-border hover:border-border-strong hover:bg-muted/50'
-        }`}
-      >
-        <span className="text-[0.8125rem] font-semibold leading-tight">{label}</span>
-        {sublabel && (
-          <span className={`text-[0.6875rem] mt-0.5 ${sel ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-            {sublabel}
-          </span>
-        )}
-      </button>
-    )
-  }
-
   const studentName = `${student.firstName} ${student.lastName}`
-  const lowCredits = creditsLeft !== null && creditsLeft <= 3
+  const deductionCount = selection.some(t => t === '2silver' || t === '2bronze') ? 2 : 1
+  const creditsAfter = creditsLeft !== null ? Math.max(0, creditsLeft - deductionCount) : null
+  const showLowCreditWarning = creditsLeft !== null && creditsLeft > 0 && creditsAfter !== null && creditsAfter <= 2
 
   return (
     <Dialog.Root open onOpenChange={(open) => { if (!open) onClose() }}>
@@ -190,114 +204,145 @@ export function CombinationPickerDialog({
             </Dialog.Title>
             <p className="text-[0.8125rem] text-muted-foreground mt-0.5 m-0 capitalize">
               {status}
-              {isSpecial && (
+              {session.isSpecial && (
                 <span className="ml-2 text-[0.6875rem] font-semibold px-1.5 py-[1px] rounded-full bg-warning-subtle text-[oklch(0.50_0.14_85)]">
-                  Special +€{pricingConfig?.specialClassSurcharge ?? 0}
+                  {t('combination.specialSurcharge', { amount: pricingConfig?.specialClassSurcharge ?? 0 })}
                 </span>
               )}
             </p>
           </div>
 
           {/* Body */}
-          <div className="px-5 py-4 flex flex-col gap-4 overflow-y-auto">
+          <div className="px-5 py-4 flex flex-col gap-3 overflow-y-auto">
 
-            {/* Membership section */}
+            {/* School pass section */}
             {tier && (
               <div>
                 <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-muted-foreground mb-2 m-0">
-                  Membership
+                  {t('combination.sectionSchoolPass')}
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid gap-2" style={{ gridTemplateColumns: tier === 'gold' ? '1fr' : isSpecial ? 'repeat(2, 1fr)' : '1fr' }}>
                   {tier === 'gold' && (
-                    <TokenButton token="gold" label={t('combination.gold')} sublabel="Unlimited" />
+                    <TokenButton
+                      label={t('combination.gold')}
+                      sublabel={t('combination.unlimited')}
+                      selected={isSelected('gold')}
+                      disabled={isDisabled('gold')}
+                      onToggle={() => toggleToken('gold')}
+                    />
                   )}
                   {tier === 'silver' && (
                     <>
                       <TokenButton
-                        token="silver"
                         label={t('combination.silver')}
-                        sublabel={creditsLeft !== null ? `${creditsLeft} left` : undefined}
-                        disabled={creditsLeft === 0}
+                        sublabel={creditsLeft !== null ? `${t('combination.oneCredit')} · ${t('combination.creditsLeft', { count: creditsLeft })}` : t('combination.oneCredit')}
+                        selected={isSelected('silver')}
+                        disabled={isDisabled('silver') || creditsLeft === 0}
+                        onToggle={() => toggleToken('silver')}
                       />
-                      <TokenButton
-                        token="2silver"
-                        label={t('combination.2silver')}
-                        sublabel={creditsLeft !== null ? `${creditsLeft} left` : undefined}
-                        disabled={creditsLeft === null || creditsLeft < 2}
-                      />
+                      {isSpecial && (
+                        <TokenButton
+                          label={t('combination.2silver')}
+                          sublabel={creditsLeft !== null ? `${t('combination.twoCredits')} · ${t('combination.creditsLeft', { count: creditsLeft })}` : t('combination.twoCredits')}
+                          selected={isSelected('2silver')}
+                          disabled={isDisabled('2silver') || creditsLeft === null || creditsLeft < 2}
+                          onToggle={() => toggleToken('2silver')}
+                        />
+                      )}
                     </>
                   )}
                   {tier === 'bronze' && (
                     <>
                       <TokenButton
-                        token="bronze"
                         label={t('combination.bronze')}
-                        sublabel={creditsLeft !== null ? `${creditsLeft} left` : undefined}
-                        disabled={creditsLeft === 0}
+                        sublabel={creditsLeft !== null ? `${t('combination.oneCredit')} · ${t('combination.creditsLeft', { count: creditsLeft })}` : t('combination.oneCredit')}
+                        selected={isSelected('bronze')}
+                        disabled={isDisabled('bronze') || creditsLeft === 0}
+                        onToggle={() => toggleToken('bronze')}
                       />
-                      <TokenButton
-                        token="2bronze"
-                        label={t('combination.2bronze')}
-                        sublabel={creditsLeft !== null ? `${creditsLeft} left` : undefined}
-                        disabled={creditsLeft === null || creditsLeft < 2}
-                      />
+                      {isSpecial && (
+                        <TokenButton
+                          label={t('combination.2bronze')}
+                          sublabel={creditsLeft !== null ? `${t('combination.twoCredits')} · ${t('combination.creditsLeft', { count: creditsLeft })}` : t('combination.twoCredits')}
+                          selected={isSelected('2bronze')}
+                          disabled={isDisabled('2bronze') || creditsLeft === null || creditsLeft < 2}
+                          onToggle={() => toggleToken('2bronze')}
+                        />
+                      )}
                     </>
                   )}
                 </div>
-                {lowCredits && creditsLeft !== null && creditsLeft > 0 && (
+                {showLowCreditWarning && (
                   <p className="text-[0.75rem] text-warning mt-1.5 m-0">
-                    {t('warnings.lowCredit', { count: creditsLeft - 1 })}
+                    {t('warnings.lowCredit', { count: creditsAfter })}
                   </p>
                 )}
               </div>
             )}
 
-            {/* External */}
+            {/* External provider section */}
             <div>
               <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-muted-foreground mb-2 m-0">
-                External
+                {t('combination.sectionExternal')}
               </p>
-              <div className="flex flex-wrap gap-2">
-                <TokenButton token="usc" label={t('combination.usc')} sublabel={pricingConfig ? `€${pricingConfig.uscRatePerCheckin}` : undefined} />
-                <TokenButton token="eversports" label={t('combination.eversports')} sublabel={pricingConfig ? `€${pricingConfig.eversportsRatePerCheckin}` : undefined} />
+              <div className="grid grid-cols-3 gap-2">
+                <TokenButton
+                  label={t('combination.usc')}
+                  sublabel={pricingConfig ? `€${pricingConfig.uscRatePerCheckin}` : undefined}
+                  selected={isSelected('usc')}
+                  disabled={isDisabled('usc')}
+                  onToggle={() => toggleToken('usc')}
+                />
+                <TokenButton
+                  label={t('combination.eversports')}
+                  sublabel={pricingConfig ? `€${pricingConfig.eversportsRatePerCheckin}` : undefined}
+                  selected={isSelected('eversports')}
+                  disabled={isDisabled('eversports')}
+                  onToggle={() => toggleToken('eversports')}
+                />
+                <TokenButton
+                  label={t('combination.cash')}
+                  sublabel={pricingConfig ? `€${pricingConfig.dropInCashRate}` : undefined}
+                  selected={isSelected('cash')}
+                  disabled={isDisabled('cash')}
+                  onToggle={() => toggleToken('cash')}
+                />
               </div>
+              {selection.includes('cash') && (
+                <div className="flex items-center gap-2 mt-2 px-3 py-2.5 bg-muted rounded-[0.5rem] border border-border">
+                  <label className="text-[0.8125rem] text-muted-foreground whitespace-nowrap">{t('combination.cashAmount')}</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={cashInput}
+                    onChange={(e) => setCashInput(e.target.value)}
+                    className="form-input w-20 text-[0.8125rem]"
+                    placeholder="0.00"
+                  />
+                </div>
+              )}
             </div>
 
-            {/* Cash */}
+            {/* Other section */}
             <div>
               <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-muted-foreground mb-2 m-0">
-                Cash
+                {t('combination.sectionOther')}
               </p>
-              <div className="flex items-center gap-2">
-                <TokenButton token="cash" label={t('combination.cash')} sublabel={pricingConfig ? `€${pricingConfig.dropInCashRate} default` : undefined} />
-                {selection.includes('cash') && (
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[0.8125rem] text-muted-foreground">€</span>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={cashInput}
-                      onChange={(e) => setCashInput(e.target.value)}
-                      className="form-input w-20 text-[0.8125rem]"
-                      placeholder="0.00"
-                    />
-                  </div>
-                )}
+              <div className="grid grid-cols-2 gap-2">
+                <TokenButton
+                  label={t('combination.trial')}
+                  sublabel={pricingConfig ? `€${pricingConfig.trialRate}` : undefined}
+                  selected={isSelected('trial')}
+                  disabled={isDisabled('trial')}
+                  onToggle={() => toggleToken('trial')}
+                />
               </div>
-            </div>
-
-            {/* Trial */}
-            <div>
-              <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-muted-foreground mb-2 m-0">
-                Trial
-              </p>
-              <TokenButton token="trial" label={t('combination.trial')} sublabel={pricingConfig ? `€${pricingConfig.trialRate}` : undefined} />
             </div>
 
             {/* Estimated value */}
             {selection.length > 0 && (
               <div className="bg-muted rounded-[0.5rem] px-3 py-2.5 flex items-center justify-between">
-                <span className="text-[0.8125rem] text-muted-foreground">Estimated value</span>
+                <span className="text-[0.8125rem] text-muted-foreground">{t('combination.estimatedValue')}</span>
                 <span className="text-[0.9375rem] font-bold text-foreground">€{estimatedValue.toFixed(2)}</span>
               </div>
             )}
@@ -310,7 +355,7 @@ export function CombinationPickerDialog({
             </Dialog.Close>
             <button
               type="button"
-              disabled={finalCombination.length === 0}
+              disabled={selection.length === 0}
               onClick={handleConfirm}
               className="btn-primary"
             >

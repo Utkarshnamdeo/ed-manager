@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
-import { useTeachers, useCreateTeacher, useUpdateTeacher } from '../../hooks/useTeachers';
+import { useTeachers, useCreateTeacher, useUpdateTeacher, useDeleteTeacher } from '../../hooks/useTeachers';
 import type { Teacher } from '../../types';
 
 /* ─── Avatar ── */
@@ -158,9 +158,11 @@ function TeacherDrawer({ teacher, canManage, onClose }: {
 }) {
   const { t } = useTranslation('teachers');
   const updateTeacher = useUpdateTeacher();
+  const deleteTeacher = useDeleteTeacher();
   const [tab, setTab] = useState<'details' | 'compensation'>('details');
   const [editing, setEditing] = useState(false);
   const [confirmDeactivate, setConfirmDeactivate] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const [form, setForm] = useState({
     firstName: teacher.firstName,
@@ -199,6 +201,11 @@ function TeacherDrawer({ teacher, canManage, onClose }: {
   async function handleToggleActive() {
     await updateTeacher.mutateAsync({ id: teacher.id, active: !teacher.active });
     setConfirmDeactivate(false);
+  }
+
+  async function handleDelete() {
+    await deleteTeacher.mutateAsync(teacher.id);
+    onClose();
   }
 
   const fullName = `${ teacher.firstName } ${ teacher.lastName }`;
@@ -306,7 +313,22 @@ function TeacherDrawer({ teacher, canManage, onClose }: {
         {/* Footer */}
         <div className="px-6 py-4 border-t border-border flex items-center justify-between gap-2">
           {canManage && (
-            confirmDeactivate ? (
+            confirmDelete ? (
+              <div className="flex flex-col gap-2 flex-1">
+                <p className="text-[0.8125rem] text-foreground m-0">
+                  {t('actions.deleteConfirm', { name: fullName })}
+                </p>
+                <p className="text-xs text-destructive m-0">{t('actions.deleteWarning')}</p>
+                <div className="flex gap-2">
+                  <button onClick={() => setConfirmDelete(false)} className="btn-secondary flex-1">
+                    {t('actions.cancel')}
+                  </button>
+                  <button onClick={handleDelete} disabled={deleteTeacher.isPending} className="btn-destructive flex-1">
+                    {deleteTeacher.isPending ? '…' : t('actions.delete')}
+                  </button>
+                </div>
+              </div>
+            ) : confirmDeactivate ? (
               <div className="flex flex-col gap-2 flex-1">
                 <p className="text-[0.8125rem] text-foreground m-0">
                   {t('actions.deactivateConfirm', { name: fullName })}
@@ -321,13 +343,21 @@ function TeacherDrawer({ teacher, canManage, onClose }: {
                 </div>
               </div>
             ) : (
-              <button
-                onClick={() => teacher.active ? setConfirmDeactivate(true) : handleToggleActive()}
-                className={teacher.active ? 'btn-destructive-outline' : 'btn-secondary'}
-                disabled={updateTeacher.isPending}
-              >
-                {teacher.active ? t('actions.deactivate') : t('actions.activate')}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="btn-destructive-outline"
+                >
+                  {t('actions.delete')}
+                </button>
+                <button
+                  onClick={() => teacher.active ? setConfirmDeactivate(true) : handleToggleActive()}
+                  className="btn-secondary"
+                  disabled={updateTeacher.isPending}
+                >
+                  {teacher.active ? t('actions.deactivate') : t('actions.activate')}
+                </button>
+              </div>
             )
           )}
           <div className="flex gap-2 ml-auto">

@@ -7,6 +7,7 @@ import {
   getDocs,
   addDoc,
   updateDoc,
+  deleteDoc,
   doc,
   serverTimestamp,
 } from 'firebase/firestore'
@@ -52,10 +53,11 @@ type CreateStudentInput = Omit<Student, 'id' | 'createdAt'>
 export function useCreateStudent() {
   return useMutation({
     mutationFn: async (input: CreateStudentInput) => {
-      await addDoc(collection(db, COLLECTION), {
+      const ref = await addDoc(collection(db, COLLECTION), {
         ...input,
         createdAt: serverTimestamp(),
       })
+      return ref.id
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY })
@@ -72,6 +74,23 @@ export function useUpdateStudent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+    },
+  })
+}
+
+export function useDeleteStudent() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Cascade: delete all memberships for this student first
+      const membershipsSnap = await getDocs(
+        query(collection(db, 'memberships'), where('studentId', '==', id)),
+      )
+      await Promise.all(membershipsSnap.docs.map((d) => deleteDoc(d.ref)))
+      await deleteDoc(doc(db, COLLECTION, id))
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: ['memberships'] })
     },
   })
 }

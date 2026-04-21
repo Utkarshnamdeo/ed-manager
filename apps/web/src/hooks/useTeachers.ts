@@ -6,6 +6,7 @@ import {
   getDocs,
   addDoc,
   updateDoc,
+  deleteDoc,
   doc,
   serverTimestamp,
 } from 'firebase/firestore'
@@ -67,6 +68,17 @@ export function useUpdateTeacher() {
   return useMutation({
     mutationFn: async ({ id, ...updates }: UpdateTeacherInput) => {
       await updateDoc(doc(db, COLLECTION, id), updates)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+    },
+  })
+}
+
+export function useDeleteTeacher() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await deleteDoc(doc(db, COLLECTION, id))
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY })

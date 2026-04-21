@@ -7,6 +7,7 @@ import {
   getDocs,
   addDoc,
   updateDoc,
+  deleteDoc,
   doc,
   serverTimestamp,
 } from 'firebase/firestore'
@@ -100,6 +101,17 @@ export function useUpdateClassSession() {
   return useMutation({
     mutationFn: async ({ id, ...updates }: UpdateClassSessionInput) => {
       await updateDoc(doc(db, COLLECTION, id), updates)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['classSessions'] })
+    },
+  })
+}
+
+export function useDeleteClassSession() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await deleteDoc(doc(db, COLLECTION, id))
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['classSessions'] })

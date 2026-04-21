@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { useTranslation } from 'react-i18next'
-import { useUpdateClassSession } from '../../hooks/useClassSessions'
+import { format } from 'date-fns'
+import { useUpdateClassSession, useDeleteClassSession } from '../../hooks/useClassSessions'
 import { useTeachers } from '../../hooks/useTeachers'
 import { useRooms } from '../../hooks/useRooms'
 import type { ClassSession, DanceStyle, ClassLevel, ClassType } from '../../types'
@@ -12,14 +13,17 @@ interface EditSessionDialogProps {
 }
 
 function toDateInput(date: Date): string {
-  return date.toISOString().split('T')[0]
+  return format(date, 'yyyy-MM-dd')
 }
 
 export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) {
   const { t } = useTranslation('classes')
   const updateSession = useUpdateClassSession()
+  const deleteSession = useDeleteClassSession()
   const { data: teachers } = useTeachers()
   const { data: rooms } = useRooms()
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [confirmCancel, setConfirmCancel] = useState(false)
 
   const [form, setForm] = useState({
     name: session.name,
@@ -176,17 +180,62 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
 
             </div>
 
-            <div className="px-6 py-4 border-t border-border flex justify-end gap-2 shrink-0">
-              <Dialog.Close asChild>
-                <button type="button" className="btn-secondary">{t('actions.cancel')}</button>
-              </Dialog.Close>
-              <button
-                type="submit"
-                disabled={updateSession.isPending || !form.name.trim()}
-                className="btn-primary"
-              >
-                {updateSession.isPending ? '…' : t('actions.save')}
-              </button>
+            <div className="px-6 py-4 border-t border-border flex items-center gap-2 shrink-0">
+              {confirmDelete ? (
+                <div className="flex flex-col gap-1.5 flex-1">
+                  <p className="text-[0.8125rem] text-foreground m-0">{t('actions.deleteConfirm', { name: session.name })}</p>
+                  <p className="text-xs text-destructive m-0">{t('actions.deleteWarning')}</p>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => setConfirmDelete(false)} className="btn-secondary flex-1">{t('actions.cancel')}</button>
+                    <button
+                      type="button"
+                      onClick={async () => { await deleteSession.mutateAsync(session.id); onClose() }}
+                      disabled={deleteSession.isPending}
+                      className="btn-destructive flex-1"
+                    >
+                      {deleteSession.isPending ? '…' : t('actions.delete')}
+                    </button>
+                  </div>
+                </div>
+              ) : confirmCancel ? (
+                <div className="flex flex-col gap-1.5 flex-1">
+                  <p className="text-[0.8125rem] text-foreground m-0">{t('actions.cancelSessionConfirm', { name: session.name })}</p>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => setConfirmCancel(false)} className="btn-secondary flex-1">{t('actions.cancel')}</button>
+                    <button
+                      type="button"
+                      onClick={async () => { await updateSession.mutateAsync({ id: session.id, status: 'cancelled' }); onClose() }}
+                      disabled={updateSession.isPending}
+                      className="btn-destructive flex-1"
+                    >
+                      {updateSession.isPending ? '…' : t('actions.cancelSession')}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex gap-2 mr-auto">
+                    <button type="button" onClick={() => setConfirmDelete(true)} className="btn-destructive-outline">
+                      {t('actions.deleteSession')}
+                    </button>
+                    {session.status !== 'cancelled' && (
+                      <button type="button" onClick={() => setConfirmCancel(true)} className="btn-secondary">
+                        {t('actions.cancelSession')}
+                      </button>
+                    )}
+                  </div>
+                  <Dialog.Close asChild>
+                    <button type="button" className="btn-secondary">{t('actions.cancel')}</button>
+                  </Dialog.Close>
+                  <button
+                    type="submit"
+                    disabled={updateSession.isPending || !form.name.trim()}
+                    className="btn-primary"
+                  >
+                    {updateSession.isPending ? '…' : t('actions.save')}
+                  </button>
+                </>
+              )}
             </div>
           </form>
         </Dialog.Content>

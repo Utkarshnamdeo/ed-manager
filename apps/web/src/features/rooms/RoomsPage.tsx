@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
-import { useRooms, useCreateRoom, useUpdateRoom } from '../../hooks/useRooms';
+import { useRooms, useCreateRoom, useUpdateRoom, useDeleteRoom } from '../../hooks/useRooms';
 import type { Room } from '../../types';
 
 /* ─── Icons ── */
@@ -28,8 +28,10 @@ function IconPlus() {
 function RoomRow({ room, canManage }: { room: Room; canManage: boolean; }) {
   const { t } = useTranslation('rooms');
   const updateRoom = useUpdateRoom();
+  const deleteRoom = useDeleteRoom();
   const [editing, setEditing] = useState(false);
   const [confirmDeactivate, setConfirmDeactivate] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [name, setName] = useState(room.name);
   const [capacity, setCapacity] = useState<string>(room.capacity != null ? String(room.capacity) : '');
 
@@ -52,6 +54,21 @@ function RoomRow({ room, canManage }: { room: Room; canManage: boolean; }) {
   async function handleToggleActive() {
     await updateRoom.mutateAsync({ id: room.id, active: !room.active });
     setConfirmDeactivate(false);
+  }
+
+  if (confirmDelete) {
+    return (
+      <div className="flex items-center gap-3 px-5 py-3 border-t border-border bg-destructive-subtle">
+        <div className="flex-1 flex flex-col gap-0.5">
+          <span className="text-sm text-foreground">{t('actions.deleteConfirm', { name: room.name })}</span>
+          <span className="text-xs text-destructive">{t('actions.deleteWarning')}</span>
+        </div>
+        <button onClick={() => setConfirmDelete(false)} className="btn-secondary">{t('actions.cancel')}</button>
+        <button onClick={() => deleteRoom.mutate(room.id)} disabled={deleteRoom.isPending} className="btn-destructive">
+          {deleteRoom.isPending ? '…' : t('actions.delete')}
+        </button>
+      </div>
+    );
   }
 
   if (confirmDeactivate) {
@@ -113,11 +130,18 @@ function RoomRow({ room, canManage }: { room: Room; canManage: boolean; }) {
                 onClick={() => room.active ? setConfirmDeactivate(true) : handleToggleActive()}
                 title={room.active ? t('actions.deactivate') : t('actions.activate')}
                 className={`px-2.5 h-8 rounded-[6px] border-0 bg-transparent cursor-pointer text-xs font-medium transition-[background-color] duration-100 ${ room.active
-                    ? 'text-destructive hover:bg-destructive-subtle'
+                    ? 'text-muted-foreground hover:bg-muted'
                     : 'text-success hover:bg-success-subtle'
                   }`}
               >
                 {room.active ? t('actions.deactivate') : t('actions.activate')}
+              </button>
+              <button
+                onClick={() => setConfirmDelete(true)}
+                title={t('actions.delete')}
+                className="px-2.5 h-8 rounded-[6px] border-0 bg-transparent cursor-pointer text-xs font-medium text-destructive hover:bg-destructive-subtle transition-[background-color] duration-100"
+              >
+                {t('actions.delete')}
               </button>
             </div>
           )}

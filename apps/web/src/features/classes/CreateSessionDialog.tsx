@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { format } from 'date-fns'
 import * as Dialog from '@radix-ui/react-dialog'
 import { useTranslation } from 'react-i18next'
 import { useCreateClassSession } from '../../hooks/useClassSessions'
@@ -20,8 +21,8 @@ export function CreateSessionDialog({ onClose, defaultDate }: CreateSessionDialo
   const { data: rooms } = useRooms()
 
   const defaultDateStr = defaultDate
-    ? defaultDate.toISOString().split('T')[0]
-    : new Date().toISOString().split('T')[0]
+    ? format(defaultDate, 'yyyy-MM-dd')
+    : format(new Date(), 'yyyy-MM-dd')
 
   const [form, setForm] = useState({
     templateId: '' as string | null,

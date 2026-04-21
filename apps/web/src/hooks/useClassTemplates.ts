@@ -7,6 +7,7 @@ import {
   getDocs,
   addDoc,
   updateDoc,
+  deleteDoc,
   doc,
   serverTimestamp,
 } from 'firebase/firestore'
@@ -74,6 +75,17 @@ export function useUpdateClassTemplate() {
   return useMutation({
     mutationFn: async ({ id, ...updates }: UpdateClassTemplateInput) => {
       await updateDoc(doc(db, COLLECTION, id), updates)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+    },
+  })
+}
+
+export function useDeleteClassTemplate() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await deleteDoc(doc(db, COLLECTION, id))
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY })

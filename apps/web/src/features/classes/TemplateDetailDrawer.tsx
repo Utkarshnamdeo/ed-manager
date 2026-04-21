@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { addDays, startOfDay } from 'date-fns'
-import { useUpdateClassTemplate } from '../../hooks/useClassTemplates'
+import { useUpdateClassTemplate, useDeleteClassTemplate } from '../../hooks/useClassTemplates'
 import { useClassSessionsByDateRange } from '../../hooks/useClassSessions'
 import { useStudents } from '../../hooks/useStudents'
 import type { ClassTemplate, Teacher, Room } from '../../types'
@@ -23,15 +23,19 @@ function DetailsTab({
   teachers,
   rooms,
   canManage,
+  onClose,
 }: {
   template: ClassTemplate
   teachers: Teacher[]
   rooms: Room[]
   canManage: boolean
+  onClose: () => void
 }) {
   const { t } = useTranslation('classes')
   const updateTemplate = useUpdateClassTemplate()
+  const deleteTemplate = useDeleteClassTemplate()
   const [editing, setEditing] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [form, setForm] = useState({
     name: template.name,
     style: template.style,
@@ -166,16 +170,40 @@ function DetailsTab({
       )}
 
       {canManage && (
-        <div className="flex gap-2 justify-end pt-2">
-          {editing ? (
-            <>
+        <div className="pt-2 border-t border-border flex items-center justify-between gap-2">
+          {confirmDelete ? (
+            <div className="flex flex-col gap-2 flex-1">
+              <p className="text-[0.8125rem] text-foreground m-0">
+                {t('actions.deleteConfirm', { name: template.name })}
+              </p>
+              <p className="text-xs text-destructive m-0">{t('actions.deleteWarning')}</p>
+              <div className="flex gap-2">
+                <button onClick={() => setConfirmDelete(false)} className="btn-secondary flex-1">{t('actions.cancel')}</button>
+                <button
+                  onClick={async () => { await deleteTemplate.mutateAsync(template.id); onClose() }}
+                  disabled={deleteTemplate.isPending}
+                  className="btn-destructive flex-1"
+                >
+                  {deleteTemplate.isPending ? '…' : t('actions.delete')}
+                </button>
+              </div>
+            </div>
+          ) : editing ? (
+            <div className="flex gap-2 ml-auto">
               <button onClick={handleCancel} className="btn-secondary">{t('actions.cancel')}</button>
               <button onClick={handleSave} disabled={updateTemplate.isPending} className="btn-primary">
                 {updateTemplate.isPending ? '…' : t('actions.save')}
               </button>
-            </>
+            </div>
           ) : (
-            <button onClick={() => setEditing(true)} className="btn-secondary">{t('actions.edit')}</button>
+            <>
+              <button onClick={() => setConfirmDelete(true)} className="btn-destructive-outline">
+                {t('actions.delete')}
+              </button>
+              <button onClick={() => setEditing(true)} className="btn-secondary ml-auto">
+                {t('actions.edit')}
+              </button>
+            </>
           )}
         </div>
       )}
@@ -328,7 +356,7 @@ export function TemplateDetailDrawer({ template, teachers, rooms, canManage, onC
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-6">
           {tab === 'details' && (
-            <DetailsTab template={template} teachers={teachers} rooms={rooms} canManage={canManage} />
+            <DetailsTab template={template} teachers={teachers} rooms={rooms} canManage={canManage} onClose={onClose} />
           )}
           {tab === 'roster' && (
             <RosterTab template={template} canManage={canManage} />

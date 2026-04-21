@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { addDays, format, isToday } from 'date-fns'
 import { useTranslation } from 'react-i18next'
 import { useClassSessionsByDate } from '../hooks/useClassSessions'
-import { useStudents } from '../hooks/useStudents'
+import { useStudents, useCreateStudent } from '../hooks/useStudents'
 import { useTeachers } from '../hooks/useTeachers'
 import { useRooms } from '../hooks/useRooms'
 import { useClassTemplates } from '../hooks/useClassTemplates'
@@ -11,7 +11,7 @@ import { useCreateAttendanceRecord } from '../hooks/useAttendanceRecords'
 import { usePricingConfig } from '../hooks/usePricingConfig'
 import { useAuth } from '../contexts/AuthContext'
 import { CombinationPickerDialog } from '../features/attendance/CombinationPickerDialog'
-import type { ClassSession, Student, Teacher, Room, AttendanceStatus, ClassTemplate } from '../types'
+import type { ClassSession, Student, Teacher, Room, AttendanceStatus, ClassTemplate, AttendanceCombination, AttendanceRecord } from '../types'
 
 /* ─── Avatar ─────────────────────────────────────────────── */
 
@@ -150,19 +150,24 @@ interface PendingCheckIn {
 }
 
 function SessionCard({ session, teacher, room, template, studentMap, markedById }: SessionCardProps) {
+  const { t } = useTranslation('attendance')
   const { data: pricingConfig } = usePricingConfig()
   const { data: records = [] } = useAttendanceRecordsBySession(session.id)
   const createRecord = useCreateAttendanceRecord()
+  const createStudent = useCreateStudent()
 
   const [expanded, setExpanded] = useState(session.status === 'active')
   const [pending, setPending] = useState<PendingCheckIn | null>(null)
   const [rosterSearch, setRosterSearch] = useState('')
   const [rosterFilter, setRosterFilter] = useState<'all' | 'unchecked' | 'present'>('all')
+  const [showDropIn, setShowDropIn] = useState(false)
+  const [dropInSearch, setDropInSearch] = useState('')
+  const [extraRosterIds, setExtraRosterIds] = useState<string[]>([])
 
-  // Build roster: template regulars + any drop-ins already checked in
+  // Build roster: template regulars + any drop-ins already checked in + manually added
   const regularIds = template?.regularStudentIds ?? []
   const checkedInIds = records.map((r) => r.studentId)
-  const rosterIds = [...new Set([...regularIds, ...checkedInIds])]
+  const rosterIds = [...new Set([...regularIds, ...checkedInIds, ...extraRosterIds])]
   const roster = rosterIds.map((id) => studentMap[id]).filter(Boolean)
 
   // Map studentId → attendance record
@@ -205,11 +210,11 @@ function SessionCard({ session, teacher, room, template, studentMap, markedById 
   }
 
   function handlePickerConfirm(result: {
-    combination: import('../types').AttendanceCombination
+    combination: AttendanceCombination
     cashAmount: number | null
     estimatedValue: number
     membershipId: string | null
-    membershipSnapshot: import('../types').AttendanceRecord['membershipSnapshot']
+    membershipSnapshot: AttendanceRecord['membershipSnapshot']
   }) {
     if (!pending) return
     createRecord.mutate({
@@ -228,6 +233,30 @@ function SessionCard({ session, teacher, room, template, studentMap, markedById 
     })
     setPending(null)
   }
+
+  async function handleDropInSelect(studentId: string) {
+    setExtraRosterIds((prev) => [...new Set([...prev, studentId])])
+    setShowDropIn(false)
+    setDropInSearch('')
+  }
+
+  async function handleDropInCreate(name: string) {
+    const parts = name.trim().split(/\s+/)
+    const firstName = parts[0] ?? name.trim()
+    const lastName = parts.slice(1).join(' ') || ''
+    const newId = await createStudent.mutateAsync({ firstName, lastName, email: null, phone: null, notes: null, activeMembershipId: null, membershipTier: null, active: true })
+    setExtraRosterIds((prev) => [...new Set([...prev, newId])])
+    setShowDropIn(false)
+    setDropInSearch('')
+  }
+
+  // Drop-in suggestions: all students not already on roster
+  const dropInSuggestions = Object.values(studentMap).filter((s) => {
+    if (rosterIds.includes(s.id)) return false
+    if (!dropInSearch.trim()) return false
+    const full = `${s.firstName} ${s.lastName}`.toLowerCase()
+    return full.includes(dropInSearch.toLowerCase())
+  })
 
   // Filtered roster
   const filteredRoster = roster.filter((student) => {
@@ -339,6 +368,63 @@ function SessionCard({ session, teacher, room, template, studentMap, markedById 
             })
           )}
 
+          {/* Drop-in panel */}
+          {showDropIn ? (
+            <div className="px-4 py-3 border-t border-border bg-background">
+              <div className="relative">
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none flex">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  autoFocus
+                  value={dropInSearch}
+                  onChange={(e) => setDropInSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') { setShowDropIn(false); setDropInSearch('') }
+                    if (e.key === 'Enter' && dropInSearch.trim() && dropInSuggestions.length === 0) {
+                      handleDropInCreate(dropInSearch)
+                    }
+                  }}
+                  placeholder={t('dropIn.search')}
+                  className="form-input w-full pl-8 text-[0.8125rem]"
+                />
+              </div>
+              {dropInSearch.trim() && (
+                <div className="mt-1.5 flex flex-col border border-border rounded-[0.5rem] overflow-hidden">
+                  {dropInSuggestions.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => handleDropInSelect(s.id)}
+                      className="text-left px-3 py-2 text-sm text-foreground hover:bg-muted bg-card border-0 cursor-pointer border-b border-border last:border-b-0"
+                    >
+                      {s.firstName} {s.lastName}
+                      {s.email && <span className="ml-2 text-xs text-muted-foreground">{s.email}</span>}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => handleDropInCreate(dropInSearch)}
+                    disabled={createStudent.isPending}
+                    className="text-left px-3 py-2 text-sm text-primary hover:bg-muted bg-card border-0 cursor-pointer font-medium"
+                  >
+                    {createStudent.isPending ? '…' : `${t('dropIn.createNew')} "${dropInSearch}"`}
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="px-4 py-2 border-t border-border">
+              <button
+                onClick={() => setShowDropIn(true)}
+                className="text-[0.8125rem] font-medium text-primary bg-transparent border-0 cursor-pointer hover:underline px-0"
+              >
+                {t('addDropIn')}
+              </button>
+            </div>
+          )}
+
           {/* Footer */}
           <div className="flex items-center justify-between px-4 py-2.5 bg-muted border-t border-border">
             <span className="text-xs text-muted-foreground font-medium">
@@ -355,7 +441,6 @@ function SessionCard({ session, teacher, room, template, studentMap, markedById 
           session={session}
           status={pending.status}
           pricingConfig={pricingConfig ?? null}
-          markedBy={markedById}
           onConfirm={handlePickerConfirm}
           onClose={() => setPending(null)}
         />

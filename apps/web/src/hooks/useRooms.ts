@@ -6,6 +6,7 @@ import {
   getDocs,
   addDoc,
   updateDoc,
+  deleteDoc,
   doc,
 } from 'firebase/firestore'
 import { db } from '../lib/firebase'
@@ -54,6 +55,17 @@ export function useUpdateRoom() {
   return useMutation({
     mutationFn: async ({ id, ...updates }: UpdateRoomInput) => {
       await updateDoc(doc(db, COLLECTION, id), updates)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+    },
+  })
+}
+
+export function useDeleteRoom() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await deleteDoc(doc(db, COLLECTION, id))
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY })

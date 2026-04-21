@@ -32,8 +32,6 @@ export function WeekCalendarView({ canManage }: WeekCalendarViewProps) {
 
   const weekLabel = `${format(weekStart, 'MMM d')} – ${format(weekEnd, 'MMM d, yyyy')}`
 
-  const totalSessions = (sessions ?? []).length
-
   function goToPrevWeek() {
     setWeekStart((prev) => addWeeks(prev, -1))
   }
@@ -136,13 +134,6 @@ export function WeekCalendarView({ canManage }: WeekCalendarViewProps) {
           )
         })}
       </div>
-
-      {/* Empty week state */}
-      {!isLoading && totalSessions === 0 && (
-        <p className="text-center text-muted-foreground text-sm py-6 m-0">
-          {t('noSessions')}
-        </p>
-      )}
 
       {/* Dialogs */}
       {editSession && (
