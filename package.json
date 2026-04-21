@@ -9,6 +9,8 @@
     "dev": "npm run dev --workspace=apps/web",
     "build": "npm run build --workspace=apps/web",
     "typecheck": "npm run typecheck --workspace=apps/web && npm run typecheck --workspace=apps/functions",
-    "seed": "node scripts/seed.js"
+    "seed": "node scripts/seed.js",
+    "emulators": "firebase emulators:start --project demo-elite-manager --import=emulator-data --export-on-exit=emulator-data",
+    "deploy:dev": "npm run build && firebase deploy --project elite-manager-app-dev"
   }
 }

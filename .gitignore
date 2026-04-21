@@ -33,3 +33,10 @@ emulator-data
 
 # Override: allow .env.example
 !.env.example
+firebase-export-*/
+firebase-export-/*
+firestore_export/
+auth_export/
+attendanceCombinationPicker.html
+firebase-export-1776611728111uDJeUQ/firestore_export/firestore_export.overall_export_metadata
+scripts/bootstrap-admin.js
