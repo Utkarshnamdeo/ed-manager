@@ -18,13 +18,13 @@ function nameHash(name: string): number {
   return Math.abs(h);
 }
 
-function Avatar({ name }: { name: string }) {
+function Avatar({ name }: { name: string; }) {
   const hueClass = AVATAR_HUE_CLASSES[nameHash(name) % 8];
   const initials = name.split(' ').slice(0, 2).map((p) => p[0]).join('').toUpperCase();
   return (
     <div
       aria-hidden="true"
-      className={`size-9 rounded-full shrink-0 flex items-center justify-center text-xs font-bold select-none ${hueClass}`}
+      className={`size-9 rounded-full shrink-0 flex items-center justify-center text-xs font-bold select-none ${ hueClass }`}
     >
       {initials}
     </div>
@@ -33,10 +33,10 @@ function Avatar({ name }: { name: string }) {
 
 /* ─── Status Badge ── */
 
-function StatusBadge({ active }: { active: boolean }) {
+function StatusBadge({ active }: { active: boolean; }) {
   const { t } = useTranslation('teachers');
   return (
-    <span className={`inline-flex items-center px-2 py-[2px] rounded-full text-xs font-semibold ${active ? 'bg-success-subtle text-success' : 'bg-muted text-muted-foreground'}`}>
+    <span className={`inline-flex items-center px-2 py-[2px] rounded-full text-xs font-semibold ${ active ? 'bg-success-subtle text-success' : 'bg-muted text-muted-foreground' }`}>
       {active ? t('status.active') : t('status.inactive')}
     </span>
   );
@@ -61,7 +61,7 @@ function FormField({ label, hint, className, children }: {
   );
 }
 
-function ReadValue({ children }: { children: React.ReactNode }) {
+function ReadValue({ children }: { children: React.ReactNode; }) {
   return (
     <div className="text-[0.9375rem] text-foreground py-2">
       {children}
@@ -89,7 +89,7 @@ function IconPlus() {
 
 /* ─── Add Teacher Form ── */
 
-function AddTeacherForm({ onClose }: { onClose: () => void }) {
+function AddTeacherForm({ onClose }: { onClose: () => void; }) {
   const { t } = useTranslation('teachers');
   const createTeacher = useCreateTeacher();
   const [form, setForm] = useState({
@@ -201,7 +201,7 @@ function TeacherDrawer({ teacher, canManage, onClose }: {
     setConfirmDeactivate(false);
   }
 
-  const fullName = `${teacher.firstName} ${teacher.lastName}`;
+  const fullName = `${ teacher.firstName } ${ teacher.lastName }`;
 
   return (
     <>
@@ -232,13 +232,12 @@ function TeacherDrawer({ teacher, canManage, onClose }: {
             <button
               key={tabKey}
               onClick={() => { setTab(tabKey); setEditing(false); }}
-              className={`py-3 mr-6 bg-transparent border-0 cursor-pointer text-sm transition-[color] duration-150 border-b-2 ${
-                tab === tabKey
+              className={`py-3 mr-6 bg-transparent border-0 cursor-pointer text-sm transition-[color] duration-150 border-b-2 ${ tab === tabKey
                   ? 'font-semibold text-primary border-b-primary'
                   : 'font-normal text-muted-foreground border-b-transparent'
-              }`}
+                }`}
             >
-              {t(`tabs.${tabKey}`)}
+              {t(`tabs.${ tabKey }`)}
             </button>
           ))}
         </div>
@@ -272,15 +271,15 @@ function TeacherDrawer({ teacher, canManage, onClose }: {
               <div className="grid grid-cols-2 gap-3">
                 <FormField label={t('form.ratePerStudent')}>
                   {editing
-                    ? <input className="form-input w-full" type="number" min="0" step="0.01" value={form.ratePerStudent}
+                    ? <input className="form-input w-full" type="text" inputMode='numeric' value={form.ratePerStudent}
                       onChange={(e) => setField('ratePerStudent', parseFloat(e.target.value) || 0)} />
                     : <ReadValue>€{teacher.ratePerStudent.toFixed(2)}</ReadValue>}
                 </FormField>
                 <FormField label={t('form.monthlyFloor')} hint={editing ? t('form.monthlyFloorHint') : undefined}>
                   {editing
-                    ? <input className="form-input w-full" type="number" min="0" step="0.01" value={form.monthlyFloor}
+                    ? <input className="form-input w-full" type='text' inputMode='numeric' value={form.monthlyFloor}
                       onChange={(e) => setField('monthlyFloor', e.target.value)} placeholder="—" />
-                    : <ReadValue>{teacher.monthlyFloor != null ? `€${teacher.monthlyFloor.toFixed(2)}` : '—'}</ReadValue>}
+                    : <ReadValue>{teacher.monthlyFloor != null ? `€${ teacher.monthlyFloor.toFixed(2) }` : '—'}</ReadValue>}
                 </FormField>
               </div>
 
@@ -289,14 +288,14 @@ function TeacherDrawer({ teacher, canManage, onClose }: {
                   {t('form.reportVisibility')}
                 </div>
                 {(['showAttendanceDetail', 'showEarningsPerSession', 'showTotalEarnings'] as const).map((key) => (
-                  <label key={key} className={`flex items-center gap-2 mb-2 ${editing ? 'cursor-pointer' : 'cursor-default'}`}>
+                  <label key={key} className={`flex items-center gap-2 mb-2 ${ editing ? 'cursor-pointer' : 'cursor-default' }`}>
                     <input
                       type="checkbox"
                       checked={form.reportVisibility[key]}
                       disabled={!editing}
                       onChange={(e) => setField('reportVisibility', { ...form.reportVisibility, [key]: e.target.checked })}
                     />
-                    <span className="text-sm text-foreground">{t(`form.${key}`)}</span>
+                    <span className="text-sm text-foreground">{t(`form.${ key }`)}</span>
                   </label>
                 ))}
               </div>
@@ -413,9 +412,9 @@ export function TeachersPage() {
           <button
             key={teacher.id}
             onClick={() => setSelectedTeacher(teacher)}
-            className={`flex items-center gap-3.5 w-full px-5 py-3.5 bg-transparent border-0 cursor-pointer text-left transition-[background-color] duration-100 hover:bg-muted ${teacher.active ? 'opacity-100' : 'opacity-50'}`}
+            className={`flex items-center gap-3.5 w-full px-5 py-3.5 bg-transparent border-0 cursor-pointer text-left transition-[background-color] duration-100 hover:bg-muted ${ teacher.active ? 'opacity-100' : 'opacity-50' }`}
           >
-            <Avatar name={`${teacher.firstName} ${teacher.lastName}`} />
+            <Avatar name={`${ teacher.firstName } ${ teacher.lastName }`} />
             <div className="flex-1 min-w-0">
               <div className="text-[0.9375rem] font-semibold text-foreground">
                 {teacher.firstName} {teacher.lastName}

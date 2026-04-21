@@ -1,8 +1,8 @@
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useAuth } from '../../contexts/AuthContext'
-import { useRooms, useCreateRoom, useUpdateRoom } from '../../hooks/useRooms'
-import type { Room } from '../../types'
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../contexts/AuthContext';
+import { useRooms, useCreateRoom, useUpdateRoom } from '../../hooks/useRooms';
+import type { Room } from '../../types';
 
 /* ─── Icons ── */
 
@@ -12,7 +12,7 @@ function IconEdit() {
       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
     </svg>
-  )
+  );
 }
 
 function IconPlus() {
@@ -20,38 +20,38 @@ function IconPlus() {
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
     </svg>
-  )
+  );
 }
 
 /* ─── Room Row ── */
 
-function RoomRow({ room, canManage }: { room: Room; canManage: boolean }) {
-  const { t } = useTranslation('rooms')
-  const updateRoom = useUpdateRoom()
-  const [editing, setEditing] = useState(false)
-  const [confirmDeactivate, setConfirmDeactivate] = useState(false)
-  const [name, setName] = useState(room.name)
-  const [capacity, setCapacity] = useState<string>(room.capacity != null ? String(room.capacity) : '')
+function RoomRow({ room, canManage }: { room: Room; canManage: boolean; }) {
+  const { t } = useTranslation('rooms');
+  const updateRoom = useUpdateRoom();
+  const [editing, setEditing] = useState(false);
+  const [confirmDeactivate, setConfirmDeactivate] = useState(false);
+  const [name, setName] = useState(room.name);
+  const [capacity, setCapacity] = useState<string>(room.capacity != null ? String(room.capacity) : '');
 
   async function handleSave() {
     await updateRoom.mutateAsync({
       id: room.id,
       name: name.trim(),
       capacity: capacity === '' ? null : parseInt(capacity, 10),
-    })
-    setEditing(false)
+    });
+    setEditing(false);
   }
 
   function handleCancel() {
-    setName(room.name)
-    setCapacity(room.capacity != null ? String(room.capacity) : '')
-    setEditing(false)
-    setConfirmDeactivate(false)
+    setName(room.name);
+    setCapacity(room.capacity != null ? String(room.capacity) : '');
+    setEditing(false);
+    setConfirmDeactivate(false);
   }
 
   async function handleToggleActive() {
-    await updateRoom.mutateAsync({ id: room.id, active: !room.active })
-    setConfirmDeactivate(false)
+    await updateRoom.mutateAsync({ id: room.id, active: !room.active });
+    setConfirmDeactivate(false);
   }
 
   if (confirmDeactivate) {
@@ -65,11 +65,11 @@ function RoomRow({ room, canManage }: { room: Room; canManage: boolean }) {
           {t('actions.deactivate')}
         </button>
       </div>
-    )
+    );
   }
 
   return (
-    <div className={`flex items-center gap-3 px-5 py-3 border-t border-border transition-opacity duration-150 ${room.active ? 'opacity-100' : 'opacity-50'}`}>
+    <div className={`flex items-center gap-3 px-5 py-3 border-t border-border transition-opacity duration-150 ${ room.active ? 'opacity-100' : 'opacity-50' }`}>
       {editing ? (
         <>
           <input
@@ -81,8 +81,8 @@ function RoomRow({ room, canManage }: { room: Room; canManage: boolean }) {
           />
           <input
             className="form-input w-[110px]"
-            type="number"
-            min="1"
+            type="text"
+            inputMode='numeric'
             value={capacity}
             onChange={(e) => setCapacity(e.target.value)}
             placeholder={t('form.capacity')}
@@ -112,11 +112,10 @@ function RoomRow({ room, canManage }: { room: Room; canManage: boolean }) {
               <button
                 onClick={() => room.active ? setConfirmDeactivate(true) : handleToggleActive()}
                 title={room.active ? t('actions.deactivate') : t('actions.activate')}
-                className={`px-2.5 h-8 rounded-[6px] border-0 bg-transparent cursor-pointer text-xs font-medium transition-[background-color] duration-100 ${
-                  room.active
+                className={`px-2.5 h-8 rounded-[6px] border-0 bg-transparent cursor-pointer text-xs font-medium transition-[background-color] duration-100 ${ room.active
                     ? 'text-destructive hover:bg-destructive-subtle'
                     : 'text-success hover:bg-success-subtle'
-                }`}
+                  }`}
               >
                 {room.active ? t('actions.deactivate') : t('actions.activate')}
               </button>
@@ -125,25 +124,25 @@ function RoomRow({ room, canManage }: { room: Room; canManage: boolean }) {
         </>
       )}
     </div>
-  )
+  );
 }
 
 /* ─── Add Room Row ── */
 
-function AddRoomRow({ onClose }: { onClose: () => void }) {
-  const { t } = useTranslation('rooms')
-  const createRoom = useCreateRoom()
-  const [name, setName] = useState('')
-  const [capacity, setCapacity] = useState('')
+function AddRoomRow({ onClose }: { onClose: () => void; }) {
+  const { t } = useTranslation('rooms');
+  const createRoom = useCreateRoom();
+  const [name, setName] = useState('');
+  const [capacity, setCapacity] = useState('');
 
   async function handleSave() {
-    if (!name.trim()) return
+    if (!name.trim()) return;
     await createRoom.mutateAsync({
       name: name.trim(),
       capacity: capacity === '' ? null : parseInt(capacity, 10),
       active: true,
-    })
-    onClose()
+    });
+    onClose();
   }
 
   return (
@@ -154,7 +153,7 @@ function AddRoomRow({ onClose }: { onClose: () => void }) {
         onChange={(e) => setName(e.target.value)}
         placeholder={t('form.name')}
         autoFocus
-        onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onClose() }}
+        onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onClose(); }}
       />
       <input
         className="form-input w-[110px]"
@@ -163,25 +162,25 @@ function AddRoomRow({ onClose }: { onClose: () => void }) {
         value={capacity}
         onChange={(e) => setCapacity(e.target.value)}
         placeholder={t('form.capacity')}
-        onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onClose() }}
+        onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onClose(); }}
       />
       <button onClick={handleSave} disabled={createRoom.isPending || !name.trim()} className="btn-primary">
         {createRoom.isPending ? '…' : t('actions.save')}
       </button>
       <button onClick={onClose} className="btn-secondary">{t('actions.cancel')}</button>
     </div>
-  )
+  );
 }
 
 /* ─── Rooms Page ── */
 
 export function RoomsPage() {
-  const { t } = useTranslation('rooms')
-  const { appUser } = useAuth()
-  const canManage = appUser?.role === 'admin' || !!appUser?.permissions?.manageRooms
+  const { t } = useTranslation('rooms');
+  const { appUser } = useAuth();
+  const canManage = appUser?.role === 'admin' || !!appUser?.permissions?.manageRooms;
 
-  const { data: rooms, isLoading, isError } = useRooms()
-  const [showAddRow, setShowAddRow] = useState(false)
+  const { data: rooms, isLoading, isError } = useRooms();
+  const [showAddRow, setShowAddRow] = useState(false);
 
   return (
     <div className="page-enter p-7 max-w-[700px]">
@@ -239,5 +238,5 @@ export function RoomsPage() {
         {showAddRow && <AddRoomRow onClose={() => setShowAddRow(false)} />}
       </div>
     </div>
-  )
+  );
 }
