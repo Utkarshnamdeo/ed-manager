@@ -24,7 +24,9 @@
       "todaysSessions": "Today's Sessions",
       "totalStudents": "Total Students",
       "activePasses": "Active Passes",
-      "weeklyCheckins": "Check-ins This Week"
+      "weeklyCheckins": "Check-ins This Week",
+      "activeCount": "{{count}} active",
+      "active": "Active"
     },
     "schedule": {
       "heading": "Today's Schedule",
