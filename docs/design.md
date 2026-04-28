@@ -1,6 +1,6 @@
 # Elite Manager — UI Design Document
 
-**Version:** 1.0 | **Date:** 2026-04-18 | **Stack:** React 19 + TypeScript + Vite 6 + Firebase + Tailwind CSS v4
+**Version:** 2.0 | **Date:** 2026-04-28 | **Stack:** React 19 + TypeScript + Vite 6 + Firebase + Tailwind CSS v4
 
 ---
 
@@ -83,9 +83,7 @@ Theme preference stored in `localStorage` key `elite-manager-theme` (`"light"` |
 
 | Concept | Light BG | Light Text | Dark BG | Dark Text |
 |---|---|---|---|---|
-| Present / Active | success-subtle | success | success-subtle | success |
-| Late | warning-subtle | warning (darker) | warning-subtle | warning |
-| Absent | muted | muted-foreground | muted | muted-foreground |
+| Checked in | success-subtle | success | success-subtle | success |
 | Trial | secondary-subtle | secondary | secondary-subtle | secondary |
 | Cancelled | destructive-subtle | destructive | destructive-subtle | destructive |
 | Active session | primary-subtle | primary | primary-subtle | primary |
@@ -209,19 +207,19 @@ States: default=`text-foreground-secondary`, hover=`bg-muted text-foreground`, a
 
 | Route | Label | Icon | Badge | Visible to |
 |---|---|---|---|---|
-| `/attendance` | Attendance | calendar-check | Today's date dot | All roles |
-| `/classes` | Classes | layout-grid | — | admin, staff; teacher (own) |
-| `/students` | Students | users | — | admin, staff (manageStudents) |
+| `/` | Dashboard | home | — | All roles |
+| `/attendance` | Attendance | calendar-check | — | All roles |
+| `/classes` | Classes | layout-grid | — | admin, staff |
+| `/students` | Students | users | — | admin, staff |
+| `/teachers` | Teachers | user-circle | — | admin, staff |
 | `/reports` | Reports | bar-chart | — | admin; staff (exportReports) |
 | `/settings` | Settings | settings | — | admin only |
 
+No `/rooms` or `/templates` nav items — both managed in Settings.
+
 **Sidebar Footer** (border-top, `p-3`):
-1. Backup status: `text-xs rounded-md p-2 flex items-center gap-2`
-   - Green dot "Last backup: today" | Amber "Last backup: 2d ago" | Red "Backup failed"
-   - Click → `/settings#backup`
-   - Hidden from teacher role
-2. Theme toggle (light/dark/system)
-3. Sign out button
+1. Theme toggle (light/dark/system)
+2. Sign out button
 
 ### 2.3 Topbar
 
@@ -250,154 +248,182 @@ Error: `border-destructive focus:ring-destructive/40`
 
 ---
 
-### 3.2 /attendance — Today's Check-In Hub (highest priority)
+### 3.2 / — Dashboard (primary check-in surface)
 
 ```
-Topbar: "Attendance"                    [+ Add Drop-in] [Create Session]
-─────────────────────────────────────────────────────────────────────
-[Date header: Saturday, 18 April 2026 · 3 classes today]
+Topbar: "Dashboard"                              [+ Add Class (admin)]
+────────────────────────────────────────────────────────────────────
+[Welcome greeting: Good morning, Anna]
 
-┌─ Session Card (active — border-l-4 border-primary) ─────────────┐
-│  ● Bachata Beginner  [Workshop badge?]  19:00–20:30             │
-│  Maria Teacher  ·  Room A  ·  8 / 12                           │
-│  ─────────────────────────────────────────────────────         │
-│  [Search/filter bar]                                           │
-│  [Student roster rows]                                         │
-│  [Roster footer: counts + "+ Add Drop-in"]                     │
+[Today's Classes]
+┌─ Session row (collapsed) ────────────────────────────────────────┐
+│  ● Bachata Beginner  19:00–20:30  Carlos  Room A  3 checked in  │
 └──────────────────────────────────────────────────────────────────┘
-┌─ Session Card (planned — collapsed) ────────────────────────────┐
-┌─ Session Card (completed — collapsed, 80% opacity) ─────────────┐
+    ↓ click row
+┌─ Session row (expanded) ─────────────────────────────────────────┐
+│  ● Bachata Beginner  19:00–20:30  Carlos  Room A  3 checked in  │
+│  ──────────────────────────────────────────────────────────────  │
+│  [ Enter student name...                                        ]│
+│                                                                  │
+│  Checked in (3):                                                 │
+│    Anna Schmidt      Silver · 7 left   ✓                        │
+│    Marco Rossi       10-class · 4 left ✓                        │
+│    Lena Braun        USC               ✓                        │
+└──────────────────────────────────────────────────────────────────┘
+
+[Analytics row — 3 small charts]
 ```
+
+#### Session Row (collapsed) — 52px
+
+`flex items-center px-4 py-3 border border-border rounded-[0.75rem] bg-card gap-3 hover:bg-muted/30 cursor-pointer transition-colors`
+
+Status dot (8px, color by status) + Name `font-semibold flex-1` + Time `text-sm text-muted-foreground` + Teacher `text-sm` + Room `text-sm` + "N checked in" badge.
+
+#### Session Row (expanded — inline, no modal)
+
+Row expands in place. Below the header: a search input + checked-in student list.
+
+**Search input:** `placeholder="Enter student name…"` — filters existing students by name prefix as user types.
+
+**Check-in flow on student selection:**
+
+A. **Student has active pass (gold/silver/bronze/ten_class/five_class):**
+   - Regular class → notes field shown, then single "Check in" confirm button. Credits auto-deducted by Cloud Function.
+   - Special/event + enough credits → same auto flow.
+   - Special/event + 1 credit (shortfall) → `CombinationPickerDialog` opens showing only supplement options: `[pass + cash]` `[pass + USC]` `[pass + Eversports]`.
+
+B. **Student has no pass:**
+   - "How are they attending?" button group: `[USC]` `[Eversports]` `[Drop-in €13]` `[Trial (free)]`
+   - Select one → notes field → confirm.
+
+C. **Student not found:**
+   - `[+ Add Student]` appears below the search dropdown.
+   - Inline form: name (required), email, phone.
+   - After adding → flows to B above.
+
+D. **Party class:**
+   - Search only shown. No combination picker. `combination: []` written.
+
+**Notes field:** Single-line text input shown between combination selection and the confirm button. Optional.
+
+**Checked-in list:** Below the search input. Each row: avatar + name + pass type badge + combination tokens + ✓ icon. Ordered by check-in time.
 
 #### Session Card States
 
-| Status | Appearance | Expanded by Default |
-|---|---|---|
-| `active` | Primary 4px left border bar | Yes |
-| `planned` | Normal border, muted header | No |
-| `completed` | Muted border, 80% opacity | No |
-| `cancelled` | Destructive left border, strikethrough | No, cannot expand |
+| Status | Appearance |
+|---|---|
+| `active` | Primary 4px left border, full opacity |
+| `planned` | Normal border, muted |
+| `completed` | Muted border, 80% opacity |
+| `cancelled` | Destructive border, cannot expand |
 
-#### Student Roster Row (48px min-height)
+#### Analytics Charts (3 cards, below today's classes)
 
-`flex items-center px-4 py-2.5 gap-3 hover:bg-muted/50`
-
-```
-[Avatar 32px] [Name + Membership Badge]   [Credit Info]   [Check-in Buttons]
-```
-
-**Avatar:** 32px circle. Initials, bg color from name hash (8 OKLCH hues at 0.85 chroma 0.12, text at 0.35 same hue).
-
-**Credit display:**
-- Gold: nothing shown
-- Silver/Bronze: "8 credits left" — green ≥3, amber =2, red ≤1
-- Expiry <14 days: amber "Exp. 2 May"
-- No pass: "No pass" muted
-
-**Check-in button group** (`flex gap-1.5`): 4 × 32px `rounded-md border text-xs font-bold`
-
-| Button | Icon | Unselected | Selected |
-|---|---|---|---|
-| Present ✓ | check | muted border | `bg-success text-success-foreground` |
-| Late L | clock | muted border | `bg-warning text-warning-foreground` |
-| Absent — | x | muted border | `bg-muted text-muted-foreground` |
-| Trial T | star | muted border | `bg-secondary text-secondary-foreground` |
-
-When one is selected, the other three dim to `opacity-40`.
-
-**Row ordering:** Checked-in first → regular roster → drop-ins
-
-**Search/filter bar** (above roster, inside card): `flex-1` search input + filter chips "All | Unchecked | Present | Late | Absent"
-
-**Roster footer:** Left: count summary. Right: "+ Add Drop-in" link text.
-
-#### Combination Picker Dialog
-
-Triggered when: no auto-selectable combo (special class + pass, or no pass).
-
-Auto-select (no dialog): Gold/Silver/Bronze + regular class → immediate write.
-
-Dialog: `max-w-sm`, student avatar + name in header. Token card grid `grid grid-cols-3 gap-2 p-4`.
-
-**Token card** (32px icon circle + label + credit cost):
-- Default: `border-border hover:border-primary/40 hover:bg-primary-subtle`
-- Selected: `border-primary bg-primary-subtle`
-- Disabled: `opacity-40 cursor-not-allowed`
-
-Colors: Gold=`bg-tier-gold/20 text-tier-gold`, Silver=`bg-tier-silver/20 text-tier-silver`, Bronze=`bg-tier-bronze/20 text-tier-bronze`, USC=blue-tint, Eversports=green-tint, Cash=muted, Trial=secondary.
-
-Cash amount field appears when `cash` token selected. Credit warning banner above footer actions.
-
-Footer: "Cancel" ghost + "Confirm Check-in" primary (disabled if no valid combo).
+1. **Check-ins this week** — bar chart per day (Mon–Sun)
+2. **Pass type breakdown this month** — donut: gold/silver/bronze/card/usc/eversports/dropin/trial
+3. **Daily trend last 30 days** — line chart
 
 ---
 
-### 3.3 /classes — Sessions & Templates
+### 3.3 /attendance — History Calendar (read-only)
 
-**Topbar:** "Classes" + tab switcher "Sessions | Templates" + `[+ New Session]` or `[+ New Template]`
+```
+Topbar: "Attendance"         [< April 2026 >]
+────────────────────────────────────────────────
+        Mon  Tue  Wed  Thu  Fri  Sat  Sun
+Week 1   —    —    —    2    1    3    —
+Week 2   —    1    —    2    1    2    —
+...
+```
 
-**Tab bar:** `border-b border-border flex gap-0 px-6`. Active: `border-b-2 border-primary text-primary`.
+Full monthly calendar grid (Mon–Sun). Each day cell shows session count badge (dot or number).
 
-#### Sessions Tab
+**Day click → day panel (right side or bottom):**
+- Lists sessions that day: name, time, teacher
+- Shows attendance count per session
 
-Filters row: Date chips (Today/This week/This month/Custom) + Status dropdown + Style dropdown + Search input.
+**Session click → expands:**
+- Teacher name
+- Each student who attended: name, pass type badge, combination tokens, notes
+- Non-members shown with their source (USC / Eversports / Drop-in / Trial)
 
-**List rows** (flat, Linear-style): `flex items-center px-6 py-3 border-b border-border hover:bg-muted/50 gap-4`
-
-Columns: Status dot | Date+Time (8rem) | Session name (flex-1, `font-medium`) | Teacher (8rem) | Room (6rem) | Attendance (6rem) | Actions (edit + three-dot)
-
-**Inline row expansion** (on click): `border-b-4 border-primary/30 bg-muted/30` indicator below. Shows session details, "Open Check-in" button, Edit + Cancel.
-
-#### Templates Tab
-
-Grouped by day of week. Section header: `text-xs font-medium uppercase tracking-wider text-muted-foreground py-2 px-6 bg-muted`.
-
-Template rows: Time | Style+Level badge | Name (flex-1) | Teacher | Regulars count | Subscription pill | Actions.
-
-**Template detail — Right drawer (480px):** 3 tabs:
-- **Details**: form with inline edit (Edit → Save/Cancel pattern)
-- **Roster**: `regularStudentIds` management with add/remove
-- **Sessions**: upcoming sessions list from this template
-
-**Create Template — Dialog (max-w-lg):** 3-step flow with "Step 1 of 3" progress indicator. Steps: Basic info → Assignment → Initial roster.
+**Read-only.** No check-in from this page.
 
 ---
 
-### 3.4 /students — Student Directory
+### 3.4 /classes — Two Tabs
+
+**Topbar:** "Classes" + tab switcher "Calendar | Sessions"
+
+#### Tab 1: Calendar (monthly)
+
+Monthly calendar grid, sessions as dots/chips color-coded by dance style.
+Click a session → detail panel: name, time, teacher, room, status, attendance count.
+Admin: Edit + Cancel buttons in the detail panel.
+
+#### Tab 2: Sessions (week view)
+
+7-column grid (Mon–Sun), sessions as time-blocks.
+
+Week navigation: `[< Prev]` `[Today]` `[Next >]`
+
+`[Copy Previous Week]` button (admin only):
+- Opens confirmation modal: "Copy 7 sessions from 21–27 Apr to 28 Apr–4 May?"
+- Lists session names to be created.
+- Confirm → creates session shells (same template/teacher/room/time, new dates, no attendance).
+
+Click a session block → `EditSessionDialog` (admin only).
+
+---
+
+### 3.5 /students — Student Directory
 
 **Topbar:** "Students" + search bar (280px always visible) + `[+ New Student]`
 
-**Filters:** Membership chip group (All/Gold/Silver/Bronze/No Pass) + Status (Active/Inactive) + Sort dropdown.
+**Filters:** Pass chip group (All / With Pass / No Pass / Gold / Silver / Bronze / 10-Class / 5-Class) + Status (Active/Inactive).
 
 **List table** (sticky column headers):
 
 | Column | Width | Content |
 |---|---|---|
-| Name | flex-1 | Avatar + full name + email |
-| Membership | 10rem | Tier badge + credits badge |
+| Name | flex-1 | Avatar + name + email |
+| Pass | 12rem | Pass type badge + credits remaining |
 | Expiry | 7rem | Date, amber if <14 days |
 | Last Class | 7rem | Relative date |
-| Actions | 4rem | Edit + three-dot |
+| Actions | 4rem | three-dot |
 
 #### Student Detail Drawer (480px)
 
-**Header:** 48px avatar + name `text-xl font-semibold` + membership badge + status badge. Close × + pencil edit icons.
+**Header:** 48px avatar + name `text-xl font-semibold` + pass badge + status badge. Close × icon.
 
 **3 tabs:**
 
-**Profile:** Contact info, notes. Inline edit. "Deactivate" destructive button.
+**Profile:** name, email, phone, notes. Inline edit. "Deactivate" destructive button.
 
-**Membership:**
+**Pass:**
 ```
-┌─ Membership Card ─────────────────────────────────────────┐
-│  [Tier badge]  Silver Pass                                │
-│  8 / 10 credits  ████████░░ (h-2 rounded-full progress)  │
-│  Expires: 2 May 2026         [Edit]  [Deactivate]         │
-└───────────────────────────────────────────────────────────┘
-```
-Below: membership history collapsible + "Assign New Membership" button.
+┌─ Active Pass Card ─────────────────────────────────────────────┐
+│  [Pass badge]  Silver Membership                               │
+│  7 / 8 credits  ███████░ (h-2 rounded-full progress bar)      │
+│  Expires: 28 May 2026         [Deactivate]                     │
+└────────────────────────────────────────────────────────────────┘
+[Assign Membership]  [Assign Class Card]
 
-**Attendance History:** Date range filter. List: date | session | status badge | combo tokens | credits used. `viewFinancials` gate for `estimatedValue` column. Virtual scroll for large lists.
+Past passes (collapsible list)
+```
+
+Pass type badge designs:
+- Gold: `bg-tier-gold/15 text-tier-gold border-tier-gold/30` · "Gold Membership"
+- Silver: `bg-tier-silver/15 text-tier-silver` · "Silver · N credits"
+- Bronze: `bg-tier-bronze/15 text-tier-bronze` · "Bronze · N credits"
+- 10-class: `bg-primary/10 text-primary` · "10-Class Card · N left"
+- 5-class: `bg-primary/10 text-primary` · "5-Class Card · N left"
+- No pass: `bg-muted text-muted-foreground` · "No pass"
+
+Credit warning overrides: 2 credits → amber dot | 1 credit → full badge turns warning | 0 → destructive badge "Expired".
+
+**History:** List of attendance records. Each row: date | session name | combination tokens | notes. `viewFinancials` gate for `estimatedValue` column. Virtual scroll for large lists.
 
 ---
 
@@ -445,31 +471,49 @@ States: Idle → Filled (all 6) → Loading → Error (red borders, "Invalid cod
 
 **Layout:** Left subnav (200px) + right content panel.
 
-Sub-nav sections: General | Pricing | Backup | Teachers | Rooms | Users | External Providers.
+Sub-nav sections: Pricing | Dance Styles | Class Levels | Membership Types | Class Card Types | External Providers | Templates | Rooms | Users.
 
-#### Backup
+#### Pricing
 
-Status card:
-```
-Last backup: Today, 02:01 · Success · 2.4 MB · 14s
-                              [Trigger Manual Backup]
-```
+Fields: Drop-in rate (€) | Gold monthly price | Silver monthly price | Bronze monthly price | 10-class card price | 5-class card price | USC per-checkin rate | Eversports per-checkin rate.
+Save button. Values pre-filled from `config/pricing`.
 
-Config form: NAS path | Retention count | Schedule toggle (Radix Switch: `w-10 h-6 rounded-full bg-border data-[state=checked]:bg-primary`).
+#### Dance Styles
 
-Backup log table: Date | Triggered by | Status badge | Size | Duration. Last 10, "View all" link.
+List of active styles with toggle switches. `[+ Add Style]` input at bottom.
+Feeds into the DanceStyle options for templates and sessions.
 
-#### Teachers
+#### Class Levels
 
-Table with edit drawer (Profile tab + Settings tab with rate/floor inputs). Deactivate with confirm.
+Same pattern as dance styles. `[+ Add Level]` input.
+
+#### Membership Types (read-only reference)
+
+Cards showing: Gold (unlimited, 30 days), Silver (8 credits, 30 days), Bronze (4 credits, 30 days).
+
+#### Class Card Types (read-only reference)
+
+Cards showing: 10-Class Card (10 credits, 4 months), 5-Class Card (5 credits, 4 months).
+
+#### External Providers
+
+Toggle cards: USC (enabled/disabled), Eversports (enabled/disabled). Controls whether the tokens appear in the check-in picker.
+
+#### Templates
+
+List grouped by day of week. Each row: Time | Style+Level | Name | Teacher | Actions.
+
+`[+ New Template]` button → form dialog: name, style, level, type, day of week, start/end time, teacher, room.
+
+Click a template → `TemplateDetailDrawer` (3 tabs: Details, Roster, Sessions).
 
 #### Rooms
 
-Inline-edit list. "+ Add Room" opens 2-field dialog (name, capacity).
+Inline-edit list. `[+ Add Room]` → 2-field form (name, capacity). Deactivate button per row.
 
 #### Users
 
-Table: Name | Email | Role dropdown | Permission toggles (in expanded drawer). Invite + Deactivate.
+Table: Name | Email | Role (admin/staff) | Permission toggles (in expanded drawer). Deactivate button.
 
 ---
 
@@ -485,21 +529,32 @@ Sizes: `sm` (h-7 px-2.5 text-xs) | `default` (h-8 px-3) | `lg` (h-9 px-4) | `ico
 
 Loading: replace children with `<Spinner className="w-4 h-4 animate-spin" />`.
 
-### 4.2 Membership Badge
+### 4.2 Pass Badge
 
 `inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium`
 
-Variants: Gold (amber/10 tint, tier-gold text+dot) | Silver (gray/10, tier-silver) | Bronze (orange/10, tier-bronze) | Trial (secondary-subtle) | Drop-in (muted) | USC (blue-tint) | Eversports (green-tint).
+Variants:
+- Gold: `bg-tier-gold/15 text-tier-gold border border-tier-gold/30` · label "Gold"
+- Silver: `bg-tier-silver/15 text-tier-silver` · label "Silver · N"
+- Bronze: `bg-tier-bronze/15 text-tier-bronze` · label "Bronze · N"
+- 10-class: `bg-primary/10 text-primary` · label "10-class · N"
+- 5-class: `bg-primary/10 text-primary` · label "5-class · N"
+- No pass: `bg-muted text-muted-foreground` · label "No pass"
+- USC: blue-tint · "USC"
+- Eversports: green-tint · "Eversports"
+- Drop-in: muted · "Drop-in"
+- Trial: secondary-subtle · "Trial"
 
-With credits: `"Silver · 8"` using `·` separator.
+Credit warning overrides (silver/bronze/card only):
+- 2 credits: amber dot inside badge
+- 1 credit: entire badge becomes warning-subtle/warning-foreground, label "1 left"
+- 0 credits: destructive-subtle, label "Expired"
 
-Warning override: 2 credits → amber dot on badge | 1 credit → entire badge warning-subtle/warning-foreground | 0 → destructive-subtle, label "Expired".
-
-### 4.3 Status Badge
+### 4.3 Session Status Badge
 
 `inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium` + optional 6px leading dot.
 
-Maps: `present`→success | `late`→warning | `absent`→muted | `trial`→secondary | `active`→primary | `planned`→muted | `completed`→muted | `cancelled`→destructive.
+Maps: `active`→primary | `planned`→muted | `completed`→muted foreground-secondary | `cancelled`→destructive.
 
 ### 4.4 Avatar
 
@@ -558,37 +613,46 @@ Types: success | error | warning | info (each with icon + optional description).
 
 ## 5. Key Interaction Flows
 
-### 5.1 Check-in — Auto-Selectable
+### 5.1 Check-in — Pass Holder, Regular Class
 
-1. Staff clicks ✓ Present for a student with Silver pass + regular class.
-2. System auto-selects `['silver']` — no dialog.
-3. Button shows 200ms spinner, row goes `opacity-60 pointer-events-none`.
-4. On success: button → selected (success) state, row gets green tint, credit count decrements optimistically.
-5. Toast: "Ana Schmidt — Present ✓" (4s).
-6. Cloud Function fires async, deducts credit. Firestore listener syncs UI.
+1. Staff types student name in the expanded row search field.
+2. Student appears in dropdown — staff clicks to select.
+3. Student has silver pass + regular class → notes field appears + "Check in" button.
+4. Staff optionally enters a note, then clicks "Check in".
+5. Button shows spinner, student appears in checked-in list with silver badge.
+6. Toast: "Ana Schmidt checked in ✓" (4s).
+7. Cloud Function fires async, deducts 1 credit. Badge updates via Firestore listener.
 
-### 5.2 Check-in — Combination Picker Required
+### 5.2 Check-in — Special Class Shortfall
 
-1. Staff clicks ✓ for Silver student in a Workshop (special class).
-2. Combination picker dialog opens (200ms fade).
-3. Auto-disables Gold (student has Silver), enables Silver/2×Silver/Silver+Cash/etc.
-4. Staff selects combo. Credit warning shows if low.
-5. Confirm → same loading/success flow.
+1. Staff selects a silver student with 1 credit remaining attending a special class.
+2. System detects shortfall (needs 2, has 1) → `CombinationPickerDialog` opens.
+3. Dialog shows only valid supplement combinations: `[Silver + Cash]`, `[Silver + USC]`, `[Silver + Eversports]`.
+4. Staff selects combination. Notes field shown. Confirm.
+5. Record written with `shortfall: true`. Cloud Function deducts the 1 remaining credit, marks pass inactive.
 
-### 5.3 Drop-in Add Flow
+### 5.3 Check-in — No Pass Student
 
-1. Staff clicks "+ Add Drop-in" in roster footer.
-2. Popover/sheet: search input with live results from students collection.
-3. Select existing student OR "Create new student?" if not found.
-4. Combination picker opens (no active pass → all pass tokens disabled, only Cash/USC/Eversports/Trial enabled).
-5. Staff selects payment, confirms. Drop-in record written. Student appears in roster with "Drop-in · Cash" badge.
+1. Student found in search with `passType: null`.
+2. "How are they attending?" button group appears: `[USC]` `[Eversports]` `[Drop-in €13]` `[Trial (free)]`.
+3. Staff taps the relevant option → notes field → confirm.
+4. Record written with the selected token (e.g. `['dropin']`). No credits deducted.
 
-### 5.4 Credit Warning
+### 5.4 Drop-in — New Student
 
-- 1 credit: amber row, non-blocking warning banner on session card after check-in toast.
-- 0 credits + staff checks in anyway: Picker opens with destructive "Shortfall" banner. On confirm: `shortfall: true` written to attendance record.
+1. Staff types name not found in search.
+2. `[+ Add Student]` option appears at bottom of dropdown.
+3. Inline form: name (required), email, phone. Save.
+4. New student created with `passType: null`. Flows to step 2 of 5.3 above.
+5. Student is now in the database and searchable on return visits.
 
-### 5.5 Step-Up Verification
+### 5.5 Credit Warning
+
+- 2 credits: amber dot on badge, no banner.
+- 1 credit remaining: amber "1 left" badge. After check-in: toast with "Ana is on their last credit — consider renewing their pass."
+- 0 credits when trying to check in for a regular class: `CombinationPickerDialog` opens with red "No credits" banner. Staff can still confirm — `shortfall: true` written.
+
+### 5.6 Step-Up Verification
 
 1. User opens `/reports` with `viewFinancials: true`.
 2. Cloud Function `sendStepUpCode` called on Section B mount.
@@ -654,12 +718,14 @@ Initial JS < 200KB gzipped. Firebase imported modularly. Inter font with `displa
 
 | Route | Visible to | Notes |
 |---|---|---|
-| `/login` | Unauthenticated only | Redirects to `/attendance` if logged in |
-| `/attendance` | All roles | Teachers see only their sessions |
-| `/classes` | admin, staff; teacher (own) | Full CRUD requires `manageClasses` |
-| `/students` | admin, staff (manageStudents) | |
+| `/login` | Unauthenticated only | Redirects to `/` if logged in |
+| `/` | All roles | Dashboard + check-in |
+| `/attendance` | All roles | Read-only history calendar |
+| `/classes` | admin, staff | Full CRUD requires `manageClasses` |
+| `/students` | admin, staff | Requires `manageStudents` for write |
+| `/teachers` | admin, staff | Requires `manageTeachers` for write |
 | `/reports` | admin; staff (exportReports) | Financial sections require step-up |
-| `/settings` | admin only | Entire route hidden for staff/teacher |
+| `/settings` | admin only | Entire route hidden for staff |
 
 ---
 
@@ -671,22 +737,25 @@ Initial JS < 200KB gzipped. Firebase imported modularly. Inter font with `displa
 | `apps/web/src/components/layout/Shell.tsx` | Full rebuild: role-aware nav with icons, backup indicator, theme toggle, mobile collapse |
 | `apps/web/src/App.tsx` | Add `/classes`, `/students`, `/reports`, `/settings` routes with `React.lazy` + role guards |
 | `apps/web/src/pages/AttendancePage.tsx` | Primary implementation target — all check-in UI |
-| `apps/web/src/types/index.ts` | Reference only — `AttendanceCombination`, `CombinationToken`, `AttendanceStatus`, `SessionStatus` drive all badge/button logic |
+| `apps/web/src/types/index.ts` | Reference only — `AttendanceCombination`, `CombinationToken`, `PassType`, `SessionStatus` drive all badge/button logic |
 
 ---
 
 ## 10. Verification
 
-1. Run `pnpm dev` and open the app.
-2. Login flow → redirects to `/attendance`.
-3. `/attendance` shows today's sessions; expand active session; check in a student.
-4. Check-in auto-selects for regular class; picker opens for special class.
-5. Low-credit student (1 credit) shows amber badge; 0-credit shows red "Shortfall" path.
-6. `/students` directory: search by name, open drawer, membership tab shows progress bar.
-7. `/reports` → step-up gate shows → enter OTP → financial data reveals.
-8. Dark mode toggle persists across reloads.
-9. Resize to <768px → bottom nav appears, sidebar hidden.
-10. Firebase emulator suite running: all Firestore reads/writes go through local emulator.
+1. Run `npm run dev` and open the app.
+2. Login flow → redirects to `/` (Dashboard).
+3. Dashboard shows today's sessions. Click a session row → inline expansion.
+4. Search a student with silver pass + regular class → notes field + check-in. No dialog.
+5. Search a silver student with 1 credit + special class → `CombinationPickerDialog` with supplement options only.
+6. Search a no-pass student → "How are they attending?" picker shown.
+7. Type unknown name → `[+ Add Student]` inline form appears.
+8. `/attendance` → monthly calendar. Click a day → session list. Click a session → attendee list. No check-in UI.
+9. `/students` → search, open drawer, Pass tab shows progress bar for silver/bronze/card.
+10. `/reports` → step-up gate → enter OTP → financial data reveals.
+11. `/settings` → Pricing save works. Dance style added to list. Template CRUD.
+12. Dark mode toggle persists across reloads.
+13. Firebase emulator running: all Firestore reads/writes go through local emulator.
 
 ---
 

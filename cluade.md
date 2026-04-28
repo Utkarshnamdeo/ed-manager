@@ -12,31 +12,6 @@ Dance school attendance management app. Firebase backend, React 19 frontend, Typ
 Before writing any code, read **spec.md** for types, collections, business rules, and conventions.
 If UI features needs to be implemented please check **design.md**, only access **design.md** if UI features needs to be worked on.  
 
----
-
-## Commands
-
-```bash
-# Install all workspace dependencies
-npm install
-
-# Start Firebase emulators (Auth, Firestore, Functions, UI)
-firebase emulators:start --import=emulator-data --export-on-exit=emulator-data
-
-# Seed sample data (separate terminal, emulators must be running)
-npm run seed
-
-# Start dev server
-npm run dev
-# → http://localhost:5173
-# Login: admin@danceacademy.com / password123
-
-# Type check
-npm run typecheck
-
-# Run tests
-npm run test
-```
 
 ---
 
