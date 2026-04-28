@@ -47,7 +47,7 @@ export function CreateTemplateDialog({ defaultDayOfWeek, onClose }: CreateTempla
 
   const styles: DanceStyle[] = ['bachata', 'kizomba', 'salsa', 'zouk', 'afro', 'other']
   const levels: ClassLevel[] = ['beginner', 'intermediate', 'advanced', 'open']
-  const types: ClassType[] = ['regular', 'special', 'workshop', 'event', 'party']
+  const types: ClassType[] = ['regular', 'special', 'event', 'party']
   const days = [0, 1, 2, 3, 4, 5, 6] as const
 
   return (

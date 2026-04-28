@@ -3,6 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { useTranslation } from 'react-i18next'
 import { addDays } from 'date-fns'
 import { useCreateMembership } from '../../hooks/useMemberships'
+import { useAuth } from '../../contexts/AuthContext'
 import type { MembershipTier } from '../../types'
 
 interface AssignMembershipDialogProps {
@@ -15,20 +16,22 @@ function toDateInput(date: Date): string {
   return date.toISOString().split('T')[0]
 }
 
+// All Eversports memberships renew monthly (30 days)
 const EXPIRY_DAYS: Record<MembershipTier, number> = {
   gold: 30,
-  silver: 90,
-  bronze: 60,
+  silver: 30,
+  bronze: 30,
 }
 
 const DEFAULT_CREDITS: Record<MembershipTier, number | null> = {
   gold: null,
-  silver: 10,
-  bronze: 5,
+  silver: 8,
+  bronze: 4,
 }
 
 export function AssignMembershipDialog({ studentId, defaultTier, onClose }: AssignMembershipDialogProps) {
   const { t } = useTranslation('students')
+  const { appUser } = useAuth()
   const createMembership = useCreateMembership()
 
   const today = new Date()
@@ -63,6 +66,7 @@ export function AssignMembershipDialog({ studentId, defaultTier, onClose }: Assi
       startDate: new Date(startDate),
       expiryDate: new Date(expiryDate),
       active: true,
+      createdBy: appUser?.uid ?? '',
     })
     onClose()
   }

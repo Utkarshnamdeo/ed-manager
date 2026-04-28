@@ -68,7 +68,7 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
 
   const styles: DanceStyle[] = ['bachata', 'kizomba', 'salsa', 'zouk', 'afro', 'other']
   const levels: ClassLevel[] = ['beginner', 'intermediate', 'advanced', 'open']
-  const types: ClassType[] = ['regular', 'special', 'workshop', 'event', 'party']
+  const types: ClassType[] = ['regular', 'special', 'event', 'party']
   const statuses = ['planned', 'active', 'completed', 'cancelled'] as const
 
   return (

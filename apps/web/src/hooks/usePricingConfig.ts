@@ -7,16 +7,14 @@ const QUERY_KEY = ['config', 'pricing'] as const
 
 function docToPricingConfig(data: Record<string, unknown>): PricingConfig {
   return {
-    dropInCashRate: data.dropInCashRate as number,
-    silverCashSurcharge: data.silverCashSurcharge as number,
-    bronzeCashSurcharge: data.bronzeCashSurcharge as number,
-    silverPassPrice: data.silverPassPrice as number,
-    bronzePassPrice: data.bronzePassPrice as number,
-    goldMonthlyPrice: data.goldMonthlyPrice as number,
-    uscRatePerCheckin: data.uscRatePerCheckin as number,
-    eversportsRatePerCheckin: data.eversportsRatePerCheckin as number,
-    specialClassSurcharge: data.specialClassSurcharge as number,
-    trialRate: data.trialRate as number,
+    dropInRate: (data.dropInRate as number) ?? 13,
+    silverMonthlyPrice: (data.silverMonthlyPrice as number) ?? 0,
+    bronzeMonthlyPrice: (data.bronzeMonthlyPrice as number) ?? 0,
+    goldMonthlyPrice: (data.goldMonthlyPrice as number) ?? 0,
+    tenClassCardPrice: (data.tenClassCardPrice as number) ?? 0,
+    fiveClassCardPrice: (data.fiveClassCardPrice as number) ?? 0,
+    uscRatePerCheckin: (data.uscRatePerCheckin as number) ?? 0,
+    eversportsRatePerCheckin: (data.eversportsRatePerCheckin as number) ?? 0,
     updatedAt: (data.updatedAt as { toDate(): Date })?.toDate() ?? new Date(),
     updatedBy: (data.updatedBy as string) ?? '',
   }
