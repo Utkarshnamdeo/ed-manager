@@ -29,6 +29,7 @@ function docToAttendanceRecord(id: string, data: Record<string, unknown>): Atten
     notes: (data.notes as string | null) ?? null,
     markedAt: (data.markedAt as { toDate(): Date })?.toDate() ?? new Date(),
     markedBy: (data.markedBy as string) ?? '',
+    active: (data.active as boolean) ?? true,
   }
 }
 
