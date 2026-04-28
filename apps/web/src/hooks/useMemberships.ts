@@ -32,6 +32,7 @@ function docToMembership(id: string, data: Record<string, unknown>): Membership 
     expiryDate: (data.expiryDate as { toDate(): Date })?.toDate() ?? new Date(),
     active: data.active as boolean,
     createdAt: (data.createdAt as { toDate(): Date })?.toDate() ?? new Date(),
+    createdBy: (data.createdBy as string) ?? '',
   }
 }
 
@@ -77,8 +78,8 @@ export function useCreateMembership() {
       })
       // Denormalize membership info onto the student doc
       await updateDoc(doc(db, 'students', input.studentId), {
-        activeMembershipId: ref.id,
-        membershipTier: input.tier,
+        activePassId: ref.id,
+        passType: input.tier,
       })
       return ref.id
     },
@@ -101,8 +102,8 @@ export function useUpdateMembership() {
       // When deactivating a membership, clear denormalized fields on the student doc
       if (updates.active === false) {
         await updateDoc(doc(db, 'students', studentId), {
-          activeMembershipId: deleteField(),
-          membershipTier: deleteField(),
+          activePassId: deleteField(),
+          passType: deleteField(),
         })
       }
     },

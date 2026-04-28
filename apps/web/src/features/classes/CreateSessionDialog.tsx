@@ -84,7 +84,7 @@ export function CreateSessionDialog({ onClose, defaultDate }: CreateSessionDialo
 
   const styles: DanceStyle[] = ['bachata', 'kizomba', 'salsa', 'zouk', 'afro', 'other']
   const levels: ClassLevel[] = ['beginner', 'intermediate', 'advanced', 'open']
-  const types: ClassType[] = ['regular', 'special', 'workshop', 'event', 'party']
+  const types: ClassType[] = ['regular', 'special', 'event', 'party']
 
   return (
     <Dialog.Root open onOpenChange={(open) => { if (!open) onClose() }}>

@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useStudents, useCreateStudent } from '../../hooks/useStudents'
 import { useActiveMemberships } from '../../hooks/useMemberships'
 import { StudentDrawer } from './StudentDrawer'
-import type { MembershipTier, Student, Membership } from '../../types'
+import type { PassType, Student, Membership } from '../../types'
 
 /* ─── Helpers ── */
 
@@ -28,22 +28,30 @@ function Avatar({ name, size = 36 }: { name: string; size?: number }) {
   )
 }
 
-export function MembershipBadge({ tier, credits }: { tier: MembershipTier | null; credits?: number | null }) {
+export function MembershipBadge({ tier, credits }: { tier: PassType | null; credits?: number | null }) {
   if (!tier) return <span className="text-[0.6875rem] text-muted-foreground">—</span>
 
   const lowCredit = typeof credits === 'number' && credits <= 2
   const badgeClass =
     lowCredit && credits === 1 ? 'bg-warning-subtle text-[oklch(0.50_0.14_85)]' :
     lowCredit && credits === 0 ? 'bg-destructive-subtle text-destructive' :
-    tier === 'gold'   ? 'badge-gold' :
-    tier === 'silver' ? 'badge-silver' :
-    'badge-bronze'
+    tier === 'gold'       ? 'badge-gold' :
+    tier === 'silver'     ? 'badge-silver' :
+    tier === 'bronze'     ? 'badge-bronze' :
+    tier === 'ten_class'  ? 'badge-silver' :
+    tier === 'five_class' ? 'badge-bronze' :
+    'bg-muted text-muted-foreground'
 
-  const label = tier.charAt(0).toUpperCase() + tier.slice(1)
+  const label =
+    tier === 'ten_class'  ? '10-Class Card' :
+    tier === 'five_class' ? '5-Class Card' :
+    tier.charAt(0).toUpperCase() + tier.slice(1)
+
+  const showCredits = typeof credits === 'number' && tier !== 'gold'
   return (
     <span className={`inline-flex items-center gap-1 py-[0.15rem] px-2 rounded-full text-[0.6875rem] font-semibold whitespace-nowrap ${badgeClass}`}>
       {label}
-      {typeof credits === 'number' && tier !== 'gold' && <> · {credits}</>}
+      {showCredits && <> · {credits}</>}
     </span>
   )
 }
@@ -72,20 +80,17 @@ function IconEdit() {
 function AddStudentForm({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation('students')
   const createStudent = useCreateStudent()
-  const [form, setForm] = useState({
-    firstName: '', lastName: '', email: '', phone: '', notes: '',
-  })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', notes: '' })
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     await createStudent.mutateAsync({
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim(),
+      name: form.name.trim(),
       email: form.email.trim() || null,
       phone: form.phone.trim() || null,
       notes: form.notes.trim() || null,
-      activeMembershipId: null,
-      membershipTier: null,
+      activePassId: null,
+      passType: null,
       active: true,
     })
     onClose()
@@ -93,15 +98,9 @@ function AddStudentForm({ onClose }: { onClose: () => void }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="grid grid-cols-2 gap-3 mb-3">
-        <div>
-          <label className="block text-[0.8125rem] font-semibold text-foreground-secondary mb-1.5">{t('form.firstName')}</label>
-          <input className="form-input w-full" value={form.firstName} onChange={(e) => setForm((p) => ({ ...p, firstName: e.target.value }))} required autoFocus />
-        </div>
-        <div>
-          <label className="block text-[0.8125rem] font-semibold text-foreground-secondary mb-1.5">{t('form.lastName')}</label>
-          <input className="form-input w-full" value={form.lastName} onChange={(e) => setForm((p) => ({ ...p, lastName: e.target.value }))} required />
-        </div>
+      <div className="mb-3">
+        <label className="block text-[0.8125rem] font-semibold text-foreground-secondary mb-1.5">{t('form.name')}</label>
+        <input className="form-input w-full" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} required autoFocus />
       </div>
       <div className="mb-3">
         <label className="block text-[0.8125rem] font-semibold text-foreground-secondary mb-1.5">{t('form.email')}</label>
@@ -129,7 +128,6 @@ function StudentRow({ student, membership, onOpen }: {
   onOpen: () => void
 }) {
   const { t } = useTranslation('students')
-  const fullName = `${student.firstName} ${student.lastName}`
 
   const today = new Date()
   const daysLeft = membership ? differenceInDays(membership.expiryDate, today) : null
@@ -143,18 +141,18 @@ function StudentRow({ student, membership, onOpen }: {
     <div className="grid grid-cols-[1fr_10rem_4rem] gap-4 items-center px-5 py-3.5 border-t border-border hover:bg-muted transition-[background-color] duration-100">
       {/* Name */}
       <div className="flex items-center gap-3 min-w-0">
-        <Avatar name={fullName} />
+        <Avatar name={student.name} />
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-foreground">{fullName}</div>
+          <div className="text-sm font-semibold text-foreground">{student.name}</div>
           {student.email && (
             <div className="text-xs text-muted-foreground truncate">{student.email}</div>
           )}
         </div>
       </div>
 
-      {/* Membership + alert */}
+      {/* Pass + alert */}
       <div className="flex items-center gap-1.5 flex-wrap">
-        <MembershipBadge tier={student.membershipTier} credits={creditsLeft} />
+        <MembershipBadge tier={student.passType} credits={creditsLeft} />
         {(isExpiringSoon || isExpired) && (
           <span className="text-[0.6rem] font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full bg-warning-subtle text-[oklch(0.50_0.14_85)]">
             {isExpired ? t('membership.expired') : t('membership.expiringAlert')}
@@ -183,7 +181,7 @@ function StudentRow({ student, membership, onOpen }: {
 
 /* ─── Students Page ── */
 
-type FilterTier = 'all' | MembershipTier | 'noPass'
+type FilterTier = 'all' | 'gold' | 'silver' | 'bronze' | 'ten_class' | 'five_class' | 'noPass'
 
 export function StudentsPage() {
   const { t } = useTranslation('students')
@@ -201,21 +199,20 @@ export function StudentsPage() {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
 
-  const filterOptions: FilterTier[] = ['all', 'gold', 'silver', 'bronze', 'noPass']
+  const filterOptions: FilterTier[] = ['all', 'gold', 'silver', 'bronze', 'ten_class', 'five_class', 'noPass']
 
   const filtered = (students ?? []).filter((s) => {
     const matchesTier =
       tierFilter === 'all' ? true :
-      tierFilter === 'noPass' ? s.membershipTier === null :
-      s.membershipTier === tierFilter
+      tierFilter === 'noPass' ? s.passType === null :
+      s.passType === tierFilter
 
     if (!matchesTier) return false
 
     if (search.trim()) {
       const q = search.toLowerCase()
       return (
-        s.firstName.toLowerCase().includes(q) ||
-        s.lastName.toLowerCase().includes(q) ||
+        s.name.toLowerCase().includes(q) ||
         (s.email?.toLowerCase().includes(q) ?? false)
       )
     }

@@ -6,7 +6,7 @@ import { useMembershipsByStudent, useUpdateMembership } from '../../hooks/useMem
 import { useAttendanceRecordsByStudent } from '../../hooks/useAttendanceRecords'
 import { MembershipBadge } from './StudentsPage'
 import { AssignMembershipDialog } from './AssignMembershipDialog'
-import type { Student, Membership, MembershipTier } from '../../types'
+import type { Student, Membership, MembershipTier, PassType } from '../../types'
 
 /* ─── Icons ── */
 
@@ -48,8 +48,7 @@ function ProfileTab({ student, canManage, onClose }: { student: Student; canMana
   const [confirmDeactivate, setConfirmDeactivate] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [form, setForm] = useState({
-    firstName: student.firstName,
-    lastName: student.lastName,
+    name: student.name,
     email: student.email ?? '',
     phone: student.phone ?? '',
     notes: student.notes ?? '',
@@ -62,8 +61,7 @@ function ProfileTab({ student, canManage, onClose }: { student: Student; canMana
   async function handleSave() {
     await updateStudent.mutateAsync({
       id: student.id,
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim(),
+      name: form.name.trim(),
       email: form.email.trim() || null,
       phone: form.phone.trim() || null,
       notes: form.notes.trim() || null,
@@ -72,7 +70,7 @@ function ProfileTab({ student, canManage, onClose }: { student: Student; canMana
   }
 
   function handleCancel() {
-    setForm({ firstName: student.firstName, lastName: student.lastName, email: student.email ?? '', phone: student.phone ?? '', notes: student.notes ?? '' })
+    setForm({ name: student.name, email: student.email ?? '', phone: student.phone ?? '', notes: student.notes ?? '' })
     setEditing(false)
     setConfirmDeactivate(false)
   }
@@ -88,11 +86,10 @@ function ProfileTab({ student, canManage, onClose }: { student: Student; canMana
   }
 
   const fields = [
-    { key: 'firstName', label: t('form.firstName') },
-    { key: 'lastName',  label: t('form.lastName') },
-    { key: 'email',     label: t('form.email') },
-    { key: 'phone',     label: t('form.phone') },
-    { key: 'notes',     label: t('form.notes') },
+    { key: 'name',  label: t('form.name') },
+    { key: 'email', label: t('form.email') },
+    { key: 'phone', label: t('form.phone') },
+    { key: 'notes', label: t('form.notes') },
   ] as const
 
   return (
@@ -111,7 +108,7 @@ function ProfileTab({ student, canManage, onClose }: { student: Student; canMana
           {confirmDelete ? (
             <div className="flex flex-col gap-2 flex-1">
               <p className="text-[0.8125rem] text-foreground m-0">
-                {t('actions.deleteConfirm', { name: `${student.firstName} ${student.lastName}` })}
+                {t('actions.deleteConfirm', { name: student.name })}
               </p>
               <p className="text-xs text-destructive m-0">{t('actions.deleteWarning')}</p>
               <div className="flex gap-2">
@@ -124,7 +121,7 @@ function ProfileTab({ student, canManage, onClose }: { student: Student; canMana
           ) : confirmDeactivate ? (
             <div className="flex flex-col gap-2 flex-1">
               <p className="text-[0.8125rem] text-foreground m-0">
-                {t('actions.deactivateConfirm', { name: `${student.firstName} ${student.lastName}` })}
+                {t('actions.deactivateConfirm', { name: student.name })}
               </p>
               <div className="flex gap-2">
                 <button onClick={handleCancel} className="btn-secondary flex-1">{t('actions.cancel')}</button>
@@ -257,7 +254,7 @@ function MembershipTab({ student, canManage }: { student: Student; canManage: bo
   const { data: memberships } = useMembershipsByStudent(student.id)
   const updateMembership = useUpdateMembership()
   const [showAssign, setShowAssign] = useState(false)
-  const [renewTier, setRenewTier] = useState<MembershipTier | undefined>(undefined)
+  const [renewTier, setRenewTier] = useState<MembershipTier | undefined>(undefined) // eslint-disable-line @typescript-eslint/no-unused-vars
   const [showPast, setShowPast] = useState(false)
 
   const active = (memberships ?? []).find((m) => m.active)
@@ -354,28 +351,21 @@ function HistoryTab({ student }: { student: Student }) {
     return <p className="text-sm text-muted-foreground py-4">{t('history.noHistory')}</p>
   }
 
-  const STATUS_BADGE: Record<string, string> = {
-    present: 'bg-success-subtle text-success',
-    late:    'bg-warning-subtle text-[oklch(0.48_0.14_85)]',
-    absent:  'bg-muted text-muted-foreground',
-    trial:   'bg-secondary-subtle text-secondary',
-  }
-
   return (
     <div className="flex flex-col divide-y divide-border">
       {records.map((r) => (
-        <div key={r.id} className="flex items-center gap-3 py-3">
-          <div className="text-xs text-muted-foreground w-20 shrink-0">
+        <div key={r.id} className="flex items-start gap-3 py-3">
+          <div className="text-xs text-muted-foreground w-20 shrink-0 pt-0.5">
             {r.markedAt.toLocaleDateString()}
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-[0.8125rem] font-medium text-foreground truncate">
-              {r.combination.join(' + ')}
+              {r.combination.length > 0 ? r.combination.join(' + ') : '—'}
             </div>
+            {r.notes && (
+              <div className="text-xs text-muted-foreground mt-0.5 truncate">{r.notes}</div>
+            )}
           </div>
-          <span className={`text-[0.6875rem] font-semibold px-2 py-[2px] rounded-full shrink-0 ${STATUS_BADGE[r.status] ?? 'bg-muted text-muted-foreground'}`}>
-            {r.status}
-          </span>
         </div>
       ))}
     </div>
@@ -393,7 +383,6 @@ interface StudentDrawerProps {
 export function StudentDrawer({ student, canManage, onClose }: StudentDrawerProps) {
   const { t } = useTranslation('students')
   const [tab, setTab] = useState<'profile' | 'membership' | 'history'>('profile')
-  const fullName = `${student.firstName} ${student.lastName}`
 
   return (
     <>
@@ -405,11 +394,11 @@ export function StudentDrawer({ student, canManage, onClose }: StudentDrawerProp
 
         {/* Header */}
         <div className="px-6 py-5 border-b border-border flex items-center gap-3">
-          <DrawerAvatar name={fullName} />
+          <DrawerAvatar name={student.name} />
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-base text-foreground">{fullName}</div>
+            <div className="font-bold text-base text-foreground">{student.name}</div>
             <div className="mt-0.5">
-              <MembershipBadge tier={student.membershipTier} />
+              <MembershipBadge tier={student.passType as PassType | null} />
             </div>
           </div>
           <button onClick={onClose} className="bg-transparent border-0 cursor-pointer text-muted-foreground p-1">
