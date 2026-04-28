@@ -38,6 +38,31 @@
       "statusPlanned": "Planned",
       "statusDone": "Done",
       "statusCancelled": "Cancelled"
+    },
+    "checkin": {
+      "searchPlaceholder": "Search student…",
+      "checkIn": "Check in",
+      "alreadyCheckedIn": "Already checked in",
+      "notesPlaceholder": "Notes (optional)",
+      "sourcePickerLabel": "How are they paying?",
+      "usc": "USC",
+      "eversports": "Eversports",
+      "dropin": "Drop-in €{{rate}}",
+      "trial": "Trial – free",
+      "addStudent": "Add",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "partyNote": "Party check-in — no pass required",
+      "checkedInCount": "{{count}} checked in",
+      "supplementLabel": "Add supplement",
+      "studentAdded": "Student added — search to check them in",
+      "addStudentForm": {
+        "name": "Name",
+        "email": "Email (optional)",
+        "phone": "Phone (optional)",
+        "submit": "Create student",
+        "cancel": "Cancel"
+      }
     }
   },
   "attendance": {

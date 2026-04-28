@@ -5,8 +5,10 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useDashboardStats } from '../../hooks/useDashboardStats'
 import { useClassSessionsByDate } from '../../hooks/useClassSessions'
 import { useTeachers } from '../../hooks/useTeachers'
+import { usePricingConfig } from '../../hooks/usePricingConfig'
 import { StatCards } from './StatCards'
 import { SessionRow } from './SessionRow'
+import { CheckInPanel } from './CheckInPanel'
 
 export function DashboardPage() {
   const { t } = useTranslation()
@@ -15,6 +17,7 @@ export function DashboardPage() {
   const stats = useDashboardStats()
   const { data: sessions = [] } = useClassSessionsByDate(today)
   const { data: teachers = [] } = useTeachers()
+  const { data: pricingConfig = null } = usePricingConfig()
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const teacherMap = new Map(teachers.map((teacher) => [teacher.id, `${teacher.firstName} ${teacher.lastName}`]))
@@ -78,7 +81,13 @@ export function DashboardPage() {
                 if (session.status === 'cancelled') return
                 setExpandedId((prev) => (prev === session.id ? null : session.id))
               }}
-            />
+            >
+              <CheckInPanel
+                session={session}
+                pricingConfig={pricingConfig}
+                markedBy={appUser?.uid ?? ''}
+              />
+            </SessionRow>
           ))
         )}
       </div>
