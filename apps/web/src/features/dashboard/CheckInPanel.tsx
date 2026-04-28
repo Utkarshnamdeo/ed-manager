@@ -607,7 +607,7 @@ export function CheckInPanel({ session, pricingConfig, markedBy }: CheckInPanelP
                   <span className="text-xs text-muted-foreground">
                     {record.combination.length > 0
                       ? record.combination.join(' + ')
-                      : 'party'}
+                      : t('dashboard.checkin.partyAttendance')}
                   </span>
                 </li>
               )

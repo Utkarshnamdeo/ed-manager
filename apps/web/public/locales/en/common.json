@@ -61,6 +61,7 @@
       "checkedInCount": "{{count}} checked in",
       "supplementLabel": "Add supplement",
       "studentAdded": "Student added — search to check them in",
+      "partyAttendance": "Party",
       "addStudentForm": {
         "name": "Name",
         "email": "Email (optional)",

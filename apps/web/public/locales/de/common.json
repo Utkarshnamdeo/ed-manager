@@ -61,6 +61,7 @@
       "checkedInCount": "{{count}} eingecheckt",
       "supplementLabel": "Zusatz hinzufügen",
       "studentAdded": "Schüler hinzugefügt — suchen zum Einchecken",
+      "partyAttendance": "Party",
       "addStudentForm": {
         "name": "Name",
         "email": "E-Mail (optional)",
