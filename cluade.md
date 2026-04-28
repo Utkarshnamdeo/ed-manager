@@ -61,6 +61,8 @@ Note: `/` (index) redirects to `/dashboard`.
 - StudentsPage — roster, membership assignment
 - TeachersPage
 
-**In progress:** Phase 5 — Dashboard (static stub; real data + inline check-in not yet built)
+- Phase 5 — Dashboard: real-data StatCards, SessionRow, inline check-in (all 4 flows), i18n EN+DE, vitest test suite (21 tests, 2 files)
+
+**In progress:** none — all phases complete
 
 > Update this section after every completed build step.

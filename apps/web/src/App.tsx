@@ -5,7 +5,7 @@ import { RequireAuth } from './components/layout/RequireAuth'
 import { PublicRoute } from './components/layout/PublicRoute'
 import { Shell } from './components/layout/Shell'
 import { LoginPage } from './features/auth/LoginPage'
-import { DashboardPage } from './pages/DashboardPage'
+import { DashboardPage } from './features/dashboard/DashboardPage'
 import { AttendancePage } from './pages/AttendancePage'
 import { TeachersPage } from './features/teachers/TeachersPage'
 

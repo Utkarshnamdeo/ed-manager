@@ -168,6 +168,7 @@ function SessionCard({ session, teacher, room, template, studentMap, markedById 
       shortfallAmount: null,
       notes: null,
       markedBy: markedById,
+      active: true,
     })
     setPendingStudent(null)
   }

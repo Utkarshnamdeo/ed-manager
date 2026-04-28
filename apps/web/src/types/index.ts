@@ -232,6 +232,8 @@ export interface AttendanceRecord {
   markedAt: Date;
   /** UID of the admin/staff who recorded the attendance */
   markedBy: string;
+  /** false = soft-deleted/corrected record */
+  active: boolean;
 }
 
 // ─── Config Documents ─────────────────────────────────────────────────────────

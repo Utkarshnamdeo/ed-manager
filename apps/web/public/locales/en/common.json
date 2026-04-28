@@ -24,7 +24,9 @@
       "todaysSessions": "Today's Sessions",
       "totalStudents": "Total Students",
       "activePasses": "Active Passes",
-      "weeklyCheckins": "Check-ins This Week"
+      "weeklyCheckins": "Check-ins This Week",
+      "activeCount": "{{count}} active",
+      "active": "Active"
     },
     "schedule": {
       "heading": "Today's Schedule",
@@ -36,6 +38,38 @@
       "statusPlanned": "Planned",
       "statusDone": "Done",
       "statusCancelled": "Cancelled"
+    },
+    "checkin": {
+      "searchPlaceholder": "Search student…",
+      "checkIn": "Check in",
+      "alreadyCheckedIn": "Already checked in",
+      "notesPlaceholder": "Notes (optional)",
+      "sourcePickerLabel": "How are they paying?",
+      "gold": "Gold",
+      "silver": "Silver",
+      "bronze": "Bronze",
+      "card": "Class Card",
+      "cash": "Cash supplement",
+      "usc": "USC",
+      "eversports": "Eversports",
+      "dropin": "Drop-in €{{rate}}",
+      "trial": "Trial – free",
+      "addStudent": "Add",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "partyNote": "Party check-in — no pass required",
+      "checkedInCount": "{{count}} checked in",
+      "supplementLabel": "Add supplement",
+      "studentAdded": "Student added — search to check them in",
+      "partyAttendance": "Party",
+      "addStudentForm": {
+        "name": "Name",
+        "email": "Email (optional)",
+        "phone": "Phone (optional)",
+        "submit": "Create student",
+        "cancel": "Cancel",
+        "error": "Failed to create student. Please try again."
+      }
     }
   },
   "attendance": {

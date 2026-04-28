@@ -19,7 +19,58 @@
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Willkommen zurück, {{name}}",
-    "emulatorStatus": "Firebase Emulator Suite"
+    "emulatorStatus": "Firebase Emulator Suite",
+    "stats": {
+      "todaysSessions": "Heutige Kurse",
+      "totalStudents": "Schüler gesamt",
+      "activePasses": "Aktive Pässe",
+      "weeklyCheckins": "Check-ins diese Woche",
+      "activeCount": "{{count}} aktiv",
+      "active": "Aktiv"
+    },
+    "schedule": {
+      "heading": "Heutiger Stundenplan",
+      "subtitle": "{{upcoming}} ausstehend · {{done}} abgeschlossen",
+      "empty": "Heute keine Kurse geplant",
+      "openCheckin": "Check-in öffnen",
+      "enrolled": "{{enrolled}} / {{capacity}}",
+      "statusActive": "Aktiv",
+      "statusPlanned": "Geplant",
+      "statusDone": "Fertig",
+      "statusCancelled": "Abgesagt"
+    },
+    "checkin": {
+      "searchPlaceholder": "Schüler suchen…",
+      "checkIn": "Einchecken",
+      "alreadyCheckedIn": "Bereits eingecheckt",
+      "notesPlaceholder": "Notizen (optional)",
+      "sourcePickerLabel": "Zahlungsmethode?",
+      "gold": "Gold",
+      "silver": "Silber",
+      "bronze": "Bronze",
+      "card": "Kurskarte",
+      "cash": "Barzahlung",
+      "usc": "USC",
+      "eversports": "Eversports",
+      "dropin": "Drop-in €{{rate}}",
+      "trial": "Probestunde – kostenlos",
+      "addStudent": "Hinzufügen",
+      "confirm": "Bestätigen",
+      "cancel": "Abbrechen",
+      "partyNote": "Party-Check-in — kein Pass erforderlich",
+      "checkedInCount": "{{count}} eingecheckt",
+      "supplementLabel": "Zusatz hinzufügen",
+      "studentAdded": "Schüler hinzugefügt — suchen zum Einchecken",
+      "partyAttendance": "Party",
+      "addStudentForm": {
+        "name": "Name",
+        "email": "E-Mail (optional)",
+        "phone": "Telefon (optional)",
+        "submit": "Schüler erstellen",
+        "cancel": "Abbrechen",
+        "error": "Schüler konnte nicht erstellt werden. Bitte erneut versuchen."
+      }
+    }
   },
   "attendance": {
     "placeholder": "Die heutigen Stunden erscheinen hier – kommt in Schritt 9."
@@ -34,22 +85,5 @@
   },
   "errors": {
     "failedToLoad": "Daten konnten nicht geladen werden."
-  },
-  "stats": {
-    "todaysSessions": "Heutige Kurse",
-    "totalStudents": "Schüler gesamt",
-    "activePasses": "Aktive Pässe",
-    "weeklyCheckins": "Check-ins diese Woche"
-  },
-  "schedule": {
-    "heading": "Heutiger Stundenplan",
-    "subtitle": "{{upcoming}} ausstehend · {{done}} abgeschlossen",
-    "empty": "Heute keine Kurse geplant",
-    "openCheckin": "Check-in öffnen",
-    "enrolled": "{{enrolled}} / {{capacity}}",
-    "statusActive": "Aktiv",
-    "statusPlanned": "Geplant",
-    "statusDone": "Fertig",
-    "statusCancelled": "Abgesagt"
   }
 }
