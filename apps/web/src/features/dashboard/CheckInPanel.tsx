@@ -59,18 +59,9 @@ interface PassFlowPanelProps {
 
 function PassFlowPanel({ session, student, pricingConfig, onConfirm, onCancel }: PassFlowPanelProps) {
   const { t } = useTranslation()
-  const { data: memberships = [] } = useMembershipsByStudent(student.id)
-  const { data: classCards = [] } = useClassCardsByStudent(student.id)
   const [notes, setNotes] = useState('')
   const [supplement, setSupplement] = useState<CombinationToken | null>(null)
   const [submitting, setSubmitting] = useState(false)
-
-  const activeMembership = memberships.find(
-    (m) => m.id === student.activePassId && m.active
-  ) ?? null
-  const activeCard = classCards.find(
-    (c) => c.id === student.activePassId && c.active
-  ) ?? null
 
   const passToken: CombinationToken =
     student.passType && isMembershipTier(student.passType)
