@@ -34,5 +34,22 @@
   },
   "errors": {
     "failedToLoad": "Daten konnten nicht geladen werden."
+  },
+  "stats": {
+    "todaysSessions": "Heutige Kurse",
+    "totalStudents": "Schüler gesamt",
+    "activePasses": "Aktive Pässe",
+    "weeklyCheckins": "Check-ins diese Woche"
+  },
+  "schedule": {
+    "heading": "Heutiger Stundenplan",
+    "subtitle": "{{upcoming}} ausstehend · {{done}} abgeschlossen",
+    "empty": "Heute keine Kurse geplant",
+    "openCheckin": "Check-in öffnen",
+    "enrolled": "{{enrolled}} / {{capacity}}",
+    "statusActive": "Aktiv",
+    "statusPlanned": "Geplant",
+    "statusDone": "Fertig",
+    "statusCancelled": "Abgesagt"
   }
 }

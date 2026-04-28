@@ -19,7 +19,24 @@
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome back, {{name}}",
-    "emulatorStatus": "Firebase Emulator Suite"
+    "emulatorStatus": "Firebase Emulator Suite",
+    "stats": {
+      "todaysSessions": "Today's Sessions",
+      "totalStudents": "Total Students",
+      "activePasses": "Active Passes",
+      "weeklyCheckins": "Check-ins This Week"
+    },
+    "schedule": {
+      "heading": "Today's Schedule",
+      "subtitle": "{{upcoming}} upcoming · {{done}} done",
+      "empty": "No sessions scheduled for today",
+      "openCheckin": "Open check-in",
+      "enrolled": "{{enrolled}} / {{capacity}}",
+      "statusActive": "Active",
+      "statusPlanned": "Planned",
+      "statusDone": "Done",
+      "statusCancelled": "Cancelled"
+    }
   },
   "attendance": {
     "placeholder": "Today's sessions will appear here — coming in step 9."
