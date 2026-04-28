@@ -8,7 +8,6 @@ import { LoginPage } from './features/auth/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { AttendancePage } from './pages/AttendancePage'
 import { TeachersPage } from './features/teachers/TeachersPage'
-import { RoomsPage } from './features/rooms/RoomsPage'
 
 const ClassesPage = lazy(() =>
   import('./features/classes/ClassesPage').then((m) => ({ default: m.ClassesPage }))
@@ -37,7 +36,7 @@ export default function App() {
             </RequireAuth>
           }
         >
-          <Route index element={<Navigate to="/attendance" replace />} />
+          <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="attendance" element={<AttendancePage />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route
@@ -57,9 +56,10 @@ export default function App() {
             }
           />
           <Route path="teachers" element={<TeachersPage />} />
-          <Route path="rooms" element={<RoomsPage />} />
+          <Route path="reports" element={<div className="p-7 text-muted-foreground">Reports — coming soon</div>} />
+          <Route path="settings" element={<div className="p-7 text-muted-foreground">Settings — coming soon</div>} />
         </Route>
-        <Route path="*" element={<Navigate to="/attendance" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </AuthProvider>
   )
