@@ -141,6 +141,7 @@ shortfallAmount: number | null
 notes: string | null               ← optional note by admin/staff
 markedAt: Timestamp
 markedBy: string                   ← uid
+active: boolean                    ← false = soft-deleted/corrected record
 ```
 
 #### `classSessions/{id}`

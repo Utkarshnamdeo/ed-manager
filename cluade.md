@@ -9,8 +9,10 @@
 
 Dance school attendance management app. Firebase backend, React 19 frontend, TypeScript throughout. Staff use it daily at the front desk to run class check-ins and track student memberships.
 
-Before writing any code, read **spec.md** for types, collections, business rules, and conventions.
-If UI features needs to be implemented please check **design.md**, only access **design.md** if UI features needs to be worked on.  
+Before writing any code, read **docs/spec.md** for types, collections, business rules, and conventions.
+If UI features need to be implemented please check **docs/design.md**, only access **docs/design.md** if UI features need to be worked on.
+Read **docs/REDESIGN.md** for the system overview and data model.
+Read **docs/decisions.md** when something seems odd or before reversing an architectural choice.
 
 
 ---
@@ -33,7 +35,7 @@ If UI features needs to be implemented please check **design.md**, only access *
 
 | Page | Route | Access |
 |---|---|---|
-| Dashboard | `/` | admin, staff |
+| Dashboard (check-in surface) | `/dashboard` | admin, staff |
 | Attendance (history calendar) | `/attendance` | admin, staff |
 | Classes (calendar + sessions) | `/classes` | admin, staff |
 | Students | `/students` | admin, staff |
@@ -41,12 +43,24 @@ If UI features needs to be implemented please check **design.md**, only access *
 | Reports | `/reports` | admin, staff |
 | Settings | `/settings` | admin only |
 
+Note: `/rooms` does NOT exist as a standalone route. Rooms are managed in Settings → Rooms.
+Note: `/` (index) redirects to `/dashboard`.
+
 ---
 
 ## Current build status
 
-**Completed:** Phase 1 (types/index.ts) · Phase 2 (Firestore rules) · Phase 3 (Cloud Function onAttendanceCreated) · Phase 4 (hooks: useMemberships, useClassCards, useStudents, useAttendanceRecords, useConfig, usePricingConfig).
+**Completed:**
+- Phase 1 — types/index.ts
+- Phase 2 — Firestore security rules
+- Phase 3 — Cloud Functions: onAttendanceCreated · sendStepUpCode · verifyStepUpCode · manualBackup · scheduledBackup · cleanupOldBackups
+- Phase 4 — Hooks: useMemberships · useClassCards · useStudents · useAttendanceRecords · useConfig · usePricingConfig · useTeachers · useRooms · useClassTemplates · useClassSessions
+- Shell layout with sidebar navigation
+- AttendancePage — real data, monthly calendar, combo picker
+- ClassesPage — calendar tab + sessions week view
+- StudentsPage — roster, membership assignment
+- TeachersPage
 
-**In progress:** Phase 5 — Dashboard page (real data + inline check-in).
+**In progress:** Phase 5 — Dashboard (static stub; real data + inline check-in not yet built)
 
 > Update this section after every completed build step.
