@@ -2,20 +2,20 @@ import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { useTranslation } from 'react-i18next'
 import { useMembershipsByStudent } from '../../hooks/useMemberships'
-import type { Student, ClassSession, PricingConfig, AttendanceCombination, AttendanceRecord, CombinationToken, AttendanceStatus } from '../../types'
+import { useClassCardsByStudent } from '../../hooks/useClassCards'
+import type { Student, ClassSession, PricingConfig, AttendanceCombination, AttendanceRecord, CombinationToken } from '../../types'
 
 interface PickerResult {
   combination: AttendanceCombination
-  cashAmount: number | null
   estimatedValue: number
   membershipId: string | null
-  membershipSnapshot: AttendanceRecord['membershipSnapshot']
+  classCardId: string | null
+  passSnapshot: AttendanceRecord['passSnapshot']
 }
 
 interface CombinationPickerDialogProps {
   student: Student
   session: ClassSession
-  status: AttendanceStatus
   pricingConfig: PricingConfig | null
   onConfirm: (result: PickerResult) => void
   onClose: () => void
@@ -23,79 +23,73 @@ interface CombinationPickerDialogProps {
 
 function calcEstimatedValue(
   combination: CombinationToken[],
-  cashAmount: number | null,
-  isSpecial: boolean,
   pricingConfig: PricingConfig | null,
 ): number {
   if (!pricingConfig) return 0
-
   let value = 0
   for (const token of combination) {
-    if (token === 'usc')            value += pricingConfig.uscRatePerCheckin
-    else if (token === 'eversports') value += pricingConfig.eversportsRatePerCheckin
-    else if (token === 'cash')       value += cashAmount ?? 0
-    else if (token === 'trial')      value += pricingConfig.trialRate
-    // gold / silver / bronze / 2silver / 2bronze: pass-based
+    if (token === 'usc')         value += pricingConfig.uscRatePerCheckin
+    if (token === 'eversports')  value += pricingConfig.eversportsRatePerCheckin
+    if (token === 'dropin')      value += pricingConfig.dropInRate
   }
-  if (isSpecial) value += pricingConfig.specialClassSurcharge
-
   return Math.round(value * 100) / 100
 }
 
-/* ─── Disable logic (ported from attendanceCombinationPicker.html) ─── */
-
+/** Compute which tokens should be disabled given current selection */
 function computeDisabled(s: Set<CombinationToken>, isSpecial: boolean): Set<CombinationToken> {
   const disabled = new Set<CombinationToken>()
+  const all: CombinationToken[] = ['gold', 'silver', 'bronze', 'card', 'usc', 'eversports', 'dropin', 'trial', 'cash']
 
-  if (s.has('gold'))    (['silver','2silver','bronze','2bronze','usc','eversports','cash','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
-  if (s.has('trial'))   (['gold','silver','2silver','bronze','2bronze','usc','eversports','cash'] as CombinationToken[]).forEach(x => disabled.add(x))
-  if (s.has('2silver')) (['gold','silver','bronze','2bronze','usc','eversports','cash','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
-  if (s.has('2bronze')) (['gold','silver','bronze','2silver','usc','eversports','cash','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
-
-  if (s.has('silver') && !s.has('usc') && !s.has('eversports') && !s.has('cash')) {
-    ;(['gold','2silver','bronze','2bronze','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
-    if (!isSpecial) { disabled.add('usc'); disabled.add('eversports'); disabled.add('cash') }
+  if (s.has('gold')) {
+    all.filter(t => t !== 'gold').forEach(t => disabled.add(t))
   }
-  if (s.has('silver') && (s.has('usc') || s.has('eversports') || s.has('cash'))) {
-    ;(['gold','2silver','bronze','2bronze','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
+  if (s.has('trial')) {
+    all.filter(t => t !== 'trial').forEach(t => disabled.add(t))
+  }
+  if (s.has('dropin')) {
+    all.filter(t => t !== 'dropin').forEach(t => disabled.add(t))
+  }
+
+  // Studio pass tokens: lock each other out, allow cash/usc/eversports supplement for specials
+  const hasPass = s.has('silver') || s.has('bronze') || s.has('card')
+  if (hasPass) {
+    ;(['gold', 'trial', 'dropin'] as CombinationToken[]).forEach(t => disabled.add(t))
+    // Prevent mixing pass types
+    if (s.has('silver')) { disabled.add('bronze'); disabled.add('card') }
+    if (s.has('bronze')) { disabled.add('silver'); disabled.add('card') }
+    if (s.has('card'))   { disabled.add('silver'); disabled.add('bronze') }
+    // Supplements only allowed for special/event classes
+    if (!isSpecial) {
+      ;(['usc', 'eversports', 'cash'] as CombinationToken[]).forEach(t => disabled.add(t))
+    }
+    // Only one supplement allowed
     if (s.has('usc'))        { disabled.add('eversports'); disabled.add('cash') }
     if (s.has('eversports')) { disabled.add('usc'); disabled.add('cash') }
     if (s.has('cash'))       { disabled.add('usc'); disabled.add('eversports') }
   }
 
-  if (s.has('bronze') && !s.has('usc') && !s.has('eversports') && !s.has('cash')) {
-    ;(['gold','2silver','silver','2bronze','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
-    if (!isSpecial) { disabled.add('usc'); disabled.add('eversports'); disabled.add('cash') }
-  }
-  if (s.has('bronze') && (s.has('usc') || s.has('eversports') || s.has('cash'))) {
-    ;(['gold','2silver','silver','2bronze','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
-    if (s.has('usc'))        { disabled.add('eversports'); disabled.add('cash') }
-    if (s.has('eversports')) { disabled.add('usc'); disabled.add('cash') }
-    if (s.has('cash'))       { disabled.add('usc'); disabled.add('eversports') }
-  }
-
-  if (s.has('usc') && !s.has('silver') && !s.has('bronze')) {
-    ;(['gold','2silver','2bronze','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
-    if (!isSpecial) { disabled.add('eversports'); disabled.add('cash'); disabled.add('silver'); disabled.add('bronze') }
-    if (s.has('eversports')) disabled.add('cash')
-    if (s.has('cash'))       disabled.add('eversports')
+  // External provider tokens
+  const hasExternal = s.has('usc') || s.has('eversports')
+  if (hasExternal && !hasPass) {
+    ;(['gold', 'trial', 'dropin'] as CombinationToken[]).forEach(t => disabled.add(t))
+    if (!isSpecial) {
+      ;(['silver', 'bronze', 'card', 'cash'] as CombinationToken[]).forEach(t => disabled.add(t))
+    }
+    if (s.has('usc'))        disabled.add('eversports')
+    if (s.has('eversports')) disabled.add('usc')
   }
 
-  if (s.has('eversports') && !s.has('usc') && !s.has('silver') && !s.has('bronze')) {
-    ;(['gold','2silver','2bronze','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
-    if (!isSpecial) { (['silver','bronze','usc','cash'] as CombinationToken[]).forEach(x => disabled.add(x)) }
-    else            { if (s.has('cash')) disabled.add('usc') }
-  }
-
-  if (s.has('cash') && !s.has('silver') && !s.has('bronze') && !s.has('usc') && !s.has('eversports')) {
-    ;(['gold','2silver','2bronze','trial'] as CombinationToken[]).forEach(x => disabled.add(x))
-    if (!isSpecial) { (['silver','bronze','usc','eversports'] as CombinationToken[]).forEach(x => disabled.add(x)) }
+  if (s.has('cash') && !hasPass && !hasExternal) {
+    ;(['gold', 'trial', 'dropin'] as CombinationToken[]).forEach(t => disabled.add(t))
+    if (!isSpecial) {
+      ;(['silver', 'bronze', 'card', 'usc', 'eversports'] as CombinationToken[]).forEach(t => disabled.add(t))
+    }
   }
 
   return disabled
 }
 
-/* ─── Token Button ─────────────────────────────────────────── */
+/* ─── Token Button ── */
 
 function TokenButton({ label, sublabel, selected, disabled, onToggle }: {
   label: string
@@ -127,33 +121,34 @@ function TokenButton({ label, sublabel, selected, disabled, onToggle }: {
   )
 }
 
-/* ─── Combination Picker Dialog ────────────────────────────── */
+/* ─── Combination Picker Dialog ── */
 
 export function CombinationPickerDialog({
   student,
   session,
-  status,
   pricingConfig,
   onConfirm,
   onClose,
 }: CombinationPickerDialogProps) {
   const { t } = useTranslation('attendance')
   const [selection, setSelection] = useState<CombinationToken[]>([])
-  const [cashInput, setCashInput] = useState(
-    pricingConfig ? String(pricingConfig.dropInCashRate) : ''
-  )
 
   const { data: memberships } = useMembershipsByStudent(student.id)
-  const activeMembership = memberships?.find((m) => m.id === student.activeMembershipId && m.active) ?? null
+  const { data: classCards } = useClassCardsByStudent(student.id)
 
-  const tier = student.membershipTier
-  const creditsLeft = activeMembership?.creditsRemaining ?? null
-  const isSpecial = session.type !== 'regular'
+  const activeMembership = memberships?.find((m) => m.id === student.activePassId && m.active) ?? null
+  const activeCard = classCards?.find((c) => c.id === student.activePassId && c.active) ?? null
 
-  const cashAmount = parseFloat(cashInput) || null
+  const passType = student.passType
+  const creditsLeft =
+    activeMembership?.creditsRemaining ?? activeCard?.creditsRemaining ?? null
+
+  const isSpecial = session.type === 'special' || session.type === 'event'
+  const creditsNeeded = isSpecial ? 2 : 1
+
   const selectionSet = new Set(selection)
   const disabled = computeDisabled(selectionSet, isSpecial)
-  const estimatedValue = calcEstimatedValue(selection, cashAmount, session.isSpecial, pricingConfig)
+  const estimatedValue = calcEstimatedValue(selection, pricingConfig)
 
   function toggleToken(token: CombinationToken) {
     setSelection((prev) => {
@@ -163,7 +158,6 @@ export function CombinationPickerDialog({
       } else {
         next.add(token)
       }
-      // Auto-remove now-disabled tokens
       const nowDisabled = computeDisabled(next, isSpecial)
       for (const d of nowDisabled) next.delete(d)
       return [...next]
@@ -175,20 +169,23 @@ export function CombinationPickerDialog({
 
   function handleConfirm() {
     if (selection.length === 0) return
+    const passSnapshot = activeMembership
+      ? { type: activeMembership.tier, creditsAtCheckIn: activeMembership.creditsRemaining }
+      : activeCard
+      ? { type: activeCard.type, creditsAtCheckIn: activeCard.creditsRemaining }
+      : null
     onConfirm({
       combination: selection,
-      cashAmount: selection.includes('cash') ? cashAmount : null,
       estimatedValue,
       membershipId: activeMembership?.id ?? null,
-      membershipSnapshot: activeMembership
-        ? { tier: activeMembership.tier, creditsAtCheckIn: activeMembership.creditsRemaining }
-        : null,
+      classCardId: activeCard?.id ?? null,
+      passSnapshot,
     })
   }
 
-  const studentName = `${student.firstName} ${student.lastName}`
-  const deductionCount = selection.some(t => t === '2silver' || t === '2bronze') ? 2 : 1
-  const creditsAfter = creditsLeft !== null ? Math.max(0, creditsLeft - deductionCount) : null
+  const creditsAfter = creditsLeft !== null
+    ? Math.max(0, creditsLeft - creditsNeeded)
+    : null
   const showLowCreditWarning = creditsLeft !== null && creditsLeft > 0 && creditsAfter !== null && creditsAfter <= 2
 
   return (
@@ -200,13 +197,13 @@ export function CombinationPickerDialog({
           {/* Header */}
           <div className="px-5 py-4 border-b border-border shrink-0">
             <Dialog.Title className="text-[1rem] font-bold m-0 text-foreground">
-              {t('combination.title', { name: studentName })}
+              {t('combination.title', { name: student.name })}
             </Dialog.Title>
             <p className="text-[0.8125rem] text-muted-foreground mt-0.5 m-0 capitalize">
-              {status}
-              {session.isSpecial && (
+              {session.name}
+              {isSpecial && (
                 <span className="ml-2 text-[0.6875rem] font-semibold px-1.5 py-[1px] rounded-full bg-warning-subtle text-[oklch(0.50_0.14_85)]">
-                  {t('combination.specialSurcharge', { amount: pricingConfig?.specialClassSurcharge ?? 0 })}
+                  {isSpecial ? t('combination.specialClass') : ''}
                 </span>
               )}
             </p>
@@ -215,14 +212,14 @@ export function CombinationPickerDialog({
           {/* Body */}
           <div className="px-5 py-4 flex flex-col gap-3 overflow-y-auto">
 
-            {/* School pass section */}
-            {tier && (
+            {/* Studio pass section */}
+            {passType && (
               <div>
                 <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-muted-foreground mb-2 m-0">
                   {t('combination.sectionSchoolPass')}
                 </p>
-                <div className="grid gap-2" style={{ gridTemplateColumns: tier === 'gold' ? '1fr' : isSpecial ? 'repeat(2, 1fr)' : '1fr' }}>
-                  {tier === 'gold' && (
+                <div className="grid gap-2" style={{ gridTemplateColumns: passType === 'gold' ? '1fr' : '1fr' }}>
+                  {passType === 'gold' && (
                     <TokenButton
                       label={t('combination.gold')}
                       sublabel={t('combination.unlimited')}
@@ -231,45 +228,38 @@ export function CombinationPickerDialog({
                       onToggle={() => toggleToken('gold')}
                     />
                   )}
-                  {tier === 'silver' && (
-                    <>
-                      <TokenButton
-                        label={t('combination.silver')}
-                        sublabel={creditsLeft !== null ? `${t('combination.oneCredit')} · ${t('combination.creditsLeft', { count: creditsLeft })}` : t('combination.oneCredit')}
-                        selected={isSelected('silver')}
-                        disabled={isDisabled('silver') || creditsLeft === 0}
-                        onToggle={() => toggleToken('silver')}
-                      />
-                      {isSpecial && (
-                        <TokenButton
-                          label={t('combination.2silver')}
-                          sublabel={creditsLeft !== null ? `${t('combination.twoCredits')} · ${t('combination.creditsLeft', { count: creditsLeft })}` : t('combination.twoCredits')}
-                          selected={isSelected('2silver')}
-                          disabled={isDisabled('2silver') || creditsLeft === null || creditsLeft < 2}
-                          onToggle={() => toggleToken('2silver')}
-                        />
-                      )}
-                    </>
+                  {passType === 'silver' && (
+                    <TokenButton
+                      label={t('combination.silver')}
+                      sublabel={creditsLeft !== null
+                        ? `${creditsNeeded} ${t('combination.credits')} · ${t('combination.creditsLeft', { count: creditsLeft })}`
+                        : `${creditsNeeded} ${t('combination.credits')}`}
+                      selected={isSelected('silver')}
+                      disabled={isDisabled('silver') || (creditsLeft !== null && creditsLeft < 1)}
+                      onToggle={() => toggleToken('silver')}
+                    />
                   )}
-                  {tier === 'bronze' && (
-                    <>
-                      <TokenButton
-                        label={t('combination.bronze')}
-                        sublabel={creditsLeft !== null ? `${t('combination.oneCredit')} · ${t('combination.creditsLeft', { count: creditsLeft })}` : t('combination.oneCredit')}
-                        selected={isSelected('bronze')}
-                        disabled={isDisabled('bronze') || creditsLeft === 0}
-                        onToggle={() => toggleToken('bronze')}
-                      />
-                      {isSpecial && (
-                        <TokenButton
-                          label={t('combination.2bronze')}
-                          sublabel={creditsLeft !== null ? `${t('combination.twoCredits')} · ${t('combination.creditsLeft', { count: creditsLeft })}` : t('combination.twoCredits')}
-                          selected={isSelected('2bronze')}
-                          disabled={isDisabled('2bronze') || creditsLeft === null || creditsLeft < 2}
-                          onToggle={() => toggleToken('2bronze')}
-                        />
-                      )}
-                    </>
+                  {passType === 'bronze' && (
+                    <TokenButton
+                      label={t('combination.bronze')}
+                      sublabel={creditsLeft !== null
+                        ? `${creditsNeeded} ${t('combination.credits')} · ${t('combination.creditsLeft', { count: creditsLeft })}`
+                        : `${creditsNeeded} ${t('combination.credits')}`}
+                      selected={isSelected('bronze')}
+                      disabled={isDisabled('bronze') || (creditsLeft !== null && creditsLeft < 1)}
+                      onToggle={() => toggleToken('bronze')}
+                    />
+                  )}
+                  {(passType === 'ten_class' || passType === 'five_class') && (
+                    <TokenButton
+                      label={passType === 'ten_class' ? t('combination.tenClassCard') : t('combination.fiveClassCard')}
+                      sublabel={creditsLeft !== null
+                        ? `${creditsNeeded} ${t('combination.credits')} · ${t('combination.creditsLeft', { count: creditsLeft })}`
+                        : `${creditsNeeded} ${t('combination.credits')}`}
+                      selected={isSelected('card')}
+                      disabled={isDisabled('card') || (creditsLeft !== null && creditsLeft < 1)}
+                      onToggle={() => toggleToken('card')}
+                    />
                   )}
                 </div>
                 {showLowCreditWarning && (
@@ -285,7 +275,7 @@ export function CombinationPickerDialog({
               <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-muted-foreground mb-2 m-0">
                 {t('combination.sectionExternal')}
               </p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <TokenButton
                   label={t('combination.usc')}
                   sublabel={pricingConfig ? `€${pricingConfig.uscRatePerCheckin}` : undefined}
@@ -300,38 +290,25 @@ export function CombinationPickerDialog({
                   disabled={isDisabled('eversports')}
                   onToggle={() => toggleToken('eversports')}
                 />
-                <TokenButton
-                  label={t('combination.cash')}
-                  sublabel={pricingConfig ? `€${pricingConfig.dropInCashRate}` : undefined}
-                  selected={isSelected('cash')}
-                  disabled={isDisabled('cash')}
-                  onToggle={() => toggleToken('cash')}
-                />
               </div>
-              {selection.includes('cash') && (
-                <div className="flex items-center gap-2 mt-2 px-3 py-2.5 bg-muted rounded-[0.5rem] border border-border">
-                  <label className="text-[0.8125rem] text-muted-foreground whitespace-nowrap">{t('combination.cashAmount')}</label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={cashInput}
-                    onChange={(e) => setCashInput(e.target.value)}
-                    className="form-input w-20 text-[0.8125rem]"
-                    placeholder="0.00"
-                  />
-                </div>
-              )}
             </div>
 
-            {/* Other section */}
+            {/* Walk-in section */}
             <div>
               <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-muted-foreground mb-2 m-0">
                 {t('combination.sectionOther')}
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <TokenButton
+                  label={t('combination.dropin')}
+                  sublabel={pricingConfig ? `€${pricingConfig.dropInRate}` : undefined}
+                  selected={isSelected('dropin')}
+                  disabled={isDisabled('dropin')}
+                  onToggle={() => toggleToken('dropin')}
+                />
+                <TokenButton
                   label={t('combination.trial')}
-                  sublabel={pricingConfig ? `€${pricingConfig.trialRate}` : undefined}
+                  sublabel={t('combination.free')}
                   selected={isSelected('trial')}
                   disabled={isDisabled('trial')}
                   onToggle={() => toggleToken('trial')}
@@ -339,8 +316,26 @@ export function CombinationPickerDialog({
               </div>
             </div>
 
+            {/* Cash supplement (for specials/shortfall) */}
+            {isSpecial && (
+              <div>
+                <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-muted-foreground mb-2 m-0">
+                  {t('combination.sectionSupplement')}
+                </p>
+                <div className="grid grid-cols-1 gap-2">
+                  <TokenButton
+                    label={t('combination.cashSupplement')}
+                    sublabel={t('combination.cashSupplementHint')}
+                    selected={isSelected('cash')}
+                    disabled={isDisabled('cash')}
+                    onToggle={() => toggleToken('cash')}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Estimated value */}
-            {selection.length > 0 && (
+            {selection.length > 0 && estimatedValue > 0 && (
               <div className="bg-muted rounded-[0.5rem] px-3 py-2.5 flex items-center justify-between">
                 <span className="text-[0.8125rem] text-muted-foreground">{t('combination.estimatedValue')}</span>
                 <span className="text-[0.9375rem] font-bold text-foreground">€{estimatedValue.toFixed(2)}</span>

@@ -19,15 +19,14 @@ function docToAttendanceRecord(id: string, data: Record<string, unknown>): Atten
     id,
     sessionId: data.sessionId as string,
     studentId: data.studentId as string,
-    status: data.status as AttendanceRecord['status'],
     combination: (data.combination as AttendanceRecord['combination']) ?? [],
     membershipId: (data.membershipId as string | null) ?? null,
-    membershipSnapshot: (data.membershipSnapshot as AttendanceRecord['membershipSnapshot']) ?? null,
-    cashAmount: (data.cashAmount as number | null) ?? null,
-    cashDefault: (data.cashDefault as number | null) ?? null,
+    classCardId: (data.classCardId as string | null) ?? null,
+    passSnapshot: (data.passSnapshot as AttendanceRecord['passSnapshot']) ?? null,
     estimatedValue: (data.estimatedValue as number) ?? 0,
     shortfall: (data.shortfall as boolean) ?? false,
     shortfallAmount: (data.shortfallAmount as number | null) ?? null,
+    notes: (data.notes as string | null) ?? null,
     markedAt: (data.markedAt as { toDate(): Date })?.toDate() ?? new Date(),
     markedBy: (data.markedBy as string) ?? '',
   }
@@ -76,10 +75,17 @@ export function useCreateAttendanceRecord() {
       })
     },
     onSuccess: (_result, input) => {
-      queryClient.invalidateQueries({ queryKey: ['attendanceRecords', 'session', input.sessionId] })
-      queryClient.invalidateQueries({ queryKey: ['attendanceRecords', 'student', input.studentId] })
+      queryClient.invalidateQueries({
+        queryKey: ['attendanceRecords', 'session', input.sessionId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['attendanceRecords', 'student', input.studentId],
+      })
       if (input.membershipId) {
         queryClient.invalidateQueries({ queryKey: ['memberships', input.studentId] })
+      }
+      if (input.classCardId) {
+        queryClient.invalidateQueries({ queryKey: ['classCards', input.studentId] })
       }
       queryClient.invalidateQueries({ queryKey: ['students'] })
     },

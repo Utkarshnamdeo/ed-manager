@@ -11,7 +11,7 @@ import { useCreateAttendanceRecord } from '../hooks/useAttendanceRecords'
 import { usePricingConfig } from '../hooks/usePricingConfig'
 import { useAuth } from '../contexts/AuthContext'
 import { CombinationPickerDialog } from '../features/attendance/CombinationPickerDialog'
-import type { ClassSession, Student, Teacher, Room, AttendanceStatus, ClassTemplate, AttendanceCombination, AttendanceRecord } from '../types'
+import type { ClassSession, Student, Teacher, Room, ClassTemplate } from '../types'
 
 /* ─── Avatar ─────────────────────────────────────────────── */
 
@@ -39,89 +39,65 @@ function Avatar({ name }: { name: string }) {
   )
 }
 
-/* ─── Membership Badge ────────────────────────────────────── */
+/* ─── Pass Badge ──────────────────────────────────────────── */
 
-const TIER_CLASS: Record<string, string> = {
-  gold:   'badge-gold',
-  silver: 'badge-silver',
-  bronze: 'badge-bronze',
+const PASS_CLASS: Record<string, string> = {
+  gold:       'badge-gold',
+  silver:     'badge-silver',
+  bronze:     'badge-bronze',
+  ten_class:  'badge-silver',
+  five_class: 'badge-bronze',
 }
 
-function MembershipBadge({ tier }: { tier: string | null }) {
-  if (!tier) return <span className="inline-flex items-center py-[0.15rem] px-2 rounded-full text-[0.6875rem] font-semibold bg-muted text-muted-foreground">No pass</span>
+const PASS_LABEL: Record<string, string> = {
+  gold:       'Gold',
+  silver:     'Silver',
+  bronze:     'Bronze',
+  ten_class:  '10-Class',
+  five_class: '5-Class',
+}
+
+function PassBadge({ passType }: { passType: string | null }) {
+  if (!passType) return <span className="inline-flex items-center py-[0.15rem] px-2 rounded-full text-[0.6875rem] font-semibold bg-muted text-muted-foreground">No pass</span>
   return (
-    <span className={`inline-flex items-center py-[0.15rem] px-2 rounded-full text-[0.6875rem] font-semibold whitespace-nowrap capitalize ${TIER_CLASS[tier] ?? 'bg-muted text-muted-foreground'}`}>
-      {tier}
+    <span className={`inline-flex items-center py-[0.15rem] px-2 rounded-full text-[0.6875rem] font-semibold whitespace-nowrap ${PASS_CLASS[passType] ?? 'bg-muted text-muted-foreground'}`}>
+      {PASS_LABEL[passType] ?? passType}
     </span>
   )
-}
-
-/* ─── Check-in Button Group ───────────────────────────────── */
-
-const STATUS_BUTTON_CLASSES: Record<AttendanceStatus, { selected: string; unselected: string }> = {
-  present: { selected: 'bg-success text-success-foreground border-0',    unselected: 'bg-card text-muted-foreground border border-border' },
-  late:    { selected: 'bg-warning text-warning-foreground border-0',     unselected: 'bg-card text-muted-foreground border border-border' },
-  absent:  { selected: 'bg-muted text-foreground-secondary border-0',     unselected: 'bg-card text-muted-foreground border border-border' },
-  trial:   { selected: 'bg-secondary text-secondary-foreground border-0', unselected: 'bg-card text-muted-foreground border border-border' },
-}
-
-const STATUS_BUTTON_LABELS: Record<AttendanceStatus, { label: string; title: string }> = {
-  present: { label: '✓', title: 'Present' },
-  late:    { label: 'L', title: 'Late' },
-  absent:  { label: '—', title: 'Absent' },
-  trial:   { label: 'T', title: 'Trial' },
 }
 
 /* ─── Student Row ─────────────────────────────────────────── */
 
 interface StudentRowProps {
   student: Student
-  currentStatus: AttendanceStatus | null
-  onStatusClick: (s: AttendanceStatus) => void
+  isCheckedIn: boolean
+  onCheckIn: () => void
   locked: boolean
 }
 
-function StudentRow({ student, currentStatus, onStatusClick, locked }: StudentRowProps) {
-  const rowBgClass =
-    currentStatus === 'present' ? 'bg-[oklch(0.97_0.02_145)]' :
-    currentStatus === 'late'    ? 'bg-[oklch(0.98_0.02_85)]'  :
-    'bg-transparent'
-
+function StudentRow({ student, isCheckedIn, onCheckIn, locked }: StudentRowProps) {
   return (
-    <div className={`flex items-center gap-3 px-4 py-2.5 border-b border-border transition-[background-color] duration-150 min-h-[52px] ${rowBgClass}`}>
-      <Avatar name={`${student.firstName} ${student.lastName}`} />
-
+    <div className={`flex items-center gap-3 px-4 py-2.5 border-b border-border transition-[background-color] duration-150 min-h-[52px] ${isCheckedIn ? 'bg-[oklch(0.97_0.02_145)]' : 'bg-transparent'}`}>
+      <Avatar name={student.name} />
       <div className="flex-1 min-w-0">
-        <div className={`text-sm font-medium text-foreground whitespace-nowrap overflow-hidden text-ellipsis ${currentStatus ? 'font-semibold' : ''}`}>
-          {student.firstName} {student.lastName}
+        <div className={`text-sm font-medium text-foreground whitespace-nowrap overflow-hidden text-ellipsis ${isCheckedIn ? 'font-semibold' : ''}`}>
+          {student.name}
         </div>
         <div className="mt-[2px]">
-          <MembershipBadge tier={student.membershipTier} />
+          <PassBadge passType={student.passType} />
         </div>
       </div>
-
-      {/* Check-in buttons */}
-      <div className="flex gap-1 shrink-0" role="group" aria-label="Check-in status">
-        {(Object.keys(STATUS_BUTTON_LABELS) as AttendanceStatus[]).map((status) => {
-          const isSelected = currentStatus === status
-          const isDimmed = currentStatus !== null && !isSelected
-          const { label, title } = STATUS_BUTTON_LABELS[status]
-          const cls = STATUS_BUTTON_CLASSES[status]
-          return (
-            <button
-              key={status}
-              title={title}
-              aria-label={title}
-              aria-pressed={isSelected}
-              disabled={locked && !isSelected}
-              onClick={() => onStatusClick(status)}
-              className={`size-8 rounded-[6px] text-xs font-bold flex items-center justify-center transition-[background-color,opacity,border-color] duration-[120ms] cursor-pointer ${isSelected ? cls.selected : cls.unselected} ${isDimmed ? 'opacity-35' : ''} ${locked && !isSelected ? 'cursor-not-allowed' : ''}`}
-            >
-              {label}
-            </button>
-          )
-        })}
-      </div>
+      {!locked && (
+        <button
+          onClick={onCheckIn}
+          className="text-[0.8125rem] font-semibold px-3 py-1.5 rounded-[0.5rem] bg-primary text-primary-foreground border-0 cursor-pointer"
+        >
+          Check in
+        </button>
+      )}
+      {isCheckedIn && (
+        <span className="text-[0.75rem] font-semibold text-success px-2 py-1 rounded-full bg-success/10">✓</span>
+      )}
     </div>
   )
 }
@@ -144,11 +120,6 @@ interface SessionCardProps {
   markedById: string
 }
 
-interface PendingCheckIn {
-  student: Student
-  status: AttendanceStatus
-}
-
 function SessionCard({ session, teacher, room, template, studentMap, markedById }: SessionCardProps) {
   const { t } = useTranslation('attendance')
   const { data: pricingConfig } = usePricingConfig()
@@ -157,81 +128,48 @@ function SessionCard({ session, teacher, room, template, studentMap, markedById 
   const createStudent = useCreateStudent()
 
   const [expanded, setExpanded] = useState(session.status === 'active')
-  const [pending, setPending] = useState<PendingCheckIn | null>(null)
+  const [pendingStudent, setPendingStudent] = useState<Student | null>(null)
   const [rosterSearch, setRosterSearch] = useState('')
-  const [rosterFilter, setRosterFilter] = useState<'all' | 'unchecked' | 'present'>('all')
   const [showDropIn, setShowDropIn] = useState(false)
   const [dropInSearch, setDropInSearch] = useState('')
   const [extraRosterIds, setExtraRosterIds] = useState<string[]>([])
 
-  // Build roster: template regulars + any drop-ins already checked in + manually added
   const regularIds = template?.regularStudentIds ?? []
   const checkedInIds = records.map((r) => r.studentId)
   const rosterIds = [...new Set([...regularIds, ...checkedInIds, ...extraRosterIds])]
   const roster = rosterIds.map((id) => studentMap[id]).filter(Boolean)
 
-  // Map studentId → attendance record
   const recordMap = Object.fromEntries(records.map((r) => [r.studentId, r]))
 
-  // Counts
-  const presentCount = records.filter((r) => r.status === 'present').length
   const checkedInCount = records.length
-  const isActive = session.status === 'active'
   const isCancelled = session.status === 'cancelled'
 
   const teacherName = teacher ? `${teacher.firstName} ${teacher.lastName}` : '—'
   const roomName = room?.name ?? '—'
   const timeLabel = `${session.startTime}–${session.endTime}`
 
-  function handleStatusClick(student: Student, status: AttendanceStatus) {
-    if (recordMap[student.id]) return // already checked in, immutable
-
-    if (status === 'absent') {
-      // Direct write — no combination needed
-      createRecord.mutate({
-        sessionId: session.id,
-        studentId: student.id,
-        status: 'absent',
-        combination: [],
-        membershipId: null,
-        membershipSnapshot: null,
-        cashAmount: null,
-        cashDefault: pricingConfig?.dropInCashRate ?? null,
-        estimatedValue: 0,
-        shortfall: false,
-        shortfallAmount: null,
-        markedBy: markedById,
-      })
-      return
-    }
-
-    // present / late / trial → open combination picker
-    setPending({ student, status })
-  }
-
   function handlePickerConfirm(result: {
-    combination: AttendanceCombination
-    cashAmount: number | null
+    combination: import('../types').AttendanceCombination
     estimatedValue: number
     membershipId: string | null
-    membershipSnapshot: AttendanceRecord['membershipSnapshot']
+    classCardId: string | null
+    passSnapshot: import('../types').AttendanceRecord['passSnapshot']
   }) {
-    if (!pending) return
+    if (!pendingStudent) return
     createRecord.mutate({
       sessionId: session.id,
-      studentId: pending.student.id,
-      status: pending.status,
+      studentId: pendingStudent.id,
       combination: result.combination,
       membershipId: result.membershipId,
-      membershipSnapshot: result.membershipSnapshot,
-      cashAmount: result.cashAmount,
-      cashDefault: pricingConfig?.dropInCashRate ?? null,
+      classCardId: result.classCardId,
+      passSnapshot: result.passSnapshot,
       estimatedValue: result.estimatedValue,
       shortfall: false,
       shortfallAmount: null,
+      notes: null,
       markedBy: markedById,
     })
-    setPending(null)
+    setPendingStudent(null)
   }
 
   async function handleDropInSelect(studentId: string) {
@@ -241,37 +179,35 @@ function SessionCard({ session, teacher, room, template, studentMap, markedById 
   }
 
   async function handleDropInCreate(name: string) {
-    const parts = name.trim().split(/\s+/)
-    const firstName = parts[0] ?? name.trim()
-    const lastName = parts.slice(1).join(' ') || ''
-    const newId = await createStudent.mutateAsync({ firstName, lastName, email: null, phone: null, notes: null, activeMembershipId: null, membershipTier: null, active: true })
+    const newId = await createStudent.mutateAsync({
+      name: name.trim(),
+      email: null,
+      phone: null,
+      notes: null,
+      activePassId: null,
+      passType: null,
+      active: true,
+    })
     setExtraRosterIds((prev) => [...new Set([...prev, newId])])
     setShowDropIn(false)
     setDropInSearch('')
   }
 
-  // Drop-in suggestions: all students not already on roster
   const dropInSuggestions = Object.values(studentMap).filter((s) => {
     if (rosterIds.includes(s.id)) return false
     if (!dropInSearch.trim()) return false
-    const full = `${s.firstName} ${s.lastName}`.toLowerCase()
-    return full.includes(dropInSearch.toLowerCase())
+    return s.name.toLowerCase().includes(dropInSearch.toLowerCase())
   })
 
-  // Filtered roster
   const filteredRoster = roster.filter((student) => {
-    const record = recordMap[student.id]
-    if (rosterFilter === 'unchecked' && record) return false
-    if (rosterFilter === 'present' && record?.status !== 'present') return false
     if (rosterSearch) {
-      const name = `${student.firstName} ${student.lastName}`.toLowerCase()
-      if (!name.includes(rosterSearch.toLowerCase())) return false
+      if (!student.name.toLowerCase().includes(rosterSearch.toLowerCase())) return false
     }
     return true
   })
 
   return (
-    <div className={`bg-card border border-border rounded-[0.875rem] overflow-hidden border-l-4 ${isActive ? 'border-l-primary' : 'border-l-transparent'} ${session.status === 'completed' ? 'opacity-75' : ''}`}>
+    <div className={`bg-card border border-border rounded-[0.875rem] overflow-hidden border-l-4 ${session.status === 'active' ? 'border-l-primary' : 'border-l-transparent'} ${session.status === 'completed' ? 'opacity-75' : ''}`}>
 
       {/* Card Header */}
       <button
@@ -280,7 +216,6 @@ function SessionCard({ session, teacher, room, template, studentMap, markedById 
         className={`flex items-center w-full px-4 py-3.5 bg-transparent border-0 gap-2.5 text-left ${isCancelled ? 'cursor-default' : 'cursor-pointer'}`}
       >
         <div className={`size-2 rounded-full shrink-0 ${STATUS_DOT_CLASS[session.status] ?? 'bg-muted-foreground'}`} />
-
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className={`text-[0.9375rem] font-bold text-foreground tracking-[-0.01em] ${isCancelled ? 'line-through' : ''}`}>
@@ -296,17 +231,12 @@ function SessionCard({ session, teacher, room, template, studentMap, markedById 
             {timeLabel} · {teacherName} · {roomName}
           </div>
         </div>
-
         <div className={`text-[0.8125rem] font-semibold shrink-0 text-right ${checkedInCount > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>
-          {presentCount} <span className="font-normal text-muted-foreground">/ {roster.length}</span>
+          {checkedInCount} <span className="font-normal text-muted-foreground">/ {roster.length}</span>
         </div>
-
         {!isCancelled && (
-          <svg
-            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
-            className={`text-muted-foreground shrink-0 transition-transform duration-200 ${expanded ? 'rotate-180' : 'rotate-0'}`}
-          >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+            className={`text-muted-foreground shrink-0 transition-transform duration-200 ${expanded ? 'rotate-180' : 'rotate-0'}`}>
             <polyline points="6 9 12 15 18 9" />
           </svg>
         )}
@@ -315,7 +245,6 @@ function SessionCard({ session, teacher, room, template, studentMap, markedById 
       {/* Expanded: roster */}
       {expanded && !isCancelled && (
         <div className="border-t border-border">
-          {/* Search / filter bar */}
           <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border bg-muted">
             <div className="relative flex-1">
               <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground flex pointer-events-none">
@@ -331,24 +260,8 @@ function SessionCard({ session, teacher, room, template, studentMap, markedById 
                 className="form-input w-full pl-7 text-[0.8125rem] rounded-md"
               />
             </div>
-            <div className="flex gap-1 shrink-0">
-              {(['all', 'unchecked', 'present'] as const).map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setRosterFilter(f)}
-                  className={`text-[0.6875rem] font-semibold px-2.5 py-1 rounded-full cursor-pointer whitespace-nowrap border-0 capitalize ${
-                    rosterFilter === f
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-card text-muted-foreground border border-border'
-                  }`}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
           </div>
 
-          {/* Student rows */}
           {filteredRoster.length === 0 ? (
             <div className="px-4 py-6 text-center text-muted-foreground text-sm">
               {roster.length === 0 ? 'No students on roster yet.' : 'No students match the filter.'}
@@ -360,8 +273,8 @@ function SessionCard({ session, teacher, room, template, studentMap, markedById 
                 <StudentRow
                   key={student.id}
                   student={student}
-                  currentStatus={record?.status ?? null}
-                  onStatusClick={(s) => handleStatusClick(student, s)}
+                  isCheckedIn={!!record}
+                  onCheckIn={() => setPendingStudent(student)}
                   locked={!!record}
                 />
               )
@@ -400,7 +313,7 @@ function SessionCard({ session, teacher, room, template, studentMap, markedById 
                       onClick={() => handleDropInSelect(s.id)}
                       className="text-left px-3 py-2 text-sm text-foreground hover:bg-muted bg-card border-0 cursor-pointer border-b border-border last:border-b-0"
                     >
-                      {s.firstName} {s.lastName}
+                      {s.name}
                       {s.email && <span className="ml-2 text-xs text-muted-foreground">{s.email}</span>}
                     </button>
                   ))}
@@ -425,24 +338,22 @@ function SessionCard({ session, teacher, room, template, studentMap, markedById 
             </div>
           )}
 
-          {/* Footer */}
           <div className="flex items-center justify-between px-4 py-2.5 bg-muted border-t border-border">
             <span className="text-xs text-muted-foreground font-medium">
-              {roster.length} on roster · {presentCount} present · {checkedInCount - presentCount} other · {roster.length - checkedInCount} unchecked
+              {roster.length} on roster · {checkedInCount} checked in
             </span>
           </div>
         </div>
       )}
 
       {/* Combination picker dialog */}
-      {pending && (
+      {pendingStudent && (
         <CombinationPickerDialog
-          student={pending.student}
+          student={pendingStudent}
           session={session}
-          status={pending.status}
           pricingConfig={pricingConfig ?? null}
           onConfirm={handlePickerConfirm}
-          onClose={() => setPending(null)}
+          onClose={() => setPendingStudent(null)}
         />
       )}
     </div>
@@ -508,7 +419,6 @@ export function AttendancePage() {
         </span>
       </div>
 
-      {/* Loading / error states */}
       {isLoading && (
         <div className="py-10 text-center text-muted-foreground text-sm">Loading…</div>
       )}
@@ -519,14 +429,12 @@ export function AttendancePage() {
         </div>
       )}
 
-      {/* Empty state */}
       {!isLoading && !isError && sessions.length === 0 && (
         <div className="py-10 text-center text-muted-foreground text-sm">
           {t('noSessions')}
         </div>
       )}
 
-      {/* Session cards */}
       {!isLoading && sessions.map((session) => (
         <SessionCard
           key={session.id}
