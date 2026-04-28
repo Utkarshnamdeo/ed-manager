@@ -26,21 +26,12 @@ service cloud.firestore {
       return isActive() && role() == 'staff';
     }
 
-    function isTeacher() {
-      return isActive() && role() == 'teacher';
-    }
-
     function isAdminOrStaff() {
       return isAdmin() || isStaff();
     }
 
     function can(flag) {
       return isActive() && me().permissions.get(flag, false) == true;
-    }
-
-    function teacherOwnsSession(sessionId) {
-      let session = get(/databases/$(database)/documents/classSessions/$(sessionId)).data;
-      return session.teacherId == me().teacherId;
     }
 
     match /users/{userId} {
@@ -50,7 +41,7 @@ service cloud.firestore {
     }
 
     match /students/{studentId} {
-      allow read: if isAdminOrStaff() || isTeacher();
+      allow read: if isAdminOrStaff();
       allow create, update: if isAdmin() || (isStaff() && can('manageStudents'));
       allow delete: if isAdmin();
     }
@@ -61,39 +52,41 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /classCards/{cardId} {
+      allow read: if isAdminOrStaff();
+      allow create, update: if isAdmin() || (isStaff() && can('manageStudents'));
+      allow delete: if isAdmin();
+    }
+
     match /teachers/{teacherId} {
-      allow read: if isActive();
+      allow read: if isAdminOrStaff();
       allow create, update: if isAdmin() || (isStaff() && can('manageTeachers'));
       allow delete: if isAdmin();
     }
 
     match /rooms/{roomId} {
-      allow read: if isActive();
+      allow read: if isAdminOrStaff();
       allow create, update: if isAdmin() || (isStaff() && can('manageRooms'));
       allow delete: if isAdmin();
     }
 
     match /classTemplates/{templateId} {
-      allow read: if isActive();
+      allow read: if isAdminOrStaff();
       allow create, update: if isAdmin() || (isStaff() && can('manageClasses'));
       allow delete: if isAdmin();
     }
 
     match /classSessions/{sessionId} {
-      allow read: if isActive();
+      allow read: if isAdminOrStaff();
       allow create, update: if isAdmin() || (isStaff() && can('manageClasses'));
       allow delete: if isAdmin();
     }
 
     match /attendanceRecords/{recordId} {
-      allow read: if isAdminOrStaff() ||
-        (isTeacher() && teacherOwnsSession(resource.data.sessionId));
-      allow create, update, delete: if false;
-    }
-
-    match /backupLogs/{logId} {
-      allow read: if isAdmin();
-      allow write: if false;
+      allow read: if isAdminOrStaff();
+      allow create: if isAdminOrStaff();
+      allow update: if isAdminOrStaff();
+      allow delete: if isAdmin();
     }
 
     match /config/{configId} {
