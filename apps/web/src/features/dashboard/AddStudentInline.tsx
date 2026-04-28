@@ -32,7 +32,7 @@ export function AddStudentInline({ initialName, onCreated, onCancel }: AddStuden
       })
       onCreated(id)
     } catch {
-      setError('Failed to create student. Please try again.')
+      setError(t('dashboard.checkin.addStudentForm.error'))
     }
   }
 

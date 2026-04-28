@@ -45,6 +45,11 @@
       "alreadyCheckedIn": "Already checked in",
       "notesPlaceholder": "Notes (optional)",
       "sourcePickerLabel": "How are they paying?",
+      "gold": "Gold",
+      "silver": "Silver",
+      "bronze": "Bronze",
+      "card": "Class Card",
+      "cash": "Cash supplement",
       "usc": "USC",
       "eversports": "Eversports",
       "dropin": "Drop-in €{{rate}}",
@@ -61,7 +66,8 @@
         "email": "Email (optional)",
         "phone": "Phone (optional)",
         "submit": "Create student",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "error": "Failed to create student. Please try again."
       }
     }
   },

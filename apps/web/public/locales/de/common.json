@@ -45,6 +45,11 @@
       "alreadyCheckedIn": "Bereits eingecheckt",
       "notesPlaceholder": "Notizen (optional)",
       "sourcePickerLabel": "Zahlungsmethode?",
+      "gold": "Gold",
+      "silver": "Silber",
+      "bronze": "Bronze",
+      "card": "Kurskarte",
+      "cash": "Barzahlung",
       "usc": "USC",
       "eversports": "Eversports",
       "dropin": "Drop-in €{{rate}}",
@@ -61,7 +66,8 @@
         "email": "E-Mail (optional)",
         "phone": "Telefon (optional)",
         "submit": "Schüler erstellen",
-        "cancel": "Abbrechen"
+        "cancel": "Abbrechen",
+        "error": "Schüler konnte nicht erstellt werden. Bitte erneut versuchen."
       }
     }
   },

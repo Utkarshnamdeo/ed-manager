@@ -33,17 +33,17 @@ function isMembershipTier(pt: PassType): pt is MembershipTier {
 
 // ─── Token label helper ───────────────────────────────────────────────────────
 
-function tokenLabel(token: CombinationToken, pricingConfig: PricingConfig | null): string {
+function tokenLabel(token: CombinationToken, pricingConfig: PricingConfig | null, t: (key: string, opts?: Record<string, unknown>) => string): string {
   switch (token) {
-    case 'gold':       return 'Gold'
-    case 'silver':     return 'Silver'
-    case 'bronze':     return 'Bronze'
-    case 'card':       return 'Class Card'
-    case 'usc':        return 'USC'
-    case 'eversports': return 'Eversports'
-    case 'dropin':     return `Drop-in €${pricingConfig?.dropInRate ?? 13}`
-    case 'trial':      return 'Trial'
-    case 'cash':       return 'Cash'
+    case 'gold':       return t('dashboard.checkin.gold')
+    case 'silver':     return t('dashboard.checkin.silver')
+    case 'bronze':     return t('dashboard.checkin.bronze')
+    case 'card':       return t('dashboard.checkin.card')
+    case 'usc':        return t('dashboard.checkin.usc')
+    case 'eversports': return t('dashboard.checkin.eversports')
+    case 'dropin':     return t('dashboard.checkin.dropin', { rate: pricingConfig?.dropInRate ?? 13 })
+    case 'trial':      return t('dashboard.checkin.trial')
+    case 'cash':       return t('dashboard.checkin.cash')
   }
 }
 
@@ -108,7 +108,7 @@ function PassFlowPanel({ session, student, pricingConfig, onConfirm, onCancel }:
       {/* Pass token pill (pre-selected, not toggleable) */}
       <div className="flex gap-2 flex-wrap">
         <span className="inline-flex items-center h-7 px-3 rounded-full text-xs font-bold bg-primary text-primary-foreground">
-          {tokenLabel(passToken, pricingConfig)}
+          {tokenLabel(passToken, pricingConfig, t)}
         </span>
       </div>
 
@@ -136,7 +136,7 @@ function PassFlowPanel({ session, student, pricingConfig, onConfirm, onCancel }:
                     isDisabled ? 'opacity-40 cursor-not-allowed' : '',
                   ].join(' ')}
                 >
-                  {tokenLabel(token, pricingConfig)}
+                  {tokenLabel(token, pricingConfig, t)}
                 </button>
               )
             })}
