@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../contexts/AuthContext'
@@ -11,8 +11,9 @@ import { SessionRow } from './SessionRow'
 export function DashboardPage() {
   const { t } = useTranslation()
   const { appUser } = useAuth()
+  const today = useMemo(() => new Date(), [])
   const stats = useDashboardStats()
-  const { data: sessions = [] } = useClassSessionsByDate(new Date())
+  const { data: sessions = [] } = useClassSessionsByDate(today)
   const { data: teachers = [] } = useTeachers()
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
