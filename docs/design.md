@@ -218,6 +218,7 @@ States: default=`text-foreground-secondary`, hover=`bg-muted text-foreground`, a
 No `/rooms` or `/templates` nav items — both managed in Settings.
 
 **Sidebar Footer** (border-top, `p-3`):
+
 1. Theme toggle (light/dark/system)
 2. Sign out button
 
@@ -225,6 +226,7 @@ No `/rooms` or `/templates` nav items — both managed in Settings.
 
 **Height:** 52px, `sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm`  
 **Layout:** `flex items-center justify-between px-6`  
+
 - Left: page title `text-xl font-semibold`  
 - Right: contextual action buttons  
 Rendered inside each page — not in Shell — so each page controls its actions.
@@ -289,21 +291,25 @@ Row expands in place. Below the header: a search input + checked-in student list
 **Check-in flow on student selection:**
 
 A. **Student has active pass (gold/silver/bronze/ten_class/five_class):**
-   - Regular class → notes field shown, then single "Check in" confirm button. Credits auto-deducted by Cloud Function.
-   - Special/event + enough credits → same auto flow.
-   - Special/event + 1 credit (shortfall) → `CombinationPickerDialog` opens showing only supplement options: `[pass + cash]` `[pass + USC]` `[pass + Eversports]`.
+
+- Regular class → notes field shown, then single "Check in" confirm button. Credits auto-deducted by Cloud Function.
+- Special/event + enough credits → same auto flow.
+- Special/event + 1 credit (shortfall) → `CombinationPickerDialog` opens showing only supplement options: `[pass + cash]` `[pass + USC]` `[pass + Eversports]`.
 
 B. **Student has no pass:**
-   - "How are they attending?" button group: `[USC]` `[Eversports]` `[Drop-in €13]` `[Trial (free)]`
-   - Select one → notes field → confirm.
+
+- "How are they attending?" button group: `[USC]` `[Eversports]` `[Drop-in €13]` `[Trial (free)]`
+- Select one → notes field → confirm.
 
 C. **Student not found:**
-   - `[+ Add Student]` appears below the search dropdown.
-   - Inline form: name (required), email, phone.
-   - After adding → flows to B above.
+
+- `[+ Add Student]` appears below the search dropdown.
+- Inline form: name (required), email, phone.
+- After adding → flows to B above.
 
 D. **Party class:**
-   - Search only shown. No combination picker. `combination: []` written.
+
+- Search only shown. No combination picker. `combination: []` written.
 
 **Notes field:** Single-line text input shown between combination selection and the confirm button. Optional.
 
@@ -340,10 +346,12 @@ Week 2   —    1    —    2    1    2    —
 Full monthly calendar grid (Mon–Sun). Each day cell shows session count badge (dot or number).
 
 **Day click → day panel (right side or bottom):**
+
 - Lists sessions that day: name, time, teacher
 - Shows attendance count per session
 
 **Session click → expands:**
+
 - Teacher name
 - Each student who attended: name, pass type badge, combination tokens, notes
 - Non-members shown with their source (USC / Eversports / Drop-in / Trial)
@@ -369,6 +377,7 @@ Admin: Edit + Cancel buttons in the detail panel.
 Week navigation: `[< Prev]` `[Today]` `[Next >]`
 
 `[Copy Previous Week]` button (admin only):
+
 - Opens confirmation modal: "Copy 7 sessions from 21–27 Apr to 28 Apr–4 May?"
 - Lists session names to be created.
 - Confirm → creates session shells (same template/teacher/room/time, new dates, no attendance).
@@ -402,6 +411,7 @@ Click a session block → `EditSessionDialog` (admin only).
 **Profile:** name, email, phone, notes. Inline edit. "Deactivate" destructive button.
 
 **Pass:**
+
 ```
 ┌─ Active Pass Card ─────────────────────────────────────────────┐
 │  [Pass badge]  Silver Membership                               │
@@ -414,6 +424,7 @@ Past passes (collapsible list)
 ```
 
 Pass type badge designs:
+
 - Gold: `bg-tier-gold/15 text-tier-gold border-tier-gold/30` · "Gold Membership"
 - Silver: `bg-tier-silver/15 text-tier-silver` · "Silver · N credits"
 - Bronze: `bg-tier-bronze/15 text-tier-bronze` · "Bronze · N credits"
@@ -534,6 +545,7 @@ Loading: replace children with `<Spinner className="w-4 h-4 animate-spin" />`.
 `inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium`
 
 Variants:
+
 - Gold: `bg-tier-gold/15 text-tier-gold border border-tier-gold/30` · label "Gold"
 - Silver: `bg-tier-silver/15 text-tier-silver` · label "Silver · N"
 - Bronze: `bg-tier-bronze/15 text-tier-bronze` · label "Bronze · N"
@@ -546,6 +558,7 @@ Variants:
 - Trial: secondary-subtle · "Trial"
 
 Credit warning overrides (silver/bronze/card only):
+
 - 2 credits: amber dot inside badge
 - 1 credit: entire badge becomes warning-subtle/warning-foreground, label "1 left"
 - 0 credits: destructive-subtle, label "Expired"
@@ -767,6 +780,8 @@ Initial JS < 200KB gzipped. Firebase imported modularly. Inter font with `displa
 
 Moved from a dark/premium sidebar to a **light sidebar** (BankDash-style). The primary visual weight is now in the content area — cards and stat numbers — rather than the chrome.
 
+Important: Do not use custom values anywhere, only use tailwind variables.
+
 ### Sidebar
 
 - **Background:** white (`oklch(1 0 0)`)
@@ -785,6 +800,7 @@ Moved from a dark/premium sidebar to a **light sidebar** (BankDash-style). The p
 ### Stat Cards (Dashboard)
 
 Follow the health dashboard reference pattern:
+
 - White card (`bg-card`), `border-radius: 1rem`, `border: 1px solid border`
 - Top row: colored icon circle (40px, `border-radius: 10px`) + status badge pill (right-aligned)
 - Middle: uppercase overline label (`0.6875rem`, `tracking-wider`) + large value (`1.875rem font-weight 800`) + trend line
@@ -793,6 +809,7 @@ Follow the health dashboard reference pattern:
 ### Mock Data Principle
 
 Keep placeholder data minimal — the goal is to demonstrate the UI, not simulate real data volume:
+
 - Attendance page: **2 sessions max**, **3 students max per session**
 - Dashboard schedule: **3 rows max**
 - No more than needed to show the full range of states (active/planned/completed, gold/silver/bronze tiers)
