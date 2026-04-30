@@ -32,5 +32,9 @@
     "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
     "loadFailed": "Einstellungen konnten nicht geladen werden.",
     "unauthorized": "Du hast keine Berechtigung, auf Einstellungen zuzugreifen."
+  },
+  "accessibility": {
+    "dismiss": "Schließen",
+    "settingsNav": "Einstellungen-Navigation"
   }
 }

@@ -32,5 +32,9 @@
     "saveFailed": "Failed to save. Please try again.",
     "loadFailed": "Failed to load settings.",
     "unauthorized": "You do not have permission to access settings."
+  },
+  "accessibility": {
+    "dismiss": "Dismiss",
+    "settingsNav": "Settings navigation"
   }
 }

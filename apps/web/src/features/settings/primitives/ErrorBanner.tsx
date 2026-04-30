@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 interface ErrorBannerProps {
   message: string
   onDismiss?: () => void
@@ -44,6 +46,8 @@ function DismissIcon() {
 }
 
 export function ErrorBanner({ message, onDismiss }: ErrorBannerProps) {
+  const { t } = useTranslation('settings')
+
   return (
     <div
       role="alert"
@@ -54,7 +58,7 @@ export function ErrorBanner({ message, onDismiss }: ErrorBannerProps) {
       {onDismiss && (
         <button
           onClick={onDismiss}
-          aria-label="Dismiss"
+          aria-label={t('accessibility.dismiss')}
           className="text-destructive/70 hover:text-destructive transition-colors shrink-0"
         >
           <DismissIcon />

@@ -27,7 +27,7 @@ export function SettingsNav() {
   const { t } = useTranslation('settings')
 
   return (
-    <nav aria-label="Settings navigation">
+    <nav aria-label={t('accessibility.settingsNav')}>
       <ul className="list-none m-0 p-0">
         {SETTINGS_SECTIONS.map((section: SettingsSection) => (
           <li key={section}>
