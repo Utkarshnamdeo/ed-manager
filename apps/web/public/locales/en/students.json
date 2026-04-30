@@ -5,6 +5,7 @@
   "form": {
     "firstName": "First name",
     "lastName": "Last name",
+    "name": "Name",
     "email": "Email",
     "phone": "Phone",
     "notes": "Notes"
@@ -14,7 +15,9 @@
     "gold": "Gold",
     "silver": "Silver",
     "bronze": "Bronze",
-    "noPass": "No pass"
+    "noPass": "No pass",
+    "ten_class": "10-class card",
+    "five_class": "5-class card"
   },
   "columns": {
     "name": "Name",

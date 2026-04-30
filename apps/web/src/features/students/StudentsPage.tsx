@@ -183,7 +183,7 @@ function StudentRow({ student, membership, onOpen }: {
 
 type FilterTier = 'all' | typeof MembershipTier.Gold | typeof MembershipTier.Silver | typeof MembershipTier.Bronze | typeof ClassCardType.TenClass | typeof ClassCardType.FiveClass | 'noPass';
 
-export function StudentsPage() {
+export const StudentsPage = () => {
   const { t } = useTranslation('students');
   const { t: tCommon } = useTranslation('common');
   const { appUser } = useAuth();
@@ -324,4 +324,4 @@ export function StudentsPage() {
       )}
     </div>
   );
-}
+};
