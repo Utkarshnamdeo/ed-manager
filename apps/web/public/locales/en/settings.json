@@ -1,1 +1,36 @@
-{}
+{
+  "title": "Settings",
+  "comingSoon": "This section is coming soon.",
+  "sections": {
+    "pricing": "Pricing",
+    "dance-styles": "Dance Styles",
+    "class-levels": "Class Levels",
+    "membership-types": "Membership Types",
+    "class-card-types": "Class Card Types",
+    "external-providers": "External Providers",
+    "templates": "Templates",
+    "rooms": "Rooms",
+    "users": "Users"
+  },
+  "actions": {
+    "save": "Save",
+    "discard": "Discard",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "activate": "Activate",
+    "deactivate": "Deactivate"
+  },
+  "states": {
+    "saving": "Saving…",
+    "loading": "Loading…",
+    "noChanges": "No changes",
+    "unsavedChanges": "You have unsaved changes"
+  },
+  "errors": {
+    "saveFailed": "Failed to save. Please try again.",
+    "loadFailed": "Failed to load settings.",
+    "unauthorized": "You do not have permission to access settings."
+  }
+}

@@ -1,1 +1,36 @@
-{}
+{
+  "title": "Einstellungen",
+  "comingSoon": "Dieser Bereich folgt in Kürze.",
+  "sections": {
+    "pricing": "Preise",
+    "dance-styles": "Tanzstile",
+    "class-levels": "Kursstufen",
+    "membership-types": "Mitgliedschaftsarten",
+    "class-card-types": "Kurskartenarten",
+    "external-providers": "Externe Anbieter",
+    "templates": "Vorlagen",
+    "rooms": "Räume",
+    "users": "Benutzer"
+  },
+  "actions": {
+    "save": "Speichern",
+    "discard": "Verwerfen",
+    "cancel": "Abbrechen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "add": "Hinzufügen",
+    "activate": "Aktivieren",
+    "deactivate": "Deaktivieren"
+  },
+  "states": {
+    "saving": "Wird gespeichert…",
+    "loading": "Wird geladen…",
+    "noChanges": "Keine Änderungen",
+    "unsavedChanges": "Du hast ungespeicherte Änderungen"
+  },
+  "errors": {
+    "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+    "loadFailed": "Einstellungen konnten nicht geladen werden.",
+    "unauthorized": "Du hast keine Berechtigung, auf Einstellungen zuzugreifen."
+  }
+}
