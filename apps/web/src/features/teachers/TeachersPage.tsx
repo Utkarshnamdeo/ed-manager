@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTeachers, useCreateTeacher, useUpdateTeacher, useDeleteTeacher } from '../../hooks/useTeachers';
-import type { Teacher } from '../../types';
+import { Role, type Teacher } from '../../types';
 
 /* ─── Avatar ── */
 
@@ -240,8 +240,8 @@ function TeacherDrawer({ teacher, canManage, onClose }: {
               key={tabKey}
               onClick={() => { setTab(tabKey); setEditing(false); }}
               className={`py-3 mr-6 bg-transparent border-0 cursor-pointer text-sm transition-[color] duration-150 border-b-2 ${ tab === tabKey
-                  ? 'font-semibold text-primary border-b-primary'
-                  : 'font-normal text-muted-foreground border-b-transparent'
+                ? 'font-semibold text-primary border-b-primary'
+                : 'font-normal text-muted-foreground border-b-transparent'
                 }`}
             >
               {t(`tabs.${ tabKey }`)}
@@ -385,7 +385,7 @@ function TeacherDrawer({ teacher, canManage, onClose }: {
 export function TeachersPage() {
   const { t } = useTranslation('teachers');
   const { appUser } = useAuth();
-  const canManage = appUser?.role === 'admin' || !!appUser?.permissions?.manageTeachers;
+  const canManage = appUser?.role === Role.Admin || !!appUser?.permissions?.manageTeachers;
 
   const { data: teachers, isLoading, isError } = useTeachers();
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);

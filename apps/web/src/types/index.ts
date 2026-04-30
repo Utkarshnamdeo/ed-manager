@@ -1,6 +1,11 @@
 // ─── Roles & Permissions ─────────────────────────────────────────────────────
 
-export type Role = 'admin' | 'staff';
+export const Role = {
+  Admin: 'admin',
+  Staff: 'staff',
+};
+
+export type Role = typeof Role[keyof typeof Role];
 
 export interface Permissions {
   viewFinancials: boolean;

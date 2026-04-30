@@ -1,59 +1,59 @@
-import { useState } from 'react'
-import { differenceInDays } from 'date-fns'
-import { useTranslation } from 'react-i18next'
-import { useAuth } from '../../contexts/AuthContext'
-import { useStudents, useCreateStudent } from '../../hooks/useStudents'
-import { useActiveMemberships } from '../../hooks/useMemberships'
-import { StudentDrawer } from './StudentDrawer'
-import type { PassType, Student, Membership } from '../../types'
+import { useState } from 'react';
+import { differenceInDays } from 'date-fns';
+import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../contexts/AuthContext';
+import { useStudents, useCreateStudent } from '../../hooks/useStudents';
+import { useActiveMemberships } from '../../hooks/useMemberships';
+import { StudentDrawer } from './StudentDrawer';
+import { type PassType, type Student, type Membership, Role } from '../../types';
 
 /* ─── Helpers ── */
 
-const AVATAR_HUE_CLASSES = ['avatar-h-0', 'avatar-h-1', 'avatar-h-2', 'avatar-h-3', 'avatar-h-4', 'avatar-h-5', 'avatar-h-6', 'avatar-h-7']
+const AVATAR_HUE_CLASSES = ['avatar-h-0', 'avatar-h-1', 'avatar-h-2', 'avatar-h-3', 'avatar-h-4', 'avatar-h-5', 'avatar-h-6', 'avatar-h-7'];
 
 function nameHash(name: string): number {
-  let h = 0
-  for (const c of name) h = c.charCodeAt(0) + ((h << 5) - h)
-  return Math.abs(h)
+  let h = 0;
+  for (const c of name) h = c.charCodeAt(0) + ((h << 5) - h);
+  return Math.abs(h);
 }
 
-function Avatar({ name, size = 36 }: { name: string; size?: number }) {
-  const hueClass = AVATAR_HUE_CLASSES[nameHash(name) % 8]
-  const initials = name.split(' ').slice(0, 2).map((p) => p[0]).join('').toUpperCase()
-  const sizeClass = size <= 36 ? 'size-9 text-xs' : 'size-12 text-sm'
+function Avatar({ name, size = 36 }: { name: string; size?: number; }) {
+  const hueClass = AVATAR_HUE_CLASSES[nameHash(name) % 8];
+  const initials = name.split(' ').slice(0, 2).map((p) => p[0]).join('').toUpperCase();
+  const sizeClass = size <= 36 ? 'size-9 text-xs' : 'size-12 text-sm';
   return (
-    <div aria-hidden="true" className={`${sizeClass} rounded-full shrink-0 flex items-center justify-center font-bold select-none ${hueClass}`}>
+    <div aria-hidden="true" className={`${ sizeClass } rounded-full shrink-0 flex items-center justify-center font-bold select-none ${ hueClass }`}>
       {initials}
     </div>
-  )
+  );
 }
 
-export function MembershipBadge({ tier, credits }: { tier: PassType | null; credits?: number | null }) {
-  if (!tier) return <span className="text-[0.6875rem] text-muted-foreground">—</span>
+export function MembershipBadge({ tier, credits }: { tier: PassType | null; credits?: number | null; }) {
+  if (!tier) return <span className="text-[0.6875rem] text-muted-foreground">—</span>;
 
-  const lowCredit = typeof credits === 'number' && credits <= 2
+  const lowCredit = typeof credits === 'number' && credits <= 2;
   const badgeClass =
     lowCredit && credits === 1 ? 'bg-warning-subtle text-[oklch(0.50_0.14_85)]' :
-    lowCredit && credits === 0 ? 'bg-destructive-subtle text-destructive' :
-    tier === 'gold'       ? 'badge-gold' :
-    tier === 'silver'     ? 'badge-silver' :
-    tier === 'bronze'     ? 'badge-bronze' :
-    tier === 'ten_class'  ? 'badge-silver' :
-    tier === 'five_class' ? 'badge-bronze' :
-    'bg-muted text-muted-foreground'
+      lowCredit && credits === 0 ? 'bg-destructive-subtle text-destructive' :
+        tier === 'gold' ? 'badge-gold' :
+          tier === 'silver' ? 'badge-silver' :
+            tier === 'bronze' ? 'badge-bronze' :
+              tier === 'ten_class' ? 'badge-silver' :
+                tier === 'five_class' ? 'badge-bronze' :
+                  'bg-muted text-muted-foreground';
 
   const label =
-    tier === 'ten_class'  ? '10-Class Card' :
-    tier === 'five_class' ? '5-Class Card' :
-    tier.charAt(0).toUpperCase() + tier.slice(1)
+    tier === 'ten_class' ? '10-Class Card' :
+      tier === 'five_class' ? '5-Class Card' :
+        tier.charAt(0).toUpperCase() + tier.slice(1);
 
-  const showCredits = typeof credits === 'number' && tier !== 'gold'
+  const showCredits = typeof credits === 'number' && tier !== 'gold';
   return (
-    <span className={`inline-flex items-center gap-1 py-[0.15rem] px-2 rounded-full text-[0.6875rem] font-semibold whitespace-nowrap ${badgeClass}`}>
+    <span className={`inline-flex items-center gap-1 py-[0.15rem] px-2 rounded-full text-[0.6875rem] font-semibold whitespace-nowrap ${ badgeClass }`}>
       {label}
       {showCredits && <> · {credits}</>}
     </span>
-  )
+  );
 }
 
 /* ─── Icons ── */
@@ -63,7 +63,7 @@ function IconPlus() {
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
     </svg>
-  )
+  );
 }
 
 function IconEdit() {
@@ -72,18 +72,18 @@ function IconEdit() {
       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
     </svg>
-  )
+  );
 }
 
 /* ─── Add Student Form ── */
 
-function AddStudentForm({ onClose }: { onClose: () => void }) {
-  const { t } = useTranslation('students')
-  const createStudent = useCreateStudent()
-  const [form, setForm] = useState({ name: '', email: '', phone: '', notes: '' })
+function AddStudentForm({ onClose }: { onClose: () => void; }) {
+  const { t } = useTranslation('students');
+  const createStudent = useCreateStudent();
+  const [form, setForm] = useState({ name: '', email: '', phone: '', notes: '' });
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+    e.preventDefault();
     await createStudent.mutateAsync({
       name: form.name.trim(),
       email: form.email.trim() || null,
@@ -92,8 +92,8 @@ function AddStudentForm({ onClose }: { onClose: () => void }) {
       activePassId: null,
       passType: null,
       active: true,
-    })
-    onClose()
+    });
+    onClose();
   }
 
   return (
@@ -117,25 +117,25 @@ function AddStudentForm({ onClose }: { onClose: () => void }) {
         </button>
       </div>
     </form>
-  )
+  );
 }
 
 /* ─── Student Row ── */
 
 function StudentRow({ student, membership, onOpen }: {
-  student: Student
-  membership: Membership | undefined
-  onOpen: () => void
+  student: Student;
+  membership: Membership | undefined;
+  onOpen: () => void;
 }) {
-  const { t } = useTranslation('students')
+  const { t } = useTranslation('students');
 
-  const today = new Date()
-  const daysLeft = membership ? differenceInDays(membership.expiryDate, today) : null
-  const creditsLeft = membership?.creditsRemaining ?? null
+  const today = new Date();
+  const daysLeft = membership ? differenceInDays(membership.expiryDate, today) : null;
+  const creditsLeft = membership?.creditsRemaining ?? null;
 
-  const isExpiringSoon = daysLeft !== null && daysLeft >= 0 && daysLeft <= 7
-  const isExpired = daysLeft !== null && daysLeft < 0
-  const isLowCredits = creditsLeft !== null && creditsLeft <= 2 && !isExpired
+  const isExpiringSoon = daysLeft !== null && daysLeft >= 0 && daysLeft <= 7;
+  const isExpired = daysLeft !== null && daysLeft < 0;
+  const isLowCredits = creditsLeft !== null && creditsLeft <= 2 && !isExpired;
 
   return (
     <div className="grid grid-cols-[1fr_10rem_4rem] gap-4 items-center px-5 py-3.5 border-t border-border hover:bg-muted transition-[background-color] duration-100">
@@ -176,48 +176,48 @@ function StudentRow({ student, membership, onOpen }: {
         </button>
       </div>
     </div>
-  )
+  );
 }
 
 /* ─── Students Page ── */
 
-type FilterTier = 'all' | 'gold' | 'silver' | 'bronze' | 'ten_class' | 'five_class' | 'noPass'
+type FilterTier = 'all' | 'gold' | 'silver' | 'bronze' | 'ten_class' | 'five_class' | 'noPass';
 
 export function StudentsPage() {
-  const { t } = useTranslation('students')
-  const { t: tCommon } = useTranslation('common')
-  const { appUser } = useAuth()
-  const canManage = appUser?.role === 'admin' || !!appUser?.permissions?.manageStudents
+  const { t } = useTranslation('students');
+  const { t: tCommon } = useTranslation('common');
+  const { appUser } = useAuth();
+  const canManage = appUser?.role === Role.Admin || !!appUser?.permissions?.manageStudents;
 
-  const { data: students, isLoading, isError } = useStudents()
-  const { data: activeMemberships = [] } = useActiveMemberships()
+  const { data: students, isLoading, isError } = useStudents();
+  const { data: activeMemberships = [] } = useActiveMemberships();
   const membershipByStudent = Object.fromEntries(
     activeMemberships.map((m) => [m.studentId, m as Membership])
-  )
-  const [search, setSearch] = useState('')
-  const [tierFilter, setTierFilter] = useState<FilterTier>('all')
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
-  const [showAddForm, setShowAddForm] = useState(false)
+  );
+  const [search, setSearch] = useState('');
+  const [tierFilter, setTierFilter] = useState<FilterTier>('all');
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
 
-  const filterOptions: FilterTier[] = ['all', 'gold', 'silver', 'bronze', 'ten_class', 'five_class', 'noPass']
+  const filterOptions: FilterTier[] = ['all', 'gold', 'silver', 'bronze', 'ten_class', 'five_class', 'noPass'];
 
   const filtered = (students ?? []).filter((s) => {
     const matchesTier =
       tierFilter === 'all' ? true :
-      tierFilter === 'noPass' ? s.passType === null :
-      s.passType === tierFilter
+        tierFilter === 'noPass' ? s.passType === null :
+          s.passType === tierFilter;
 
-    if (!matchesTier) return false
+    if (!matchesTier) return false;
 
     if (search.trim()) {
-      const q = search.toLowerCase()
+      const q = search.toLowerCase();
       return (
         s.name.toLowerCase().includes(q) ||
         (s.email?.toLowerCase().includes(q) ?? false)
-      )
+      );
     }
-    return true
-  })
+    return true;
+  });
 
   return (
     <div className="page-enter p-7 max-w-[800px]">
@@ -251,13 +251,12 @@ export function StudentsPage() {
             <button
               key={key}
               onClick={() => setTierFilter(key)}
-              className={`text-[0.75rem] font-semibold px-3 py-1.5 rounded-full border cursor-pointer transition-[background-color,color,border-color] duration-100 ${
-                tierFilter === key
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card text-muted-foreground border-border'
-              }`}
+              className={`text-[0.75rem] font-semibold px-3 py-1.5 rounded-full border cursor-pointer transition-[background-color,color,border-color] duration-100 ${ tierFilter === key
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-card text-muted-foreground border-border'
+                }`}
             >
-              {t(`filter.${key}`)}
+              {t(`filter.${ key }`)}
             </button>
           ))}
         </div>
@@ -324,5 +323,5 @@ export function StudentsPage() {
         />
       )}
     </div>
-  )
+  );
 }

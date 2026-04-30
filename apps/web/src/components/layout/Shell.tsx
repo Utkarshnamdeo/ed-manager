@@ -3,6 +3,7 @@ import { signOut } from 'firebase/auth';
 import { useTranslation } from 'react-i18next';
 import { auth } from '../../lib/firebase';
 import { useAuth } from '../../contexts/AuthContext';
+import { Role } from '@/types';
 
 /* ─── Page title map ── */
 
@@ -187,8 +188,8 @@ export function Shell() {
     navigate('/login', { replace: true });
   }
 
-  const isAdmin = appUser?.role === 'admin';
-  const isStaff = appUser?.role === 'staff';
+  const isAdmin = appUser?.role === Role.Admin;
+  const isStaff = appUser?.role === Role.Staff;
   const canViewStudents = isAdmin || isStaff;
   const canViewReports = isAdmin || isStaff;
 

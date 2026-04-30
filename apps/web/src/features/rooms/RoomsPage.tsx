@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRooms, useCreateRoom, useUpdateRoom, useDeleteRoom } from '../../hooks/useRooms';
-import type { Room } from '../../types';
+import { Role, type Room } from '../../types';
 
 /* ─── Icons ── */
 
@@ -130,8 +130,8 @@ function RoomRow({ room, canManage }: { room: Room; canManage: boolean; }) {
                 onClick={() => room.active ? setConfirmDeactivate(true) : handleToggleActive()}
                 title={room.active ? t('actions.deactivate') : t('actions.activate')}
                 className={`px-2.5 h-8 rounded-[6px] border-0 bg-transparent cursor-pointer text-xs font-medium transition-[background-color] duration-100 ${ room.active
-                    ? 'text-muted-foreground hover:bg-muted'
-                    : 'text-success hover:bg-success-subtle'
+                  ? 'text-muted-foreground hover:bg-muted'
+                  : 'text-success hover:bg-success-subtle'
                   }`}
               >
                 {room.active ? t('actions.deactivate') : t('actions.activate')}
@@ -201,7 +201,7 @@ function AddRoomRow({ onClose }: { onClose: () => void; }) {
 export function RoomsPage() {
   const { t } = useTranslation('rooms');
   const { appUser } = useAuth();
-  const canManage = appUser?.role === 'admin' || !!appUser?.permissions?.manageRooms;
+  const canManage = appUser?.role === Role.Admin || !!appUser?.permissions?.manageRooms;
 
   const { data: rooms, isLoading, isError } = useRooms();
   const [showAddRow, setShowAddRow] = useState(false);
