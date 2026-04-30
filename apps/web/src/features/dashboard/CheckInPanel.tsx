@@ -1,94 +1,95 @@
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useAttendanceRecordsBySession, useCreateAttendanceRecord } from '../../hooks/useAttendanceRecords'
-import { useStudents } from '../../hooks/useStudents'
-import { useMembershipsByStudent } from '../../hooks/useMemberships'
-import { useClassCardsByStudent } from '../../hooks/useClassCards'
-import { calcEstimatedValue, computeDisabled } from '../../lib/combinationLogic'
-import { AddStudentInline } from './AddStudentInline'
-import type { ClassSession, Student, PricingConfig, CombinationToken, PassType, MembershipTier } from '../../types'
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useAttendanceRecordsBySession, useCreateAttendanceRecord } from '../../hooks/useAttendanceRecords';
+import { useStudents } from '../../hooks/useStudents';
+import { useMembershipsByStudent } from '../../hooks/useMemberships';
+import { useClassCardsByStudent } from '../../hooks/useClassCards';
+import { calcEstimatedValue, computeDisabled } from '../../lib/combinationLogic';
+import { AddStudentInline } from './AddStudentInline';
+import { type ClassSession, type Student, type PricingConfig, type CombinationToken, type PassType, ClassType, ExternalProvider, MembershipTier } from '../../types';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface CheckInPanelProps {
-  session: ClassSession
-  pricingConfig: PricingConfig | null
-  markedBy: string
+  session: ClassSession;
+  pricingConfig: PricingConfig | null;
+  markedBy: string;
 }
 
 // ─── State machine ────────────────────────────────────────────────────────────
 
 type PanelState =
-  | { step: 'search' }
-  | { step: 'pass'; student: Student }
-  | { step: 'noPass'; student: Student }
-  | { step: 'addStudent'; searchQuery: string }
-  | { step: 'party'; student: Student }
+  | { step: 'search'; }
+  | { step: 'pass'; student: Student; }
+  | { step: 'noPass'; student: Student; }
+  | { step: 'addStudent'; searchQuery: string; }
+  | { step: typeof ClassType.Party; student: Student; };
 
 // ─── Type guard ───────────────────────────────────────────────────────────────
 
 function isMembershipTier(pt: PassType): pt is MembershipTier {
-  return pt === 'gold' || pt === 'silver' || pt === 'bronze'
+  return pt === MembershipTier.Gold || pt === MembershipTier.Silver || pt === MembershipTier.Bronze;
 }
 
 // ─── Token label helper ───────────────────────────────────────────────────────
 
 function tokenLabel(token: CombinationToken, pricingConfig: PricingConfig | null, t: (key: string, opts?: Record<string, unknown>) => string): string {
   switch (token) {
-    case 'gold':       return t('dashboard.checkin.gold')
-    case 'silver':     return t('dashboard.checkin.silver')
-    case 'bronze':     return t('dashboard.checkin.bronze')
-    case 'card':       return t('dashboard.checkin.card')
-    case 'usc':        return t('dashboard.checkin.usc')
-    case 'eversports': return t('dashboard.checkin.eversports')
-    case 'dropin':     return t('dashboard.checkin.dropin', { rate: pricingConfig?.dropInRate ?? 13 })
-    case 'trial':      return t('dashboard.checkin.trial')
-    case 'cash':       return t('dashboard.checkin.cash')
+    case MembershipTier.Gold: return t('dashboard.checkin.gold');
+    case MembershipTier.Silver: return t('dashboard.checkin.silver');
+    case MembershipTier.Bronze: return t('dashboard.checkin.bronze');
+    case 'card': return t('dashboard.checkin.card');
+    case ExternalProvider.USC: return t('dashboard.checkin.usc');
+    case ExternalProvider.Eversports: return t('dashboard.checkin.eversports');
+    case 'dropin': return t('dashboard.checkin.dropin', { rate: pricingConfig?.dropInRate ?? 13 });
+    case 'trial': return t('dashboard.checkin.trial');
+    case 'cash': return t('dashboard.checkin.cash');
+    default: return token;
   }
 }
 
 // ─── PassFlowPanel — handles 'pass' state ────────────────────────────────────
 
 interface PassFlowPanelProps {
-  session: ClassSession
-  student: Student
-  pricingConfig: PricingConfig | null
-  onConfirm: (combination: CombinationToken[], notes: string) => Promise<void>
-  onCancel: () => void
+  session: ClassSession;
+  student: Student;
+  pricingConfig: PricingConfig | null;
+  onConfirm: (combination: CombinationToken[], notes: string) => Promise<void>;
+  onCancel: () => void;
 }
 
 function PassFlowPanel({ session, student, pricingConfig, onConfirm, onCancel }: PassFlowPanelProps) {
-  const { t } = useTranslation()
-  const [notes, setNotes] = useState('')
-  const [supplement, setSupplement] = useState<CombinationToken | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const { t } = useTranslation();
+  const [notes, setNotes] = useState('');
+  const [supplement, setSupplement] = useState<CombinationToken | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const passToken: CombinationToken =
     student.passType && isMembershipTier(student.passType)
       ? student.passType
-      : 'card'
+      : 'card';
 
-  const isSpecial = session.type === 'special' || session.type === 'event'
-  const isGold = passToken === 'gold'
+  const isSpecial = session.type === ClassType.Special || session.type === ClassType.Event;
+  const isGold = passToken === MembershipTier.Gold;
   // For gold or regular classes — no supplement needed
-  const showSupplementPicker = isSpecial && !isGold
+  const showSupplementPicker = isSpecial && !isGold;
 
-  const currentSet = new Set<CombinationToken>([passToken, ...(supplement ? [supplement] : [])])
-  const disabled = computeDisabled(currentSet, isSpecial)
+  const currentSet = new Set<CombinationToken>([passToken, ...(supplement ? [supplement] : [])]);
+  const disabled = computeDisabled(currentSet, isSpecial);
 
-  const supplementOptions: CombinationToken[] = ['usc', 'eversports', 'cash']
+  const supplementOptions: CombinationToken[] = [ExternalProvider.USC, ExternalProvider.Eversports, 'cash'];
 
   function buildCombination(): CombinationToken[] {
-    if (supplement) return [passToken, supplement]
-    return [passToken]
+    if (supplement) return [passToken, supplement];
+    return [passToken];
   }
 
   async function handleConfirm() {
-    setSubmitting(true)
+    setSubmitting(true);
     try {
-      await onConfirm(buildCombination(), notes)
+      await onConfirm(buildCombination(), notes);
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
   }
 
@@ -111,8 +112,8 @@ function PassFlowPanel({ session, student, pricingConfig, onConfirm, onCancel }:
           </span>
           <div className="flex gap-2 flex-wrap">
             {supplementOptions.map((token) => {
-              const isSelected = supplement === token
-              const isDisabled = disabled.has(token)
+              const isSelected = supplement === token;
+              const isDisabled = disabled.has(token);
               return (
                 <button
                   key={token}
@@ -129,7 +130,7 @@ function PassFlowPanel({ session, student, pricingConfig, onConfirm, onCancel }:
                 >
                   {tokenLabel(token, pricingConfig, t)}
                 </button>
-              )
+              );
             })}
           </div>
         </div>
@@ -164,38 +165,38 @@ function PassFlowPanel({ session, student, pricingConfig, onConfirm, onCancel }:
         </button>
       </div>
     </div>
-  )
+  );
 }
 
 // ─── NoPassFlowPanel — handles 'noPass' state ─────────────────────────────────
 
 interface NoPassFlowPanelProps {
-  student: Student
-  pricingConfig: PricingConfig | null
-  onConfirm: (combination: CombinationToken[], notes: string) => Promise<void>
-  onCancel: () => void
+  student: Student;
+  pricingConfig: PricingConfig | null;
+  onConfirm: (combination: CombinationToken[], notes: string) => Promise<void>;
+  onCancel: () => void;
 }
 
 function NoPassFlowPanel({ student, pricingConfig, onConfirm, onCancel }: NoPassFlowPanelProps) {
-  const { t } = useTranslation()
-  const [selected, setSelected] = useState<CombinationToken | null>(null)
-  const [notes, setNotes] = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  const { t } = useTranslation();
+  const [selected, setSelected] = useState<CombinationToken | null>(null);
+  const [notes, setNotes] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const sources: { token: CombinationToken; label: string }[] = [
-    { token: 'usc',       label: t('dashboard.checkin.usc') },
-    { token: 'eversports', label: t('dashboard.checkin.eversports') },
-    { token: 'dropin',    label: t('dashboard.checkin.dropin', { rate: pricingConfig?.dropInRate ?? 13 }) },
-    { token: 'trial',     label: t('dashboard.checkin.trial') },
-  ]
+  const sources: { token: CombinationToken; label: string; }[] = [
+    { token: ExternalProvider.USC, label: t('dashboard.checkin.usc') },
+    { token: ExternalProvider.Eversports, label: t('dashboard.checkin.eversports') },
+    { token: 'dropin', label: t('dashboard.checkin.dropin', { rate: pricingConfig?.dropInRate ?? 13 }) },
+    { token: 'trial', label: t('dashboard.checkin.trial') },
+  ];
 
   async function handleConfirm() {
-    if (!selected) return
-    setSubmitting(true)
+    if (!selected) return;
+    setSubmitting(true);
     try {
-      await onConfirm([selected], notes)
+      await onConfirm([selected], notes);
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
   }
 
@@ -258,29 +259,29 @@ function NoPassFlowPanel({ student, pricingConfig, onConfirm, onCancel }: NoPass
         </button>
       </div>
     </div>
-  )
+  );
 }
 
-// ─── PartyFlowPanel — handles 'party' state ───────────────────────────────────
+// ─── PartyFlowPanel — handles ClassType.Party state ───────────────────────────────────
 
 interface PartyFlowPanelProps {
-  student: Student
-  onConfirm: (combination: CombinationToken[], notes: string) => Promise<void>
-  onCancel: () => void
+  student: Student;
+  onConfirm: (combination: CombinationToken[], notes: string) => Promise<void>;
+  onCancel: () => void;
 }
 
 function PartyFlowPanel({ student, onConfirm, onCancel }: PartyFlowPanelProps) {
-  const { t } = useTranslation()
-  const [notes, setNotes] = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  const { t } = useTranslation();
+  const [notes, setNotes] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   async function handleConfirm() {
-    setSubmitting(true)
+    setSubmitting(true);
     try {
       // Party: always empty combination — no tokens, no credit deduction
-      await onConfirm([], notes)
+      await onConfirm([], notes);
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
   }
 
@@ -316,60 +317,60 @@ function PartyFlowPanel({ student, onConfirm, onCancel }: PartyFlowPanelProps) {
         </button>
       </div>
     </div>
-  )
+  );
 }
 
 // ─── CheckInPanel (main export) ───────────────────────────────────────────────
 
 export function CheckInPanel({ session, pricingConfig, markedBy }: CheckInPanelProps) {
-  const { t } = useTranslation()
-  const { data: records = [] } = useAttendanceRecordsBySession(session.id)
-  const { data: allStudents = [] } = useStudents()
-  const createRecord = useCreateAttendanceRecord()
+  const { t } = useTranslation();
+  const { data: records = [] } = useAttendanceRecordsBySession(session.id);
+  const { data: allStudents = [] } = useStudents();
+  const createRecord = useCreateAttendanceRecord();
 
-  const [state, setState] = useState<PanelState>({ step: 'search' })
-  const [query, setQuery] = useState('')
-  const [alreadyCheckedIn, setAlreadyCheckedIn] = useState(false)
-  const [studentAdded, setStudentAdded] = useState(false)
-  const [showDropdown, setShowDropdown] = useState(false)
+  const [state, setState] = useState<PanelState>({ step: 'search' });
+  const [query, setQuery] = useState('');
+  const [alreadyCheckedIn, setAlreadyCheckedIn] = useState(false);
+  const [studentAdded, setStudentAdded] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
-  const activeRecords = records.filter((r) => r.active !== false)
-  const studentMap = new Map(allStudents.map((s) => [s.id, s]))
+  const activeRecords = records.filter((r) => r.active !== false);
+  const studentMap = new Map(allStudents.map((s) => [s.id, s]));
 
   // Client-side search
-  const lowerQuery = query.toLowerCase()
+  const lowerQuery = query.toLowerCase();
   const filtered = query.trim()
     ? allStudents
-        .filter((s) => s.name.toLowerCase().includes(lowerQuery))
-        .slice(0, 8)
-    : []
+      .filter((s) => s.name.toLowerCase().includes(lowerQuery))
+      .slice(0, 8)
+    : [];
 
   const hasExactMatch = filtered.some(
     (s) => s.name.toLowerCase() === lowerQuery
-  )
-  const showAddStudentButton = query.trim().length >= 3 && !hasExactMatch
+  );
+  const showAddStudentButton = query.trim().length >= 3 && !hasExactMatch;
 
   function selectStudent(student: Student) {
-    setAlreadyCheckedIn(false)
-    setShowDropdown(false)
+    setAlreadyCheckedIn(false);
+    setShowDropdown(false);
 
     // Check if already checked in
-    const alreadyIn = activeRecords.some((r) => r.studentId === student.id)
+    const alreadyIn = activeRecords.some((r) => r.studentId === student.id);
     if (alreadyIn) {
-      setAlreadyCheckedIn(true)
-      setQuery('')
-      return
+      setAlreadyCheckedIn(true);
+      setQuery('');
+      return;
     }
 
     // Transition based on session type and passType
-    if (session.type === 'party') {
-      setState({ step: 'party', student })
+    if (session.type === ClassType.Party) {
+      setState({ step: ClassType.Party, student });
     } else if (student.passType !== null) {
-      setState({ step: 'pass', student })
+      setState({ step: 'pass', student });
     } else {
-      setState({ step: 'noPass', student })
+      setState({ step: 'noPass', student });
     }
-    setQuery('')
+    setQuery('');
   }
 
   // Builds passSnapshot from memberships/classCards loaded in PassFlowPanel
@@ -382,21 +383,21 @@ export function CheckInPanel({ session, pricingConfig, markedBy }: CheckInPanelP
     classCards: import('../../types').ClassCard[],
   ) {
     const activeMembership =
-      memberships.find((m) => m.id === student.activePassId && m.active) ?? null
+      memberships.find((m) => m.id === student.activePassId && m.active) ?? null;
     const activeCard =
-      classCards.find((c) => c.id === student.activePassId && c.active) ?? null
+      classCards.find((c) => c.id === student.activePassId && c.active) ?? null;
 
     const passSnapshot = activeMembership
       ? {
-          type: activeMembership.tier as import('../../types').PassType,
-          creditsAtCheckIn: activeMembership.creditsRemaining,
-        }
+        type: activeMembership.tier as import('../../types').PassType,
+        creditsAtCheckIn: activeMembership.creditsRemaining,
+      }
       : activeCard
-      ? {
+        ? {
           type: activeCard.type as import('../../types').PassType,
           creditsAtCheckIn: activeCard.creditsRemaining,
         }
-      : null
+        : null;
 
     await createRecord.mutateAsync({
       sessionId: session.id,
@@ -411,9 +412,9 @@ export function CheckInPanel({ session, pricingConfig, markedBy }: CheckInPanelP
       notes: notes.trim() || null,
       markedBy,
       active: true,
-    })
-    setState({ step: 'search' })
-    setQuery('')
+    });
+    setState({ step: 'search' });
+    setQuery('');
   }
 
   async function handleConfirmSimple(
@@ -434,25 +435,25 @@ export function CheckInPanel({ session, pricingConfig, markedBy }: CheckInPanelP
       notes: notes.trim() || null,
       markedBy,
       active: true,
-    })
-    setState({ step: 'search' })
-    setQuery('')
+    });
+    setState({ step: 'search' });
+    setQuery('');
   }
 
   function handleCancel() {
-    setState({ step: 'search' })
-    setQuery('')
-    setAlreadyCheckedIn(false)
+    setState({ step: 'search' });
+    setQuery('');
+    setAlreadyCheckedIn(false);
   }
 
   // After student creation, reset to search — the student will appear once
   // React Query invalidation resolves
   function handleStudentCreated(_newId: string) {
     // After creation, student appears in search results once invalidation resolves
-    setState({ step: 'search' })
-    setQuery('')
-    setStudentAdded(true)
-    setTimeout(() => setStudentAdded(false), 4000)
+    setState({ step: 'search' });
+    setQuery('');
+    setStudentAdded(true);
+    setTimeout(() => setStudentAdded(false), 4000);
   }
 
   return (
@@ -466,9 +467,9 @@ export function CheckInPanel({ session, pricingConfig, markedBy }: CheckInPanelP
               type="text"
               value={query}
               onChange={(e) => {
-                setQuery(e.target.value)
-                setAlreadyCheckedIn(false)
-                setShowDropdown(true)
+                setQuery(e.target.value);
+                setAlreadyCheckedIn(false);
+                setShowDropdown(true);
               }}
               onFocus={() => setShowDropdown(true)}
               onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
@@ -500,8 +501,8 @@ export function CheckInPanel({ session, pricingConfig, markedBy }: CheckInPanelP
                     <button
                       type="button"
                       onMouseDown={() => {
-                        setState({ step: 'addStudent', searchQuery: query })
-                        setShowDropdown(false)
+                        setState({ step: 'addStudent', searchQuery: query });
+                        setShowDropdown(false);
                       }}
                       className="w-full text-left px-3 py-2 text-sm text-primary font-medium hover:bg-muted transition-colors border-t border-border"
                     >
@@ -518,8 +519,8 @@ export function CheckInPanel({ session, pricingConfig, markedBy }: CheckInPanelP
                 <button
                   type="button"
                   onMouseDown={() => {
-                    setState({ step: 'addStudent', searchQuery: query })
-                    setShowDropdown(false)
+                    setState({ step: 'addStudent', searchQuery: query });
+                    setShowDropdown(false);
                   }}
                   className="w-full text-left px-3 py-2 text-sm text-primary font-medium hover:bg-muted transition-colors"
                 >
@@ -573,7 +574,7 @@ export function CheckInPanel({ session, pricingConfig, markedBy }: CheckInPanelP
       )}
 
       {/* Party flow */}
-      {state.step === 'party' && (
+      {state.step === ClassType.Party && (
         <PartyFlowPanel
           student={state.student}
           onConfirm={(combination, notes) =>
@@ -591,7 +592,7 @@ export function CheckInPanel({ session, pricingConfig, markedBy }: CheckInPanelP
           </p>
           <ul className="flex flex-col gap-1">
             {activeRecords.map((record) => {
-              const student = studentMap.get(record.studentId)
+              const student = studentMap.get(record.studentId);
               return (
                 <li key={record.id} className="flex items-center justify-between text-sm">
                   <span className="font-medium">{student?.name ?? record.studentId}</span>
@@ -601,33 +602,33 @@ export function CheckInPanel({ session, pricingConfig, markedBy }: CheckInPanelP
                       : t('dashboard.checkin.partyAttendance')}
                   </span>
                 </li>
-              )
+              );
             })}
           </ul>
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // ─── PassFlowWithData — thin wrapper that loads memberships/cards for PassFlowPanel ──
 
 interface PassFlowWithDataProps {
-  session: ClassSession
-  student: Student
-  pricingConfig: PricingConfig | null
+  session: ClassSession;
+  student: Student;
+  pricingConfig: PricingConfig | null;
   onConfirm: (
     combination: CombinationToken[],
     notes: string,
     memberships: import('../../types').Membership[],
     classCards: import('../../types').ClassCard[],
-  ) => Promise<void>
-  onCancel: () => void
+  ) => Promise<void>;
+  onCancel: () => void;
 }
 
 function PassFlowWithData({ session, student, pricingConfig, onConfirm, onCancel }: PassFlowWithDataProps) {
-  const { data: memberships = [] } = useMembershipsByStudent(student.id)
-  const { data: classCards = [] } = useClassCardsByStudent(student.id)
+  const { data: memberships = [] } = useMembershipsByStudent(student.id);
+  const { data: classCards = [] } = useClassCardsByStudent(student.id);
 
   return (
     <PassFlowPanel
@@ -637,5 +638,5 @@ function PassFlowWithData({ session, student, pricingConfig, onConfirm, onCancel
       onConfirm={(combination, notes) => onConfirm(combination, notes, memberships, classCards)}
       onCancel={onCancel}
     />
-  )
+  );
 }

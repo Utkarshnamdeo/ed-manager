@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useStudents, useCreateStudent } from '../../hooks/useStudents';
 import { useActiveMemberships } from '../../hooks/useMemberships';
 import { StudentDrawer } from './StudentDrawer';
-import { type PassType, type Student, type Membership, Role } from '../../types';
+import { type PassType, type Student, type Membership, Role, MembershipTier, ClassCardType } from '../../types';
 
 /* ─── Helpers ── */
 
@@ -35,19 +35,19 @@ export function MembershipBadge({ tier, credits }: { tier: PassType | null; cred
   const badgeClass =
     lowCredit && credits === 1 ? 'bg-warning-subtle text-[oklch(0.50_0.14_85)]' :
       lowCredit && credits === 0 ? 'bg-destructive-subtle text-destructive' :
-        tier === 'gold' ? 'badge-gold' :
-          tier === 'silver' ? 'badge-silver' :
-            tier === 'bronze' ? 'badge-bronze' :
-              tier === 'ten_class' ? 'badge-silver' :
-                tier === 'five_class' ? 'badge-bronze' :
+        tier === MembershipTier.Gold ? 'badge-gold' :
+          tier === MembershipTier.Silver ? 'badge-silver' :
+            tier === MembershipTier.Bronze ? 'badge-bronze' :
+              tier === ClassCardType.TenClass ? 'badge-silver' :
+                tier === ClassCardType.FiveClass ? 'badge-bronze' :
                   'bg-muted text-muted-foreground';
 
   const label =
-    tier === 'ten_class' ? '10-Class Card' :
-      tier === 'five_class' ? '5-Class Card' :
+    tier === ClassCardType.TenClass ? '10-Class Card' :
+      tier === ClassCardType.FiveClass ? '5-Class Card' :
         tier.charAt(0).toUpperCase() + tier.slice(1);
 
-  const showCredits = typeof credits === 'number' && tier !== 'gold';
+  const showCredits = typeof credits === 'number' && tier !== MembershipTier.Gold;
   return (
     <span className={`inline-flex items-center gap-1 py-[0.15rem] px-2 rounded-full text-[0.6875rem] font-semibold whitespace-nowrap ${ badgeClass }`}>
       {label}
@@ -181,7 +181,7 @@ function StudentRow({ student, membership, onOpen }: {
 
 /* ─── Students Page ── */
 
-type FilterTier = 'all' | 'gold' | 'silver' | 'bronze' | 'ten_class' | 'five_class' | 'noPass';
+type FilterTier = 'all' | typeof MembershipTier.Gold | typeof MembershipTier.Silver | typeof MembershipTier.Bronze | typeof ClassCardType.TenClass | typeof ClassCardType.FiveClass | 'noPass';
 
 export function StudentsPage() {
   const { t } = useTranslation('students');
@@ -199,7 +199,7 @@ export function StudentsPage() {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const filterOptions: FilterTier[] = ['all', 'gold', 'silver', 'bronze', 'ten_class', 'five_class', 'noPass'];
+  const filterOptions: FilterTier[] = ['all', MembershipTier.Gold, MembershipTier.Silver, MembershipTier.Bronze, ClassCardType.TenClass, ClassCardType.FiveClass, 'noPass'];
 
   const filtered = (students ?? []).filter((s) => {
     const matchesTier =

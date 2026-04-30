@@ -1,26 +1,27 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router'
-import { useTranslation } from 'react-i18next'
-import { useAuth } from '../../contexts/AuthContext'
-import { useDashboardStats } from '../../hooks/useDashboardStats'
-import { useClassSessionsByDate } from '../../hooks/useClassSessions'
-import { useTeachers } from '../../hooks/useTeachers'
-import { usePricingConfig } from '../../hooks/usePricingConfig'
-import { StatCards } from './StatCards'
-import { SessionRow } from './SessionRow'
-import { CheckInPanel } from './CheckInPanel'
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../contexts/AuthContext';
+import { useDashboardStats } from '../../hooks/useDashboardStats';
+import { useClassSessionsByDate } from '../../hooks/useClassSessions';
+import { useTeachers } from '../../hooks/useTeachers';
+import { usePricingConfig } from '../../hooks/usePricingConfig';
+import { StatCards } from './StatCards';
+import { SessionRow } from './SessionRow';
+import { CheckInPanel } from './CheckInPanel';
+import { SessionStatus } from '@/types';
 
 export function DashboardPage() {
-  const { t } = useTranslation()
-  const { appUser } = useAuth()
-  const today = useMemo(() => new Date(), [])
-  const stats = useDashboardStats()
-  const { data: sessions = [] } = useClassSessionsByDate(today)
-  const { data: teachers = [] } = useTeachers()
-  const { data: pricingConfig = null } = usePricingConfig()
-  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const { t } = useTranslation();
+  const { appUser } = useAuth();
+  const today = useMemo(() => new Date(), []);
+  const stats = useDashboardStats();
+  const { data: sessions = [] } = useClassSessionsByDate(today);
+  const { data: teachers = [] } = useTeachers();
+  const { data: pricingConfig = null } = usePricingConfig();
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const teacherMap = new Map(teachers.map((teacher) => [teacher.id, `${teacher.firstName} ${teacher.lastName}`]))
+  const teacherMap = new Map(teachers.map((teacher) => [teacher.id, `${ teacher.firstName } ${ teacher.lastName }`]));
 
   return (
     <div className="page-enter p-7 flex flex-col gap-6">
@@ -78,8 +79,8 @@ export function DashboardPage() {
               checkedInCount={0}
               isExpanded={expandedId === session.id}
               onToggle={() => {
-                if (session.status === 'cancelled') return
-                setExpandedId((prev) => (prev === session.id ? null : session.id))
+                if (session.status === SessionStatus.Cancelled) return;
+                setExpandedId((prev) => (prev === session.id ? null : session.id));
               }}
             >
               <CheckInPanel
@@ -110,5 +111,5 @@ export function DashboardPage() {
       )}
 
     </div>
-  )
+  );
 }

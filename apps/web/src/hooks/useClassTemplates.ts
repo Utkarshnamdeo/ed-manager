@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   collection,
   query,
@@ -10,13 +10,13 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
-} from 'firebase/firestore'
-import { db } from '../lib/firebase'
-import { queryClient } from '../lib/queryClient'
-import type { ClassTemplate } from '../types'
+} from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { queryClient } from '../lib/queryClient';
+import { SessionStatus, type ClassTemplate } from '../types';
 
-const COLLECTION = 'classTemplates'
-const QUERY_KEY = ['classTemplates'] as const
+const COLLECTION = 'classTemplates';
+const QUERY_KEY = ['classTemplates'] as const;
 
 function docToClassTemplate(id: string, data: Record<string, unknown>): ClassTemplate {
   return {
@@ -33,8 +33,8 @@ function docToClassTemplate(id: string, data: Record<string, unknown>): ClassTem
     regularStudentIds: (data.regularStudentIds as string[]) ?? [],
     isSubscription: (data.isSubscription as boolean) ?? false,
     active: data.active as boolean,
-    createdAt: (data.createdAt as { toDate(): Date })?.toDate() ?? new Date(),
-  }
+    createdAt: (data.createdAt as { toDate(): Date; })?.toDate() ?? new Date(),
+  };
 }
 
 export function useClassTemplates() {
@@ -43,17 +43,17 @@ export function useClassTemplates() {
     queryFn: async () => {
       const q = query(
         collection(db, COLLECTION),
-        where('active', '==', true),
+        where(SessionStatus.Active, '==', true),
         orderBy('dayOfWeek'),
         orderBy('startTime'),
-      )
-      const snap = await getDocs(q)
-      return snap.docs.map((d) => docToClassTemplate(d.id, d.data()))
+      );
+      const snap = await getDocs(q);
+      return snap.docs.map((d) => docToClassTemplate(d.id, d.data()));
     },
-  })
+  });
 }
 
-type CreateClassTemplateInput = Omit<ClassTemplate, 'id' | 'createdAt'>
+type CreateClassTemplateInput = Omit<ClassTemplate, 'id' | 'createdAt'>;
 
 export function useCreateClassTemplate() {
   return useMutation({
@@ -61,34 +61,34 @@ export function useCreateClassTemplate() {
       await addDoc(collection(db, COLLECTION), {
         ...input,
         createdAt: serverTimestamp(),
-      })
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
-  })
+  });
 }
 
-type UpdateClassTemplateInput = Partial<Omit<ClassTemplate, 'id' | 'createdAt'>> & { id: string }
+type UpdateClassTemplateInput = Partial<Omit<ClassTemplate, 'id' | 'createdAt'>> & { id: string; };
 
 export function useUpdateClassTemplate() {
   return useMutation({
     mutationFn: async ({ id, ...updates }: UpdateClassTemplateInput) => {
-      await updateDoc(doc(db, COLLECTION, id), updates)
+      await updateDoc(doc(db, COLLECTION, id), updates);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
-  })
+  });
 }
 
 export function useDeleteClassTemplate() {
   return useMutation({
     mutationFn: async (id: string) => {
-      await deleteDoc(doc(db, COLLECTION, id))
+      await deleteDoc(doc(db, COLLECTION, id));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
-  })
+  });
 }

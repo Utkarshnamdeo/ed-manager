@@ -1,10 +1,10 @@
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { addDays, startOfDay } from 'date-fns'
-import { useUpdateClassTemplate, useDeleteClassTemplate } from '../../hooks/useClassTemplates'
-import { useClassSessionsByDateRange } from '../../hooks/useClassSessions'
-import { useStudents } from '../../hooks/useStudents'
-import type { ClassTemplate, Teacher, Room } from '../../types'
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { addDays, startOfDay } from 'date-fns';
+import { useUpdateClassTemplate, useDeleteClassTemplate } from '../../hooks/useClassTemplates';
+import { useClassSessionsByDateRange } from '../../hooks/useClassSessions';
+import { useStudents } from '../../hooks/useStudents';
+import { type ClassTemplate, type Teacher, type Room, ClassLevel, ClassType, SessionStatus, DanceStyle } from '../../types';
 
 /* ─── Icons ── */
 
@@ -13,7 +13,7 @@ function IconClose() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
     </svg>
-  )
+  );
 }
 
 /* ─── Details Tab ── */
@@ -25,17 +25,17 @@ function DetailsTab({
   canManage,
   onClose,
 }: {
-  template: ClassTemplate
-  teachers: Teacher[]
-  rooms: Room[]
-  canManage: boolean
-  onClose: () => void
+  template: ClassTemplate;
+  teachers: Teacher[];
+  rooms: Room[];
+  canManage: boolean;
+  onClose: () => void;
 }) {
-  const { t } = useTranslation('classes')
-  const updateTemplate = useUpdateClassTemplate()
-  const deleteTemplate = useDeleteClassTemplate()
-  const [editing, setEditing] = useState(false)
-  const [confirmDelete, setConfirmDelete] = useState(false)
+  const { t } = useTranslation('classes');
+  const updateTemplate = useUpdateClassTemplate();
+  const deleteTemplate = useDeleteClassTemplate();
+  const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [form, setForm] = useState({
     name: template.name,
     style: template.style,
@@ -46,15 +46,15 @@ function DetailsTab({
     teacherId: template.teacherId,
     roomId: template.roomId,
     isSubscription: template.isSubscription,
-  })
+  });
 
   function setField<K extends keyof typeof form>(key: K, value: typeof form[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }))
+    setForm((prev) => ({ ...prev, [key]: value }));
   }
 
   async function handleSave() {
-    await updateTemplate.mutateAsync({ id: template.id, ...form })
-    setEditing(false)
+    await updateTemplate.mutateAsync({ id: template.id, ...form });
+    setEditing(false);
   }
 
   function handleCancel() {
@@ -68,13 +68,13 @@ function DetailsTab({
       teacherId: template.teacherId,
       roomId: template.roomId,
       isSubscription: template.isSubscription,
-    })
-    setEditing(false)
+    });
+    setEditing(false);
   }
 
-  const styles = ['bachata', 'kizomba', 'salsa', 'zouk', 'afro', 'other'] as const
-  const levels = ['beginner', 'intermediate', 'advanced', 'open'] as const
-  const types = ['regular', 'special', 'workshop', 'event', 'party'] as const
+  const styles = [DanceStyle.Bachata, DanceStyle.Kizomba, DanceStyle.Salsa, DanceStyle.Zouk, DanceStyle.Afro, 'other'] as const;
+  const levels = [ClassLevel.Beginner, ClassLevel.Intermediate, ClassLevel.Advanced, ClassLevel.Open] as const;
+  const types = [ClassType.Regular, ClassType.Special, 'workshop', ClassType.Event, ClassType.Party] as const;
 
   return (
     <div className="flex flex-col gap-4">
@@ -90,10 +90,10 @@ function DetailsTab({
           {editing
             ? (
               <select className="form-input w-full" value={form.style} onChange={(e) => setField('style', e.target.value as typeof form.style)}>
-                {styles.map((s) => <option key={s} value={s}>{t(`style.${s}`)}</option>)}
+                {styles.map((s) => <option key={s} value={s}>{t(`style.${ s }`)}</option>)}
               </select>
             )
-            : <div className="text-[0.9375rem] text-foreground py-2">{t(`style.${template.style}`)}</div>}
+            : <div className="text-[0.9375rem] text-foreground py-2">{t(`style.${ template.style }`)}</div>}
         </div>
       </div>
 
@@ -103,20 +103,20 @@ function DetailsTab({
           {editing
             ? (
               <select className="form-input w-full" value={form.level} onChange={(e) => setField('level', e.target.value as typeof form.level)}>
-                {levels.map((l) => <option key={l} value={l}>{t(`level.${l}`)}</option>)}
+                {levels.map((l) => <option key={l} value={l}>{t(`level.${ l }`)}</option>)}
               </select>
             )
-            : <div className="text-[0.9375rem] text-foreground py-2">{t(`level.${template.level}`)}</div>}
+            : <div className="text-[0.9375rem] text-foreground py-2">{t(`level.${ template.level }`)}</div>}
         </div>
         <div>
           <label className="block text-[0.8125rem] font-semibold text-foreground-secondary mb-1.5">{t('form.type')}</label>
           {editing
             ? (
               <select className="form-input w-full" value={form.type} onChange={(e) => setField('type', e.target.value as typeof form.type)}>
-                {types.map((tp) => <option key={tp} value={tp}>{t(`type.${tp}`)}</option>)}
+                {types.map((tp) => <option key={tp} value={tp}>{t(`type.${ tp }`)}</option>)}
               </select>
             )
-            : <div className="text-[0.9375rem] text-foreground py-2">{t(`type.${template.type}`)}</div>}
+            : <div className="text-[0.9375rem] text-foreground py-2">{t(`type.${ template.type }`)}</div>}
         </div>
       </div>
 
@@ -180,7 +180,7 @@ function DetailsTab({
               <div className="flex gap-2">
                 <button onClick={() => setConfirmDelete(false)} className="btn-secondary flex-1">{t('actions.cancel')}</button>
                 <button
-                  onClick={async () => { await deleteTemplate.mutateAsync(template.id); onClose() }}
+                  onClick={async () => { await deleteTemplate.mutateAsync(template.id); onClose(); }}
                   disabled={deleteTemplate.isPending}
                   className="btn-destructive flex-1"
                 >
@@ -208,24 +208,24 @@ function DetailsTab({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 /* ─── Roster Tab ── */
 
-function RosterTab({ template, canManage }: { template: ClassTemplate; canManage: boolean }) {
-  const { t } = useTranslation('classes')
-  const updateTemplate = useUpdateClassTemplate()
-  const { data: allStudents } = useStudents()
+function RosterTab({ template, canManage }: { template: ClassTemplate; canManage: boolean; }) {
+  const { t } = useTranslation('classes');
+  const updateTemplate = useUpdateClassTemplate();
+  const { data: allStudents } = useStudents();
 
   async function handleRemove(studentId: string) {
     await updateTemplate.mutateAsync({
       id: template.id,
       regularStudentIds: template.regularStudentIds.filter((id) => id !== studentId),
-    })
+    });
   }
 
-  const enrolled = (allStudents ?? []).filter((s) => template.regularStudentIds.includes(s.id))
+  const enrolled = (allStudents ?? []).filter((s) => template.regularStudentIds.includes(s.id));
 
   return (
     <div>
@@ -253,64 +253,62 @@ function RosterTab({ template, canManage }: { template: ClassTemplate; canManage
         </div>
       )}
     </div>
-  )
+  );
 }
 
 /* ─── Sessions Tab ── */
 
-function SessionsTab({ template }: { template: ClassTemplate }) {
-  const { t } = useTranslation('classes')
-  const today = startOfDay(new Date())
-  const { data: sessions } = useClassSessionsByDateRange(today, addDays(today, 90))
+function SessionsTab({ template }: { template: ClassTemplate; }) {
+  const { t } = useTranslation('classes');
+  const today = startOfDay(new Date());
+  const { data: sessions } = useClassSessionsByDateRange(today, addDays(today, 90));
 
-  const templateSessions = (sessions ?? []).filter((s) => s.templateId === template.id)
+  const templateSessions = (sessions ?? []).filter((s) => s.templateId === template.id);
 
   if (templateSessions.length === 0) {
-    return <p className="text-sm text-muted-foreground py-4">{t('noSessions')}</p>
+    return <p className="text-sm text-muted-foreground py-4">{t('noSessions')}</p>;
   }
 
   return (
     <div className="flex flex-col divide-y divide-border">
       {templateSessions.map((session) => (
         <div key={session.id} className="flex items-center gap-4 py-3">
-          <div className={`size-2 rounded-full shrink-0 ${
-            session.status === 'active' ? 'bg-success' :
-            session.status === 'planned' ? 'bg-warning' :
-            session.status === 'completed' ? 'bg-muted-foreground' :
-            'bg-destructive'
-          }`} />
+          <div className={`size-2 rounded-full shrink-0 ${ session.status === SessionStatus.Active ? 'bg-success' :
+            session.status === SessionStatus.Planned ? 'bg-warning' :
+              session.status === SessionStatus.Completed ? 'bg-muted-foreground' :
+                'bg-destructive'
+            }`} />
           <div className="flex-1">
             <div className="text-sm font-medium text-foreground">
               {session.date.toLocaleDateString()} · {session.startTime}–{session.endTime}
             </div>
           </div>
-          <span className={`text-[0.6875rem] font-semibold px-2 py-[2px] rounded-full ${
-            session.status === 'active' ? 'bg-success-subtle text-success' :
-            session.status === 'planned' ? 'bg-warning-subtle text-[oklch(0.48_0.14_85)]' :
-            session.status === 'completed' ? 'bg-muted text-muted-foreground' :
-            'bg-destructive-subtle text-destructive'
-          }`}>
-            {t(`status.${session.status}`)}
+          <span className={`text-[0.6875rem] font-semibold px-2 py-[2px] rounded-full ${ session.status === SessionStatus.Active ? 'bg-success-subtle text-success' :
+            session.status === SessionStatus.Planned ? 'bg-warning-subtle text-[oklch(0.48_0.14_85)]' :
+              session.status === SessionStatus.Completed ? 'bg-muted text-muted-foreground' :
+                'bg-destructive-subtle text-destructive'
+            }`}>
+            {t(`status.${ session.status }`)}
           </span>
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 /* ─── Template Detail Drawer ── */
 
 interface TemplateDetailDrawerProps {
-  template: ClassTemplate
-  teachers: Teacher[]
-  rooms: Room[]
-  canManage: boolean
-  onClose: () => void
+  template: ClassTemplate;
+  teachers: Teacher[];
+  rooms: Room[];
+  canManage: boolean;
+  onClose: () => void;
 }
 
 export function TemplateDetailDrawer({ template, teachers, rooms, canManage, onClose }: TemplateDetailDrawerProps) {
-  const { t } = useTranslation('classes')
-  const [tab, setTab] = useState<'details' | 'roster' | 'sessions'>('details')
+  const { t } = useTranslation('classes');
+  const [tab, setTab] = useState<'details' | 'roster' | 'sessions'>('details');
 
   return (
     <>
@@ -328,7 +326,7 @@ export function TemplateDetailDrawer({ template, teachers, rooms, canManage, onC
           <div className="flex-1 min-w-0">
             <div className="font-bold text-base text-foreground">{template.name}</div>
             <div className="text-[0.8125rem] text-muted-foreground mt-[2px]">
-              {t(`style.${template.style}`)} · {t(`level.${template.level}`)}
+              {t(`style.${ template.style }`)} · {t(`level.${ template.level }`)}
             </div>
           </div>
           <button onClick={onClose} className="bg-transparent border-0 cursor-pointer text-muted-foreground p-1">
@@ -342,13 +340,12 @@ export function TemplateDetailDrawer({ template, teachers, rooms, canManage, onC
             <button
               key={key}
               onClick={() => setTab(key)}
-              className={`py-3 mr-6 bg-transparent border-0 cursor-pointer text-sm transition-[color] duration-150 border-b-2 ${
-                tab === key
-                  ? 'font-semibold text-primary border-b-primary'
-                  : 'font-normal text-muted-foreground border-b-transparent'
-              }`}
+              className={`py-3 mr-6 bg-transparent border-0 cursor-pointer text-sm transition-[color] duration-150 border-b-2 ${ tab === key
+                ? 'font-semibold text-primary border-b-primary'
+                : 'font-normal text-muted-foreground border-b-transparent'
+                }`}
             >
-              {t(`drawer.${key}`)}
+              {t(`drawer.${ key }`)}
             </button>
           ))}
         </div>
@@ -367,5 +364,5 @@ export function TemplateDetailDrawer({ template, teachers, rooms, canManage, onC
         </div>
       </div>
     </>
-  )
+  );
 }

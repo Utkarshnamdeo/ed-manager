@@ -30,17 +30,33 @@ export interface AppUser {
 // ─── Pass / Membership Types ──────────────────────────────────────────────────
 
 /** Monthly subscriptions purchased via Eversports */
-export type MembershipTier = 'gold' | 'silver' | 'bronze';
+export const MembershipTier = {
+  Gold: 'gold',
+  Silver: 'silver',
+  Bronze: 'bronze',
+} as const;
+
+export type MembershipTier = typeof MembershipTier[keyof typeof MembershipTier];
 
 /** Offline class cards purchased at the studio */
-export type ClassCardType = 'ten_class' | 'five_class';
+export const ClassCardType = {
+  TenClass: 'ten_class',
+  FiveClass: 'five_class',
+} as const;
+
+export type ClassCardType = typeof ClassCardType[keyof typeof ClassCardType];
 
 /** Union of all pass types — memberships and class cards */
 export type PassType = MembershipTier | ClassCardType;
 
 // ─── External Providers ───────────────────────────────────────────────────────
 
-export type ExternalProvider = 'usc' | 'eversports';
+export const ExternalProvider = {
+  USC: 'usc',
+  Eversports: 'eversports',
+} as const;
+
+export type ExternalProvider = typeof ExternalProvider[keyof typeof ExternalProvider];
 
 // ─── Attendance Combinations ─────────────────────────────────────────────────
 //
@@ -48,13 +64,13 @@ export type ExternalProvider = 'usc' | 'eversports';
 // for or accessed a class.
 //
 // Credit-deducting tokens (handled by onAttendanceCreated Cloud Function):
-//   'silver'  → 1 credit for regular, 2 credits for special/event
-//   'bronze'  → 1 credit for regular, 2 credits for special/event
+//   MembershipTier.Silver  → 1 credit for regular, 2 credits for special/event
+//   MembershipTier.Bronze  → 1 credit for regular, 2 credits for special/event
 //   'card'    → 1 credit for regular, 2 credits for special/event (ten_class or five_class)
 //   'gold'    → unlimited (0 deducted)
 //
 // Non-deducting tokens:
-//   'usc'        → Urban Sports Club member
+//   ExternalProvider.USC        → Urban Sports Club member
 //   'eversports' → Eversports one-time / non-membership booking
 //   'dropin'     → Walk-in cash payment (rate from config/pricing.dropInRate)
 //   'trial'      → Free trial class; always available for students with no active pass
@@ -64,12 +80,14 @@ export type ExternalProvider = 'usc' | 'eversports';
 // Party classes: combination is always [] — no tokens, no deduction.
 
 export type CombinationToken =
-  | 'gold'
-  | 'silver'
-  | 'bronze'
+  | typeof MembershipTier.Gold
+  | typeof MembershipTier.Silver
+  | typeof MembershipTier.Bronze
+  | typeof ClassCardType.TenClass
+  | typeof ClassCardType.FiveClass
   | 'card'
-  | 'usc'
-  | 'eversports'
+  | typeof ExternalProvider.USC
+  | typeof ExternalProvider.Eversports
   | 'dropin'
   | 'trial'
   | 'cash';
@@ -78,7 +96,14 @@ export type AttendanceCombination = CombinationToken[];
 
 // ─── Class / Session Enums ────────────────────────────────────────────────────
 
-export type SessionStatus = 'planned' | 'active' | 'completed' | 'cancelled';
+export const SessionStatus = {
+  Planned: 'planned',
+  Active: 'active',
+  Completed: 'completed',
+  Cancelled: 'cancelled',
+} as const;
+
+export type SessionStatus = typeof SessionStatus[keyof typeof SessionStatus];
 
 /**
  * regular  → standard class (1 credit for silver/bronze/card)
@@ -86,18 +111,41 @@ export type SessionStatus = 'planned' | 'active' | 'completed' | 'cancelled';
  * event    → event (2 credits for silver/bronze/card)
  * party    → social event; attendance recorded but 0 credits deducted, no combination picker
  */
-export type ClassType = 'regular' | 'special' | 'event' | 'party';
+export const ClassType = {
+  Regular: 'regular',
+  Special: 'special',
+  Event: 'event',
+  Party: 'party',
+} as const;
+
+export type ClassType = typeof ClassType[keyof typeof ClassType];
 
 /**
  * Base dance styles — extensible at runtime via config/danceStyles in Firestore.
  * The UI reads dynamic styles from that config; this type covers the seed defaults.
  */
-export type DanceStyle = 'bachata' | 'kizomba' | 'salsa' | 'zouk' | 'afro' | 'other';
+export const DanceStyle = {
+  Bachata: 'bachata',
+  Kizomba: 'kizomba',
+  Salsa: 'salsa',
+  Zouk: 'zouk',
+  Afro: 'afro',
+  Other: 'other',
+} as const;
+
+export type DanceStyle = typeof DanceStyle[keyof typeof DanceStyle];
 
 /**
  * Base class levels — extensible at runtime via config/classLevels in Firestore.
  */
-export type ClassLevel = 'beginner' | 'intermediate' | 'advanced' | 'open';
+export const ClassLevel = {
+  Beginner: 'beginner',
+  Intermediate: 'intermediate',
+  Advanced: 'advanced',
+  Open: 'open',
+} as const;
+
+export type ClassLevel = typeof ClassLevel[keyof typeof ClassLevel];
 
 // ─── Entities ─────────────────────────────────────────────────────────────────
 

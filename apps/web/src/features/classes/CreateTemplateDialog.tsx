@@ -1,57 +1,57 @@
-import { useState } from 'react'
-import * as Dialog from '@radix-ui/react-dialog'
-import { useTranslation } from 'react-i18next'
-import { useCreateClassTemplate } from '../../hooks/useClassTemplates'
-import { useTeachers } from '../../hooks/useTeachers'
-import { useRooms } from '../../hooks/useRooms'
-import type { DanceStyle, ClassLevel, ClassType } from '../../types'
+import { useState } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import { useTranslation } from 'react-i18next';
+import { useCreateClassTemplate } from '../../hooks/useClassTemplates';
+import { useTeachers } from '../../hooks/useTeachers';
+import { useRooms } from '../../hooks/useRooms';
+import { DanceStyle, ClassLevel, ClassType } from '../../types';
 
 interface CreateTemplateDialogProps {
-  defaultDayOfWeek: number
-  onClose: () => void
+  defaultDayOfWeek: number;
+  onClose: () => void;
 }
 
 export function CreateTemplateDialog({ defaultDayOfWeek, onClose }: CreateTemplateDialogProps) {
-  const { t } = useTranslation('classes')
-  const createTemplate = useCreateClassTemplate()
-  const { data: teachers } = useTeachers()
-  const { data: rooms } = useRooms()
+  const { t } = useTranslation('classes');
+  const createTemplate = useCreateClassTemplate();
+  const { data: teachers } = useTeachers();
+  const { data: rooms } = useRooms();
 
   const [form, setForm] = useState({
     name: '',
-    style: 'bachata' as DanceStyle,
-    level: 'beginner' as ClassLevel,
-    type: 'regular' as ClassType,
+    style: DanceStyle.Bachata as DanceStyle,
+    level: ClassLevel.Beginner as ClassLevel,
+    type: ClassType.Regular as ClassType,
     dayOfWeek: defaultDayOfWeek,
     startTime: '19:00',
     endTime: '20:30',
     teacherId: teachers?.[0]?.id ?? '',
     roomId: rooms?.[0]?.id ?? '',
     isSubscription: false,
-  })
+  });
 
   function setField<K extends keyof typeof form>(key: K, value: typeof form[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }))
+    setForm((prev) => ({ ...prev, [key]: value }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!form.teacherId || !form.roomId) return
+    e.preventDefault();
+    if (!form.teacherId || !form.roomId) return;
     await createTemplate.mutateAsync({
       ...form,
       regularStudentIds: [],
       active: true,
-    })
-    onClose()
+    });
+    onClose();
   }
 
-  const styles: DanceStyle[] = ['bachata', 'kizomba', 'salsa', 'zouk', 'afro', 'other']
-  const levels: ClassLevel[] = ['beginner', 'intermediate', 'advanced', 'open']
-  const types: ClassType[] = ['regular', 'special', 'event', 'party']
-  const days = [0, 1, 2, 3, 4, 5, 6] as const
+  const styles: DanceStyle[] = [DanceStyle.Bachata, DanceStyle.Kizomba, DanceStyle.Salsa, DanceStyle.Zouk, DanceStyle.Afro, 'other'];
+  const levels: ClassLevel[] = [ClassLevel.Beginner, ClassLevel.Intermediate, ClassLevel.Advanced, ClassLevel.Open];
+  const types: ClassType[] = [ClassType.Regular, ClassType.Special, ClassType.Event, ClassType.Party];
+  const days = [0, 1, 2, 3, 4, 5, 6] as const;
 
   return (
-    <Dialog.Root open onOpenChange={(open) => { if (!open) onClose() }}>
+    <Dialog.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/25 z-40 animate-[fadeIn_0.15s_ease]" />
         <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-card border border-border rounded-[1rem] shadow-[0_8px_32px_rgba(0,0,0,0.12)] z-50 animate-[fadeIn_0.15s_ease] flex flex-col max-h-[90vh]">
@@ -82,13 +82,13 @@ export function CreateTemplateDialog({ defaultDayOfWeek, onClose }: CreateTempla
                 <div>
                   <label className="block text-[0.8125rem] font-semibold text-foreground-secondary mb-1.5">{t('form.style')}</label>
                   <select className="form-input w-full" value={form.style} onChange={(e) => setField('style', e.target.value as DanceStyle)}>
-                    {styles.map((s) => <option key={s} value={s}>{t(`style.${s}`)}</option>)}
+                    {styles.map((s) => <option key={s} value={s}>{t(`style.${ s }`)}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-[0.8125rem] font-semibold text-foreground-secondary mb-1.5">{t('form.level')}</label>
                   <select className="form-input w-full" value={form.level} onChange={(e) => setField('level', e.target.value as ClassLevel)}>
-                    {levels.map((l) => <option key={l} value={l}>{t(`level.${l}`)}</option>)}
+                    {levels.map((l) => <option key={l} value={l}>{t(`level.${ l }`)}</option>)}
                   </select>
                 </div>
               </div>
@@ -98,13 +98,13 @@ export function CreateTemplateDialog({ defaultDayOfWeek, onClose }: CreateTempla
                 <div>
                   <label className="block text-[0.8125rem] font-semibold text-foreground-secondary mb-1.5">{t('form.type')}</label>
                   <select className="form-input w-full" value={form.type} onChange={(e) => setField('type', e.target.value as ClassType)}>
-                    {types.map((tp) => <option key={tp} value={tp}>{t(`type.${tp}`)}</option>)}
+                    {types.map((tp) => <option key={tp} value={tp}>{t(`type.${ tp }`)}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-[0.8125rem] font-semibold text-foreground-secondary mb-1.5">{t('form.dayOfWeek')}</label>
                   <select className="form-input w-full" value={form.dayOfWeek} onChange={(e) => setField('dayOfWeek', Number(e.target.value))}>
-                    {days.map((d) => <option key={d} value={d}>{t(`days.${d}`)}</option>)}
+                    {days.map((d) => <option key={d} value={d}>{t(`days.${ d }`)}</option>)}
                   </select>
                 </div>
               </div>
@@ -168,5 +168,5 @@ export function CreateTemplateDialog({ defaultDayOfWeek, onClose }: CreateTempla
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
-  )
+  );
 }

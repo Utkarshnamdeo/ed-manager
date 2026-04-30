@@ -1,19 +1,19 @@
-import { useState } from 'react'
-import * as Dialog from '@radix-ui/react-dialog'
-import { useTranslation } from 'react-i18next'
-import { addDays } from 'date-fns'
-import { useCreateMembership } from '../../hooks/useMemberships'
-import { useAuth } from '../../contexts/AuthContext'
-import type { MembershipTier } from '../../types'
+import { useState } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import { useTranslation } from 'react-i18next';
+import { addDays } from 'date-fns';
+import { useCreateMembership } from '../../hooks/useMemberships';
+import { useAuth } from '../../contexts/AuthContext';
+import { MembershipTier } from '../../types';
 
 interface AssignMembershipDialogProps {
-  studentId: string
-  defaultTier?: MembershipTier
-  onClose: () => void
+  studentId: string;
+  defaultTier?: MembershipTier;
+  onClose: () => void;
 }
 
 function toDateInput(date: Date): string {
-  return date.toISOString().split('T')[0]
+  return date.toISOString().split('T')[0];
 }
 
 // All Eversports memberships renew monthly (30 days)
@@ -21,43 +21,43 @@ const EXPIRY_DAYS: Record<MembershipTier, number> = {
   gold: 30,
   silver: 30,
   bronze: 30,
-}
+};
 
 const DEFAULT_CREDITS: Record<MembershipTier, number | null> = {
   gold: null,
   silver: 8,
   bronze: 4,
-}
+};
 
 export function AssignMembershipDialog({ studentId, defaultTier, onClose }: AssignMembershipDialogProps) {
-  const { t } = useTranslation('students')
-  const { appUser } = useAuth()
-  const createMembership = useCreateMembership()
+  const { t } = useTranslation('students');
+  const { appUser } = useAuth();
+  const createMembership = useCreateMembership();
 
-  const today = new Date()
-  const initialTier = defaultTier ?? 'silver'
-  const [tier, setTier] = useState<MembershipTier>(initialTier)
-  const [startDate, setStartDate] = useState(toDateInput(today))
-  const [expiryDate, setExpiryDate] = useState(toDateInput(addDays(today, EXPIRY_DAYS[initialTier])))
+  const today = new Date();
+  const initialTier = defaultTier ?? MembershipTier.Silver;
+  const [tier, setTier] = useState<MembershipTier>(initialTier);
+  const [startDate, setStartDate] = useState(toDateInput(today));
+  const [expiryDate, setExpiryDate] = useState(toDateInput(addDays(today, EXPIRY_DAYS[initialTier])));
   const [creditsTotal, setCreditsTotal] = useState<string>(
     DEFAULT_CREDITS[initialTier] != null ? String(DEFAULT_CREDITS[initialTier]) : ''
-  )
+  );
 
   function handleTierChange(newTier: MembershipTier) {
-    setTier(newTier)
-    const credits = DEFAULT_CREDITS[newTier]
-    setCreditsTotal(credits != null ? String(credits) : '')
-    setExpiryDate(toDateInput(addDays(new Date(startDate), EXPIRY_DAYS[newTier])))
+    setTier(newTier);
+    const credits = DEFAULT_CREDITS[newTier];
+    setCreditsTotal(credits != null ? String(credits) : '');
+    setExpiryDate(toDateInput(addDays(new Date(startDate), EXPIRY_DAYS[newTier])));
   }
 
   function handleStartDateChange(val: string) {
-    setStartDate(val)
-    setExpiryDate(toDateInput(addDays(new Date(val), EXPIRY_DAYS[tier])))
+    setStartDate(val);
+    setExpiryDate(toDateInput(addDays(new Date(val), EXPIRY_DAYS[tier])));
   }
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const creditsNum = tier === 'gold' ? null : (creditsTotal === '' ? null : Number(creditsTotal))
+    e.preventDefault();
+    const creditsNum = tier === MembershipTier.Gold ? null : (creditsTotal === '' ? null : Number(creditsTotal));
     await createMembership.mutateAsync({
       studentId,
       tier,
@@ -67,14 +67,14 @@ export function AssignMembershipDialog({ studentId, defaultTier, onClose }: Assi
       expiryDate: new Date(expiryDate),
       active: true,
       createdBy: appUser?.uid ?? '',
-    })
-    onClose()
+    });
+    onClose();
   }
 
-  const tiers: MembershipTier[] = ['gold', 'silver', 'bronze']
+  const tiers: MembershipTier[] = [MembershipTier.Gold, MembershipTier.Silver, MembershipTier.Bronze];
 
   return (
-    <Dialog.Root open onOpenChange={(open) => { if (!open) onClose() }}>
+    <Dialog.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/25 z-50 animate-[fadeIn_0.15s_ease]" />
         <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-card border border-border rounded-[1rem] shadow-[0_8px_32px_rgba(0,0,0,0.12)] z-[51] animate-[fadeIn_0.15s_ease]">
@@ -96,15 +96,14 @@ export function AssignMembershipDialog({ studentId, defaultTier, onClose }: Assi
                       key={tp}
                       type="button"
                       onClick={() => handleTierChange(tp)}
-                      className={`flex-1 py-2 rounded-[0.5rem] border text-sm font-semibold cursor-pointer transition-[background-color,border-color] duration-100 ${
-                        tier === tp
-                          ? tp === 'gold' ? 'badge-gold border-[oklch(0.55_0.14_85)]' :
-                            tp === 'silver' ? 'badge-silver border-[oklch(0.45_0.06_240)]' :
+                      className={`flex-1 py-2 rounded-[0.5rem] border text-sm font-semibold cursor-pointer transition-[background-color,border-color] duration-100 ${ tier === tp
+                        ? tp === MembershipTier.Gold ? 'badge-gold border-[oklch(0.55_0.14_85)]' :
+                          tp === MembershipTier.Silver ? 'badge-silver border-[oklch(0.45_0.06_240)]' :
                             'badge-bronze border-[oklch(0.50_0.10_50)]'
-                          : 'bg-card text-muted-foreground border-border'
-                      }`}
+                        : 'bg-card text-muted-foreground border-border'
+                        }`}
                     >
-                      {t(`tier.${tp}`)}
+                      {t(`tier.${ tp }`)}
                     </button>
                   ))}
                 </div>
@@ -135,7 +134,7 @@ export function AssignMembershipDialog({ studentId, defaultTier, onClose }: Assi
               </div>
 
               {/* Credits (not for gold) */}
-              {tier !== 'gold' && (
+              {tier !== MembershipTier.Gold && (
                 <div>
                   <label className="block text-[0.8125rem] font-semibold text-foreground-secondary mb-1.5">{t('assignMembership.creditsTotal')}</label>
                   <input
@@ -163,5 +162,5 @@ export function AssignMembershipDialog({ studentId, defaultTier, onClose }: Assi
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
-  )
+  );
 }

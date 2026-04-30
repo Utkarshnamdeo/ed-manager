@@ -1,29 +1,29 @@
-import { useState } from 'react'
-import * as Dialog from '@radix-ui/react-dialog'
-import { useTranslation } from 'react-i18next'
-import { format } from 'date-fns'
-import { useUpdateClassSession, useDeleteClassSession } from '../../hooks/useClassSessions'
-import { useTeachers } from '../../hooks/useTeachers'
-import { useRooms } from '../../hooks/useRooms'
-import type { ClassSession, DanceStyle, ClassLevel, ClassType } from '../../types'
+import { useState } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import { useTranslation } from 'react-i18next';
+import { format } from 'date-fns';
+import { useUpdateClassSession, useDeleteClassSession } from '../../hooks/useClassSessions';
+import { useTeachers } from '../../hooks/useTeachers';
+import { useRooms } from '../../hooks/useRooms';
+import { ClassSession, DanceStyle, ClassLevel, ClassType, SessionStatus } from '../../types';
 
 interface EditSessionDialogProps {
-  session: ClassSession
-  onClose: () => void
+  session: ClassSession;
+  onClose: () => void;
 }
 
 function toDateInput(date: Date): string {
-  return format(date, 'yyyy-MM-dd')
+  return format(date, 'yyyy-MM-dd');
 }
 
 export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) {
-  const { t } = useTranslation('classes')
-  const updateSession = useUpdateClassSession()
-  const deleteSession = useDeleteClassSession()
-  const { data: teachers } = useTeachers()
-  const { data: rooms } = useRooms()
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const [confirmCancel, setConfirmCancel] = useState(false)
+  const { t } = useTranslation('classes');
+  const updateSession = useUpdateClassSession();
+  const deleteSession = useDeleteClassSession();
+  const { data: teachers } = useTeachers();
+  const { data: rooms } = useRooms();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   const [form, setForm] = useState({
     name: session.name,
@@ -39,14 +39,14 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
     capacity: session.capacity != null ? String(session.capacity) : '',
     notes: session.notes ?? '',
     status: session.status,
-  })
+  });
 
   function setField<K extends keyof typeof form>(key: K, value: typeof form[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }))
+    setForm((prev) => ({ ...prev, [key]: value }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+    e.preventDefault();
     await updateSession.mutateAsync({
       id: session.id,
       name: form.name.trim(),
@@ -62,17 +62,17 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
       capacity: form.capacity === '' ? null : Number(form.capacity),
       notes: form.notes.trim() || null,
       status: form.status,
-    })
-    onClose()
+    });
+    onClose();
   }
 
-  const styles: DanceStyle[] = ['bachata', 'kizomba', 'salsa', 'zouk', 'afro', 'other']
-  const levels: ClassLevel[] = ['beginner', 'intermediate', 'advanced', 'open']
-  const types: ClassType[] = ['regular', 'special', 'event', 'party']
-  const statuses = ['planned', 'active', 'completed', 'cancelled'] as const
+  const styles: DanceStyle[] = [DanceStyle.Bachata, DanceStyle.Kizomba, DanceStyle.Salsa, DanceStyle.Zouk, DanceStyle.Afro, 'other'];
+  const levels: ClassLevel[] = [ClassLevel.Beginner, ClassLevel.Intermediate, ClassLevel.Advanced, ClassLevel.Open];
+  const types: ClassType[] = [ClassType.Regular, ClassType.Special, ClassType.Event, ClassType.Party];
+  const statuses = [SessionStatus.Planned, SessionStatus.Active, SessionStatus.Completed, SessionStatus.Cancelled] as const;
 
   return (
-    <Dialog.Root open onOpenChange={(open) => { if (!open) onClose() }}>
+    <Dialog.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/25 z-40 animate-[fadeIn_0.15s_ease]" />
         <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-card border border-border rounded-[1rem] shadow-[0_8px_32px_rgba(0,0,0,0.12)] z-50 animate-[fadeIn_0.15s_ease] flex flex-col max-h-[90vh]">
@@ -94,13 +94,13 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
                 <div>
                   <label className="block text-[0.8125rem] font-semibold text-foreground-secondary mb-1.5">{t('form.style')}</label>
                   <select className="form-input w-full" value={form.style} onChange={(e) => setField('style', e.target.value as DanceStyle)}>
-                    {styles.map((s) => <option key={s} value={s}>{t(`style.${s}`)}</option>)}
+                    {styles.map((s) => <option key={s} value={s}>{t(`style.${ s }`)}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-[0.8125rem] font-semibold text-foreground-secondary mb-1.5">{t('form.level')}</label>
                   <select className="form-input w-full" value={form.level} onChange={(e) => setField('level', e.target.value as ClassLevel)}>
-                    {levels.map((l) => <option key={l} value={l}>{t(`level.${l}`)}</option>)}
+                    {levels.map((l) => <option key={l} value={l}>{t(`level.${ l }`)}</option>)}
                   </select>
                 </div>
               </div>
@@ -109,13 +109,13 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
                 <div>
                   <label className="block text-[0.8125rem] font-semibold text-foreground-secondary mb-1.5">{t('form.type')}</label>
                   <select className="form-input w-full" value={form.type} onChange={(e) => setField('type', e.target.value as ClassType)}>
-                    {types.map((tp) => <option key={tp} value={tp}>{t(`type.${tp}`)}</option>)}
+                    {types.map((tp) => <option key={tp} value={tp}>{t(`type.${ tp }`)}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-[0.8125rem] font-semibold text-foreground-secondary mb-1.5">{t('columns.status')}</label>
                   <select className="form-input w-full" value={form.status} onChange={(e) => setField('status', e.target.value as typeof form.status)}>
-                    {statuses.map((s) => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
+                    {statuses.map((s) => <option key={s} value={s}>{t(`status.${ s }`)}</option>)}
                   </select>
                 </div>
               </div>
@@ -189,7 +189,7 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
                     <button type="button" onClick={() => setConfirmDelete(false)} className="btn-secondary flex-1">{t('actions.cancel')}</button>
                     <button
                       type="button"
-                      onClick={async () => { await deleteSession.mutateAsync(session.id); onClose() }}
+                      onClick={async () => { await deleteSession.mutateAsync(session.id); onClose(); }}
                       disabled={deleteSession.isPending}
                       className="btn-destructive flex-1"
                     >
@@ -204,7 +204,7 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
                     <button type="button" onClick={() => setConfirmCancel(false)} className="btn-secondary flex-1">{t('actions.cancel')}</button>
                     <button
                       type="button"
-                      onClick={async () => { await updateSession.mutateAsync({ id: session.id, status: 'cancelled' }); onClose() }}
+                      onClick={async () => { await updateSession.mutateAsync({ id: session.id, status: SessionStatus.Cancelled }); onClose(); }}
                       disabled={updateSession.isPending}
                       className="btn-destructive flex-1"
                     >
@@ -218,7 +218,7 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
                     <button type="button" onClick={() => setConfirmDelete(true)} className="btn-destructive-outline">
                       {t('actions.deleteSession')}
                     </button>
-                    {session.status !== 'cancelled' && (
+                    {session.status !== SessionStatus.Cancelled && (
                       <button type="button" onClick={() => setConfirmCancel(true)} className="btn-secondary">
                         {t('actions.cancelSession')}
                       </button>
@@ -241,5 +241,5 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
-  )
+  );
 }

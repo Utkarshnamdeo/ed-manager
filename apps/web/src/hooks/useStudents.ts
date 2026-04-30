@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   collection,
   query,
@@ -10,13 +10,13 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
-} from 'firebase/firestore'
-import { db } from '../lib/firebase'
-import { queryClient } from '../lib/queryClient'
-import type { Student } from '../types'
+} from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { queryClient } from '../lib/queryClient';
+import { SessionStatus, type Student } from '../types';
 
-const COLLECTION = 'students'
-const QUERY_KEY = ['students'] as const
+const COLLECTION = 'students';
+const QUERY_KEY = ['students'] as const;
 
 function docToStudent(id: string, data: Record<string, unknown>): Student {
   return {
@@ -28,8 +28,8 @@ function docToStudent(id: string, data: Record<string, unknown>): Student {
     activePassId: (data.activePassId as string | null) ?? null,
     passType: (data.passType as Student['passType']) ?? null,
     active: data.active as boolean,
-    createdAt: (data.createdAt as { toDate(): Date })?.toDate() ?? new Date(),
-  }
+    createdAt: (data.createdAt as { toDate(): Date; })?.toDate() ?? new Date(),
+  };
 }
 
 export function useStudents() {
@@ -38,13 +38,13 @@ export function useStudents() {
     queryFn: async () => {
       const q = query(
         collection(db, COLLECTION),
-        where('active', '==', true),
+        where(SessionStatus.Active, '==', true),
         orderBy('name'),
-      )
-      const snap = await getDocs(q)
-      return snap.docs.map((d) => docToStudent(d.id, d.data()))
+      );
+      const snap = await getDocs(q);
+      return snap.docs.map((d) => docToStudent(d.id, d.data()));
     },
-  })
+  });
 }
 
 /**
@@ -56,24 +56,24 @@ export function useStudentSearch(searchQuery: string) {
   return useQuery({
     queryKey: [...QUERY_KEY, 'search', searchQuery],
     queryFn: async () => {
-      if (!searchQuery.trim()) return []
+      if (!searchQuery.trim()) return [];
       const q = query(
         collection(db, COLLECTION),
-        where('active', '==', true),
+        where(SessionStatus.Active, '==', true),
         orderBy('name'),
-      )
-      const snap = await getDocs(q)
-      const lower = searchQuery.toLowerCase()
+      );
+      const snap = await getDocs(q);
+      const lower = searchQuery.toLowerCase();
       return snap.docs
         .map((d) => docToStudent(d.id, d.data()))
-        .filter((s) => s.name.toLowerCase().includes(lower))
+        .filter((s) => s.name.toLowerCase().includes(lower));
     },
     enabled: searchQuery.trim().length > 0,
     staleTime: 30_000,
-  })
+  });
 }
 
-type CreateStudentInput = Omit<Student, 'id' | 'createdAt'>
+type CreateStudentInput = Omit<Student, 'id' | 'createdAt'>;
 
 export function useCreateStudent() {
   return useMutation({
@@ -81,26 +81,26 @@ export function useCreateStudent() {
       const ref = await addDoc(collection(db, COLLECTION), {
         ...input,
         createdAt: serverTimestamp(),
-      })
-      return ref.id
+      });
+      return ref.id;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
-  })
+  });
 }
 
-type UpdateStudentInput = Partial<Omit<Student, 'id' | 'createdAt'>> & { id: string }
+type UpdateStudentInput = Partial<Omit<Student, 'id' | 'createdAt'>> & { id: string; };
 
 export function useUpdateStudent() {
   return useMutation({
     mutationFn: async ({ id, ...updates }: UpdateStudentInput) => {
-      await updateDoc(doc(db, COLLECTION, id), updates)
+      await updateDoc(doc(db, COLLECTION, id), updates);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
-  })
+  });
 }
 
 export function useDeleteStudent() {
@@ -110,17 +110,17 @@ export function useDeleteStudent() {
       const [membershipsSnap, cardsSnap] = await Promise.all([
         getDocs(query(collection(db, 'memberships'), where('studentId', '==', id))),
         getDocs(query(collection(db, 'classCards'), where('studentId', '==', id))),
-      ])
+      ]);
       await Promise.all([
         ...membershipsSnap.docs.map((d) => deleteDoc(d.ref)),
         ...cardsSnap.docs.map((d) => deleteDoc(d.ref)),
-      ])
-      await deleteDoc(doc(db, COLLECTION, id))
+      ]);
+      await deleteDoc(doc(db, COLLECTION, id));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY })
-      queryClient.invalidateQueries({ queryKey: ['memberships'] })
-      queryClient.invalidateQueries({ queryKey: ['classCards'] })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['memberships'] });
+      queryClient.invalidateQueries({ queryKey: ['classCards'] });
     },
-  })
+  });
 }
