@@ -14,11 +14,11 @@ If UI features need to be implemented please check **docs/design.md**, only acce
 Read **docs/REDESIGN.md** for the system overview and data model.
 Read **docs/decisions.md** when something seems odd or before reversing an architectural choice.
 
-
 ---
 
 ## Non-negotiable rules
 
+- **Never run `git commit` or `git push`** — the developer always commits and pushes manually.
 - `combination` on attendance records is always `CombinationToken[]` — never a string.
 - Credit deduction only in `onAttendanceCreated` Cloud Function. Never client-side.
 - All Firestore reads/writes go through TanStack Query hooks. No raw `setDoc`/`getDoc` in components.
@@ -43,26 +43,4 @@ Read **docs/decisions.md** when something seems odd or before reversing an archi
 | Reports | `/reports` | admin, staff |
 | Settings | `/settings` | admin only |
 
-Note: `/rooms` does NOT exist as a standalone route. Rooms are managed in Settings → Rooms.
 Note: `/` (index) redirects to `/dashboard`.
-
----
-
-## Current build status
-
-**Completed:**
-- Phase 1 — types/index.ts
-- Phase 2 — Firestore security rules
-- Phase 3 — Cloud Functions: onAttendanceCreated · sendStepUpCode · verifyStepUpCode · manualBackup · scheduledBackup · cleanupOldBackups
-- Phase 4 — Hooks: useMemberships · useClassCards · useStudents · useAttendanceRecords · useConfig · usePricingConfig · useTeachers · useRooms · useClassTemplates · useClassSessions
-- Shell layout with sidebar navigation
-- AttendancePage — real data, monthly calendar, combo picker
-- ClassesPage — calendar tab + sessions week view
-- StudentsPage — roster, membership assignment
-- TeachersPage
-
-- Phase 5 — Dashboard: real-data StatCards, SessionRow, inline check-in (all 4 flows), i18n EN+DE, vitest test suite (21 tests, 2 files)
-
-**In progress:** none — all phases complete
-
-> Update this section after every completed build step.
